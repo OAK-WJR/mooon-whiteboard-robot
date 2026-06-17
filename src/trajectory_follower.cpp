@@ -109,7 +109,13 @@ bool TrajectoryFollower::compute(float robot_x, float robot_y, float robot_theta
 
     out_vel.vx = ex * scale;
     out_vel.vy = ey * scale;
-    out_vel.omega = 0;  // 全向轮不需要转向，直接侧移
+
+    // 航向保持: 把 theta 主动拉回 0, 抵消旋转漂移 -> 走直线
+    float theta_err = -robot_theta;
+    while (theta_err >  (float)M_PI) theta_err -= 2.0f * (float)M_PI;
+    while (theta_err < -(float)M_PI) theta_err += 2.0f * (float)M_PI;
+    out_vel.omega = fmaxf(-MAX_ANGULAR_SPEED,
+                          fminf(MAX_ANGULAR_SPEED, KP_ANGULAR * theta_err));
 
     return true;
 }

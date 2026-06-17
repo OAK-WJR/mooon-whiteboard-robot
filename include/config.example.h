@@ -139,4 +139,10 @@
 #define END_DECEL_DIST      0.08f   // 终端减速起始距离 (m)
 #define MIN_APPROACH_SPEED  0.04f   // 终端最低速度 (m/s)
 
+// 航向保持: 主动用角速度把 theta 锁回 0, 抵消旋转漂移让点到点走直线。
+// 默认关 (KP_ANGULAR=0 -> omega=0): 翻台/无负载下 odom theta 不可信, 开了会自旋。
+// 落地 + M1 编码器干净(theta 可信)后改成 ~3.0 启用, 才能拉直。
+#define KP_ANGULAR          0.0f    // 航向保持比例增益 (0=关; 落地可信后设 3.0)
+#define MAX_ANGULAR_SPEED   1.5f    // 最大角速度 (rad/s)
+
 #endif // CONFIG_H
