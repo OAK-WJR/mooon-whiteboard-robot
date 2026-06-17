@@ -89,10 +89,11 @@
 #define PID_KF_M0           470.0f
 #define PID_ILIM_M0         250.0f
 
-#define PID_KP_M1           63.4f
-#define PID_KI_M1           3.9f
-#define PID_KD_M1           0.0f
-#define PID_KF_M1           636.0f
+// M1: 手动调参 (电机偏卡, 大 Ki 推过死区)
+#define PID_KP_M1           500.0f
+#define PID_KI_M1           400.0f
+#define PID_KD_M1           70.0f
+#define PID_KF_M1           410.0f
 #define PID_ILIM_M1         250.0f
 
 #define PID_KP_M2           108.0f
