@@ -158,6 +158,9 @@ void RobotController::update(float dt) {
         }
 
         float pwm_f = pid_[i].compute(target_v, actual_v, dt);
+        // 静摩擦前馈: 命令运动时叠加固定 PWM, 掀过启动摩擦 (低速也能动)
+        if (fabsf(target_v) > MOTOR_MIN_SPEED)
+            pwm_f += (target_v > 0 ? MOTOR_STICTION_PWM : -MOTOR_STICTION_PWM);
         int16_t pwm = constrain((int16_t)pwm_f, -PWM_MAX, PWM_MAX);
         motors_.motor(i).setSpeed(pwm);
         last_pwm_[i] = pwm;
