@@ -62,6 +62,23 @@ void RobotController::handleCommand(JsonDocument& doc) {
             state_ = STATE_IDLE;
         }
     }
+    else if (strcmp(cmd, "goto") == 0) {
+        // 点到点: 从当前位置直线导航到目标点, 立即执行
+        float x = doc["x"] | 0.0f;
+        float y = doc["y"] | 0.0f;
+        const Pose2D& pose = odometry_.getPose();
+        state_ = STATE_PLANNING;
+        int n = planner_.generateGoto(pose.x, pose.y, x, y);
+        Serial.printf("Goto (%.3f,%.3f)->(%.3f,%.3f): %d pts\n", pose.x, pose.y, x, y, n);
+        if (n >= 2) {
+            follower_.setPath(planner_.getPath(), planner_.getCount());
+            follower_.setSpeed(max_speed_);
+            for (int i = 0; i < 3; i++) pid_[i].reset();
+            state_ = STATE_RUNNING;
+        } else {
+            state_ = STATE_IDLE;
+        }
+    }
     else if (strcmp(cmd, "start") == 0) {
         if (state_ == STATE_READY || state_ == STATE_DONE) {
             follower_.setPath(planner_.getPath(), planner_.getCount());

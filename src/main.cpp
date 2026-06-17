@@ -107,6 +107,11 @@ static void handleSerialLine(char* line) {
         JsonDocument d;
         d["cmd"] = "area"; d["x"] = x; d["y"] = y; d["w"] = w; d["h"] = h; d["spacing"] = sp;
         robot.handleCommand(d);
+    } else if (strcmp(cmd, "goto") == 0) {
+        float x = 0, y = 0;
+        if (args) sscanf(args, "%f %f", &x, &y);
+        JsonDocument d; d["cmd"] = "goto"; d["x"] = x; d["y"] = y;
+        robot.handleCommand(d);
     } else if (strcmp(cmd, "pos") == 0) {
         float x = 0, y = 0, th = 0;
         if (args) sscanf(args, "%f %f %f", &x, &y, &th);

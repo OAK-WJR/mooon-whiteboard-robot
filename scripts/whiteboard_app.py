@@ -34,6 +34,8 @@ class WhiteBoardApp(QMainWindow):
         self.traj_y = deque(maxlen=2000)
         self.plan_x = []
         self.plan_y = []
+        self.robot_pose = (0.0, 0.0, 0.0)   # 最新 x,y,theta
+        self.target_xy = None               # 点到点目标
 
         self._build_ui()
         self.status_received.connect(self._on_status)
@@ -60,10 +62,15 @@ class WhiteBoardApp(QMainWindow):
         self.plot.addLegend()
         self.plan_curve = self.plot.plot(pen=pg.mkPen('c', width=1, style=Qt.DashLine), name="Plan")
         self.traj_curve = self.plot.plot(pen=pg.mkPen('y', width=2), name="Actual")
-        self.robot_dot = self.plot.plot(pen=None, symbol='o', symbolSize=10, symbolBrush='r', name="Robot")
+        self.robot_dot = self.plot.plot(pen=None, symbol='o', symbolSize=12, symbolBrush='r', name="Robot")
+        self.heading_line = self.plot.plot(pen=pg.mkPen('r', width=2))                 # 机器人朝向
+        self.target_dot = self.plot.plot(pen=None, symbol='star', symbolSize=20,
+                                         symbolBrush=(0, 220, 0), name="Target")        # 点到点目标
         # 目标区域矩形
         self.area_rect = pg.PlotDataItem(pen=pg.mkPen('g', width=2, style=Qt.DashLine))
         self.plot.addItem(self.area_rect)
+        # 点击地图设目标点 (点到点导航)
+        self.plot.scene().sigMouseClicked.connect(self._on_plot_click)
         main.addWidget(self.plot, stretch=3)
 
         # === Right: controls ===
@@ -83,6 +90,24 @@ class WhiteBoardApp(QMainWindow):
             ag.addWidget(s, i, 1)
             self.spins[label.lower()] = s
         ctrl.addWidget(area_grp)
+
+        # Navigation (点到点)
+        nav_grp = QGroupBox("点到点导航")
+        ng = QGridLayout(nav_grp)
+        hint = QLabel("← 左键点击地图 = 设目标并前往")
+        hint.setStyleSheet("color:#ffaa33;")
+        ng.addWidget(hint, 0, 0, 1, 2)
+        ng.addWidget(QLabel("X"), 1, 0)
+        self.goto_x = QDoubleSpinBox(); self.goto_x.setRange(-2, 2)
+        self.goto_x.setSingleStep(0.01); self.goto_x.setDecimals(3); ng.addWidget(self.goto_x, 1, 1)
+        ng.addWidget(QLabel("Y"), 2, 0)
+        self.goto_y = QDoubleSpinBox(); self.goto_y.setRange(-2, 2)
+        self.goto_y.setSingleStep(0.01); self.goto_y.setDecimals(3); ng.addWidget(self.goto_y, 2, 1)
+        gobtn = QPushButton("GOTO (X, Y)")
+        gobtn.setStyleSheet("background-color:#ffaa33; font-weight:bold; padding:6px;")
+        gobtn.clicked.connect(lambda: self._goto(self.goto_x.value(), self.goto_y.value()))
+        ng.addWidget(gobtn, 3, 0, 1, 2)
+        ctrl.addWidget(nav_grp)
 
         # Buttons
         btn_grp = QGroupBox("Control")
@@ -160,6 +185,26 @@ class WhiteBoardApp(QMainWindow):
         # 画规划路径预览
         self._preview_zigzag(x, y, w, h, area["spacing"])
 
+    def _goto(self, x, y):
+        # 点到点导航: 发目标, 画目标星标 + 当前->目标直线预览
+        self.target_xy = (x, y)
+        self._send({"cmd": "goto", "x": round(x, 4), "y": round(y, 4)})
+        self.target_dot.setData([x], [y])
+        rx, ry, _ = self.robot_pose
+        self.plan_x = [rx, x]
+        self.plan_y = [ry, y]
+        self.log.append(f"GOTO ({x:.3f}, {y:.3f})")
+
+    def _on_plot_click(self, ev):
+        # 左键点击轨迹图 = 设目标点并前往
+        if ev.button() != Qt.LeftButton:
+            return
+        vb = self.plot.getPlotItem().vb
+        pt = vb.mapSceneToView(ev.scenePos())
+        self.goto_x.setValue(pt.x())
+        self.goto_y.setValue(pt.y())
+        self._goto(pt.x(), pt.y())
+
     def _preview_zigzag(self, ax, ay, w, h, spacing):
         self.plan_x.clear()
         self.plan_y.clear()
@@ -201,6 +246,7 @@ class WhiteBoardApp(QMainWindow):
         wp = msg.get("wp", 0)
         wp_total = msg.get("wp_total", 0)
 
+        self.robot_pose = (x, y, theta)
         self.lbl_state.setText(state.upper())
         colors = {"idle": "#888", "planning": "#ff8", "ready": "#8f8", "running": "#4f4", "done": "#88f"}
         self.lbl_state.setStyleSheet(f"color: {colors.get(state, '#fff')};")
@@ -216,8 +262,11 @@ class WhiteBoardApp(QMainWindow):
             self.plan_curve.setData(self.plan_x, self.plan_y)
         if len(self.traj_x) > 1:
             self.traj_curve.setData(list(self.traj_x), list(self.traj_y))
-        if len(self.traj_x) > 0:
-            self.robot_dot.setData([self.traj_x[-1]], [self.traj_y[-1]])
+        # 机器人当前位姿 + 朝向 (始终更新, 不只是 running)
+        rx, ry, th = self.robot_pose
+        self.robot_dot.setData([rx], [ry])
+        hl = 0.03
+        self.heading_line.setData([rx, rx + hl * np.cos(th)], [ry, ry + hl * np.sin(th)])
 
     def closeEvent(self, event):
         self.running = False
