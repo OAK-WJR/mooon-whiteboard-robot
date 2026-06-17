@@ -3,14 +3,18 @@
 void WifiComm::begin(const char* ssid, const char* pass) {
     WiFi.begin(ssid, pass);
     Serial.print("WiFi connecting");
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
+    // 非阻塞: 超时后继续运行, 不卡启动 (USB/串口模式无需 WiFi)
+    unsigned long t0 = millis();
+    while (WiFi.status() != WL_CONNECTED && millis() - t0 < 8000) {
+        delay(250);
         Serial.print(".");
     }
-    Serial.printf("\nWiFi connected: %s\n", WiFi.localIP().toString().c_str());
-
+    if (WiFi.status() == WL_CONNECTED) {
+        Serial.printf("\nWiFi connected: %s\n", WiFi.localIP().toString().c_str());
+    } else {
+        Serial.println("\nWiFi 未连接 (超时), 继续运行 — 可走 USB 串口");
+    }
     udp_.begin(UDP_LISTEN_PORT);
-    Serial.printf("UDP listening on port %d\n", UDP_LISTEN_PORT);
 }
 
 bool WifiComm::receive(JsonDocument& doc) {

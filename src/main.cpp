@@ -36,6 +36,7 @@ static WifiComm wifi;
 // 串口调参状态
 static int  tune_motor = -1;       // -1=全部三轮
 static bool telemetry_on = false;
+static bool json_stream  = false;  // j: 串口流式输出位姿 JSON (USB 导航可视化)
 
 // FreeRTOS 控制任务 (Core 1, 高优先级, 50Hz)
 static void controlTask(void* param) {
@@ -128,6 +129,9 @@ static void handleSerialLine(char* line) {
     } else if (strcmp(cmd, "t") == 0) {
         telemetry_on = !telemetry_on;
         Serial.printf("遥测 %s\n", telemetry_on ? "ON" : "OFF");
+    } else if (strcmp(cmd, "j") == 0) {
+        json_stream = !json_stream;
+        Serial.printf("位姿JSON流 %s\n", json_stream ? "ON" : "OFF");
     } else if (strcmp(cmd, "m") == 0) {
         if (args && (args[0] == 'a' || args[0] == 'A')) tune_motor = -1;
         else tune_motor = constrain((int)arg1(-1), -1, 2);
@@ -187,6 +191,14 @@ void loop() {
     if (telemetry_on && millis() - last_tele >= 100) {
         robot.printTelemetry(Serial);
         last_tele = millis();
+    }
+
+    // 位姿 JSON 流 (10Hz, 给 USB 串口导航可视化)
+    static unsigned long last_json = 0;
+    if (json_stream && millis() - last_json >= 100) {
+        JsonDocument st; robot.fillStatus(st);
+        serializeJson(st, Serial); Serial.println();
+        last_json = millis();
     }
 
     vTaskDelay(pdMS_TO_TICKS(20));
