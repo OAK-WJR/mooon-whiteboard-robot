@@ -12,7 +12,9 @@ void WifiComm::begin(const char* ssid, const char* pass) {
     if (WiFi.status() == WL_CONNECTED) {
         Serial.printf("\nWiFi connected: %s\n", WiFi.localIP().toString().c_str());
     } else {
-        Serial.println("\nWiFi 未连接 (超时), 继续运行 — 可走 USB 串口");
+        Serial.println("\nWiFi 未连接 (超时), 关射频走 USB — 消除 ENC1(GPIO36/39) RF 噪声");
+        WiFi.mode(WIFI_OFF);   // 关 WiFi 射频, 否则 GPIO36/39 编码器被灌假计数
+        return;                // USB 模式不需要 UDP
     }
     udp_.begin(UDP_LISTEN_PORT);
 }
