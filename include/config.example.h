@@ -76,6 +76,10 @@
 #define MOTOR_STICTION_M2   140.0f
 #define MOTOR_BREAKAWAY_VEL 0.02f
 
+// 轮速合理性闸: 实测最快轮速 ~0.38 m/s, 超过此值判为编码器噪声/串扰直接丢弃。
+// 主要挡 M1 电机 PWM 串扰进 ENC1(GPIO36/39) 造成的幽灵恒速 (~0.58 m/s)。
+#define MAX_WHEEL_VEL       0.45f
+
 // --- FF + PID 参数 (每个电机) ---
 // 注意: 更换驱动芯片后 Kf 可能需要重新标定
 // 全局缺省 = 自动调参 M1 实测结果 (kf_true=636)
@@ -96,11 +100,13 @@
 #define PID_KF_M0           470.0f
 #define PID_ILIM_M0         250.0f
 
-// M1: 手动调参 (电机偏卡, 大 Ki 推过死区)
-#define PID_KP_M1           500.0f
-#define PID_KI_M1           400.0f
-#define PID_KD_M1           70.0f
-#define PID_KF_M1           410.0f
+// M1: 实测kf自动调参的温和增益 (Kf为主, Kd=0, 小Ki)。
+// 不再用大 Ki 硬推死区 —— 那活已交给静摩擦前馈; 温和增益才不会把
+// ENC1 串扰噪声放大成乱跳。
+#define PID_KP_M1           63.4f
+#define PID_KI_M1           3.9f
+#define PID_KD_M1           0.0f
+#define PID_KF_M1           636.0f
 #define PID_ILIM_M1         250.0f
 
 #define PID_KP_M2           108.0f

@@ -158,6 +158,10 @@ void Odometry::update(float dt) {
         float revolutions = (float)delta / cpr4;
         float raw_vel = (revolutions * wheel_circumference) / dt;
 
+        // 轮速合理性闸: 超过物理最大速度 = 编码器噪声/串扰 (尤其 M1 PWM 串扰
+        // 进 ENC1), 丢弃这帧 (按 0 处理), 防止幽灵恒速把 PID 顶到饱和。
+        if (fabsf(raw_vel) > MAX_WHEEL_VEL) raw_vel = 0.0f;
+
         // 一阶低通滤波: 平滑轮速测量，减少 PID 对噪声的过度反应
         // alpha=0.3 → 截止频率 ≈ 50Hz * 0.3 / (2π) ≈ 2.4Hz
         constexpr float VELOCITY_FILTER_ALPHA = 0.3f;
