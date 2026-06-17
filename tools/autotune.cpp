@@ -28,10 +28,12 @@ static const float MPC  = CIRC / CPR4;               // 每个编码器计数对
 
 // 每个电机的真实一阶模型 (kf_true = 稳态 PWM/(m/s), tau = 时间常数)
 struct MotorModel { const char* name; float kf_true; float tau; };
+// 真机实测 (开环 PWM=200, 2026-06-16): kf_true = PWM/(m/s)。
+// tau 暂用 50ms 估值 (未实测), 三轮增益差异由实测 kf_true 驱动。
 static const MotorModel MOTORS[3] = {
-    {"M0", 600.0f, 0.045f},
-    {"M1", 640.0f, 0.050f},
-    {"M2", 560.0f, 0.060f},
+    {"M0", 504.0f, 0.050f},
+    {"M1", 636.0f, 0.050f},
+    {"M2", 515.0f, 0.050f},
 };
 
 struct Gains { float kp, ki, kd, kf, ilim; };
