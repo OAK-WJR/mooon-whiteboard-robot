@@ -97,9 +97,15 @@ bool TrajectoryFollower::compute(float robot_x, float robot_y, float robot_theta
     float ex = cos_th * dx + sin_th * dy;   // 前方
     float ey = -sin_th * dx + cos_th * dy;  // 左方
 
-    // 比例控制
+    // 终端减速: 距目标越近速度越低, 防止冲过头绕圈
+    float dist_to_goal = distTo(robot_x, robot_y, path_[count_ - 1].x, path_[count_ - 1].y);
+    float v_cap = max_speed_;
+    if (dist_to_goal < END_DECEL_DIST)
+        v_cap = fmaxf(MIN_APPROACH_SPEED, max_speed_ * dist_to_goal / END_DECEL_DIST);
+
+    // 比例控制 (终端减速封顶)
     float dist = sqrtf(ex * ex + ey * ey);
-    float scale = (dist > 0.001f) ? fminf(kp_linear_ * dist, max_speed_) / dist : 0;
+    float scale = (dist > 0.001f) ? fminf(kp_linear_ * dist, v_cap) / dist : 0;
 
     out_vel.vx = ex * scale;
     out_vel.vy = ey * scale;

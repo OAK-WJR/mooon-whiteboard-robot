@@ -130,9 +130,13 @@
 
 // --- 轨迹跟踪 ---
 #define LOOK_AHEAD_DIST     0.06f   // 前瞻距离 (m)
-#define GOAL_TOLERANCE       0.01f   // 到达判定距离 (m)
+#define GOAL_TOLERANCE       0.02f   // 到达判定距离 (m); 翻台无负载下 8mm 停不进, 2cm 是甜点
 #define MAX_LINEAR_SPEED     0.15f   // 最大线速度 (m/s)
 #define KP_LINEAR            2.0f    // 线速度比例增益
 #define MAX_WAYPOINTS        200     // 最大路径点数
+// 终端减速: 距目标 END_DECEL_DIST 内开始按距离线性减速到 MIN_APPROACH_SPEED,
+// 避免冲过头绕圈, 让机器人爬进容差停住。
+#define END_DECEL_DIST      0.08f   // 终端减速起始距离 (m)
+#define MIN_APPROACH_SPEED  0.04f   // 终端最低速度 (m/s)
 
 #endif // CONFIG_H
