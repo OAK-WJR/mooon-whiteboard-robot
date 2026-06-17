@@ -82,10 +82,11 @@
 // 每个电机独立 PID —— 自动调参 (tools/autotune.cpp), 三轮各不相同。
 // 真机实测 kf_true (开环 PWM=200, 2026-06-16): M0=504 M1=636 M2=515。
 // Kf 直接 = 各自实测直流增益; Kd=0 避免 50Hz 极限环; Ki 消稳态。
-#define PID_KP_M0           41.7f
-#define PID_KI_M0           3.7f
-#define PID_KD_M0           0.0f
-#define PID_KF_M0           504.0f
+// M0: 手动调参 (PID Tuner 实测调出)
+#define PID_KP_M0           500.0f
+#define PID_KI_M0           10.0f
+#define PID_KD_M0           50.0f
+#define PID_KF_M0           470.0f
 #define PID_ILIM_M0         250.0f
 
 #define PID_KP_M1           63.4f
