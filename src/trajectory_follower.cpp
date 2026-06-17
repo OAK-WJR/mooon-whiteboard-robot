@@ -36,8 +36,8 @@ int TrajectoryFollower::findClosestSegment(float rx, float ry) const {
 }
 
 void TrajectoryFollower::getLookAheadPoint(float rx, float ry, float& lx, float& ly) const {
-    // 从当前最近点开始，沿路径前进 LOOK_AHEAD_DIST
-    float remaining = LOOK_AHEAD_DIST;
+    // 从当前最近点开始，沿路径前进 look_ahead_
+    float remaining = look_ahead_;
     int idx = findClosestSegment(rx, ry);
 
     // 更新 current waypoint（非 const 需要 mutable 或者外部更新）
@@ -71,13 +71,13 @@ bool TrajectoryFollower::compute(float robot_x, float robot_y, float robot_theta
 
     // 更新当前 waypoint
     while (current_wp_ < count_ - 1 &&
-           distTo(robot_x, robot_y, path_[current_wp_].x, path_[current_wp_].y) < GOAL_TOLERANCE) {
+           distTo(robot_x, robot_y, path_[current_wp_].x, path_[current_wp_].y) < goal_tol_) {
         current_wp_++;
     }
 
     // 到达终点
     if (current_wp_ >= count_ - 1 &&
-        distTo(robot_x, robot_y, path_[count_ - 1].x, path_[count_ - 1].y) < GOAL_TOLERANCE) {
+        distTo(robot_x, robot_y, path_[count_ - 1].x, path_[count_ - 1].y) < goal_tol_) {
         out_vel = {0, 0, 0};
         finished_ = true;
         return false;
@@ -99,7 +99,7 @@ bool TrajectoryFollower::compute(float robot_x, float robot_y, float robot_theta
 
     // 比例控制
     float dist = sqrtf(ex * ex + ey * ey);
-    float scale = (dist > 0.001f) ? fminf(KP_LINEAR * dist, max_speed_) / dist : 0;
+    float scale = (dist > 0.001f) ? fminf(kp_linear_ * dist, max_speed_) / dist : 0;
 
     out_vel.vx = ex * scale;
     out_vel.vy = ey * scale;

@@ -98,7 +98,16 @@ void RobotController::handleCommand(JsonDocument& doc) {
 void RobotController::update(float dt) {
     odometry_.update(dt);
 
-    if (state_ != STATE_RUNNING) return;
+    // 即使空闲也刷新实际轮速快照, 方便串口验证编码器
+    {
+        const WheelVelocity& wv = odometry_.getWheelVelocity();
+        for (int i = 0; i < 3; i++) last_actual_[i] = wv.v[i];
+    }
+
+    if (state_ != STATE_RUNNING) {
+        for (int i = 0; i < 3; i++) { last_target_[i] = 0; last_pwm_[i] = 0; }
+        return;
+    }
 
     const Pose2D& pose = odometry_.getPose();
     BodyVelocity target_body;
@@ -121,16 +130,20 @@ void RobotController::update(float dt) {
         float target_v = target_wheels.v[i];
         float actual_v = actual_wheels.v[i];
 
+        last_target_[i] = target_v;
+
         if (fabsf(target_v) < MOTOR_MIN_SPEED && fabsf(target_body.vx) < MOTOR_MIN_SPEED
             && fabsf(target_body.vy) < MOTOR_MIN_SPEED) {
             pid_[i].reset();
             motors_.motor(i).stop();
+            last_pwm_[i] = 0;
             continue;
         }
 
         float pwm_f = pid_[i].compute(target_v, actual_v, dt);
         int16_t pwm = constrain((int16_t)pwm_f, -PWM_MAX, PWM_MAX);
         motors_.motor(i).setSpeed(pwm);
+        last_pwm_[i] = pwm;
     }
 }
 
@@ -143,4 +156,47 @@ void RobotController::fillStatus(JsonDocument& doc) {
     doc["progress"] = follower_.getProgress();
     doc["wp"] = follower_.getCurrentWaypoint();
     doc["wp_total"] = follower_.getTotalWaypoints();
+}
+
+// ============================================================
+// 运行时调参 (串口)
+// ============================================================
+
+void RobotController::tunePid(int motor, char which, float val) {
+    int from = (motor < 0) ? 0 : motor;
+    int to   = (motor < 0) ? 2 : motor;
+    if (from < 0 || to > 2) return;
+
+    for (int i = from; i <= to; i++) {
+        switch (which) {
+            case 'p': pid_[i].setKp(val); break;
+            case 'i': pid_[i].setKi(val); break;
+            case 'd': pid_[i].setKd(val); break;
+            case 'f': pid_[i].setKf(val); break;
+            case 'l': pid_[i].setIntegralLimit(val); break;
+            default: Serial.printf("ERR 未知增益 '%c'\n", which); return;
+        }
+    }
+    Serial.printf("OK %s K%c=%.2f\n",
+                  motor < 0 ? "all" : (String("M") + motor).c_str(), which, val);
+}
+
+void RobotController::printParams(Print& out) const {
+    out.println(F("------ 可调参数 ------"));
+    for (int i = 0; i < 3; i++) {
+        out.printf("M%d  Kp=%.1f Ki=%.1f Kd=%.1f Kf=%.1f Ilim=%.0f\n",
+                   i, pid_[i].getKp(), pid_[i].getKi(), pid_[i].getKd(),
+                   pid_[i].getKf(), pid_[i].getIntegralLimit());
+    }
+    out.printf("speed=%.3f m/s  lookahead=%.3f m  goal_tol=%.3f m  kp_lin=%.2f\n",
+               follower_.getMaxSpeed(), follower_.getLookAhead(),
+               follower_.getGoalTolerance(), follower_.getLinearGain());
+    out.println(F("----------------------"));
+}
+
+void RobotController::printTelemetry(Print& out) const {
+    out.printf("M0 t=%.3f a=%.3f pwm=%d | M1 t=%.3f a=%.3f pwm=%d | M2 t=%.3f a=%.3f pwm=%d\n",
+               last_target_[0], last_actual_[0], last_pwm_[0],
+               last_target_[1], last_actual_[1], last_pwm_[1],
+               last_target_[2], last_actual_[2], last_pwm_[2]);
 }

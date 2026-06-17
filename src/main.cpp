@@ -1,262 +1,188 @@
 /**
- * WhiteBoardBot - ESP32 固件入口
+ * WhiteBoardBot 主固件 — ESP32 自主控制 (无 ROS)
  *
- * 三轮全向轮机器人底层控制:
- * - micro-ROS 通信 (WiFi UDP 或 serial transport)
- * - 发布 /odom (nav_msgs/Odometry)
- * - 订阅 /cmd_vel (geometry_msgs/Twist)
- * - 编码器里程计 + 逆运动学 + FF+PID 闭环电机控制
+ * ESP32 自己做: 路径规划 + 循线 + FF/PID。上位机 (scripts/whiteboard_app.py)
+ * 只通过 WiFi UDP 发目标区域 / 位置校正, 并接收状态回传。
+ *
+ * 双任务: controlTask(Core1, 50Hz 控制) + commTask(Core0, WiFi 收发)。
+ * loop() 跑一个串口调参控制台 —— 运行时改 PID/速度/前瞻, 无需重新烧录。
+ *
+ * 串口命令 (115200, 行结束发送):
+ *   s              打印状态 JSON
+ *   p              打印所有可调参数
+ *   t              切换遥测流 (每轮 目标/实际/PWM, 10Hz)
+ *   m <0|1|2|a>    选择调参电机 (a=全部, 默认全部)
+ *   kp/ki/kd/kf/il <v>   设 P/I/D/前馈/积分限幅 (作用于选中电机)
+ *   v <v>          最大线速度 m/s
+ *   la <v>         前瞻距离 m
+ *   gt <v>         到达容差 m
+ *   kl <v>         循线比例增益
+ *   area <x y w h spacing>   本地规划一条 zigzag 路径 (台架测试)
+ *   pos <x y th>   校正里程计位姿
+ *   go             开始执行当前路径
+ *   x              停止
+ *   h / ?          帮助
  */
 
 #include <Arduino.h>
-#include <micro_ros_platformio.h>
-#ifdef MICRO_ROS_TRANSPORT_WIFI
-#include <WiFi.h>
-#endif
-
-#include <rcl/rcl.h>
-#include <rclc/rclc.h>
-#include <rclc/executor.h>
-
-#include <nav_msgs/msg/odometry.h>
-#include <geometry_msgs/msg/twist.h>
-
+#include <ArduinoJson.h>
+#include "robot_controller.h"
+#include "wifi_comm.h"
 #include "config.h"
-#include "kinematics.h"
-#include "odometry.h"
-#include "motor_driver.h"
-#include "pid_controller.h"
 
-// ---- 全局对象 ----
-static Kinematics      kinematics(WHEEL_RADIUS, ROBOT_RADIUS);
-static Odometry         odometry(kinematics, ENCODER_CPR);
-static TriMotorDriver   motors;
-static PIDController    pid[3];   // 每个电机一个 FF+PID
+static RobotController robot;
+static WifiComm wifi;
 
-// ---- micro-ROS 对象 ----
-static rcl_allocator_t  allocator;
-static rclc_support_t   support;
-static rcl_node_t       node;
+// 串口调参状态
+static int  tune_motor = -1;       // -1=全部三轮
+static bool telemetry_on = false;
 
-static rcl_publisher_t  odom_pub;
-static nav_msgs__msg__Odometry odom_msg;
+// FreeRTOS 控制任务 (Core 1, 高优先级, 50Hz)
+static void controlTask(void* param) {
+    (void)param;
+    TickType_t last_wake = xTaskGetTickCount();
 
-static rcl_subscription_t cmd_vel_sub;
-static geometry_msgs__msg__Twist cmd_vel_msg;
-
-static rcl_timer_t      control_timer;
-static rclc_executor_t  executor;
-
-// ---- 控制状态 ----
-static unsigned long last_control_us = 0;
-
-// 目标机体速度 (由 cmd_vel 回调更新)
-static BodyVelocity target_body = {0, 0, 0};
-
-// 安全超时: 超过此时间没收到 cmd_vel 则停止
-// WiFi 有延迟，设大一些避免误触发
-#define CMD_VEL_TIMEOUT_MS 1000
-static unsigned long last_cmd_vel_ms = 0;
-
-// ============================================================
-// cmd_vel 订阅回调 (只存目标, 不直接驱动电机)
-// ============================================================
-static void cmd_vel_callback(const void* msg_in) {
-    const geometry_msgs__msg__Twist* twist =
-        (const geometry_msgs__msg__Twist*)msg_in;
-
-    target_body.vx    = (float)twist->linear.x;
-    target_body.vy    = (float)twist->linear.y;
-    target_body.omega = (float)twist->angular.z;
-
-    last_cmd_vel_ms = millis();
+    for (;;) {
+        float dt = (float)CONTROL_PERIOD_MS / 1000.0f;
+        robot.update(dt);
+        vTaskDelayUntil(&last_wake, pdMS_TO_TICKS(CONTROL_PERIOD_MS));
+    }
 }
 
-// ============================================================
-// 控制定时器回调 (固定频率闭环: 里程计 + FF+PID + odom 发布)
-// ============================================================
-static void control_timer_callback(rcl_timer_t* timer, int64_t last_call_time) {
-    (void)timer;
-    (void)last_call_time;
+// FreeRTOS 通信任务 (Core 0, WiFi + 状态回传)
+static void commTask(void* param) {
+    (void)param;
+    unsigned long last_status = 0;
 
-    // ---- 计算 dt ----
-    unsigned long now_us = micros();
-    float dt = (float)(now_us - last_control_us) / 1000000.0f;
-    last_control_us = now_us;
+    for (;;) {
+        // 接收命令
+        JsonDocument doc;
+        if (wifi.receive(doc)) {
+            robot.handleCommand(doc);
 
-    // 防止 dt 异常 (首次/溢出)
-    if (dt <= 0.0f || dt > 0.1f) dt = (float)CONTROL_PERIOD_MS / 1000.0f;
-
-    // ---- 1. 更新里程计 (获取实际轮速) ----
-    odometry.update(dt);
-
-    // ---- 2. 安全超时检查 ----
-    bool timed_out = (millis() - last_cmd_vel_ms > CMD_VEL_TIMEOUT_MS);
-    if (timed_out) {
-        target_body.vx    = 0;
-        target_body.vy    = 0;
-        target_body.omega = 0;
-    }
-
-    // ---- 3. 逆运动学: 目标机体速度 → 目标轮线速度 ----
-    WheelVelocity target_wheels = kinematics.inverse(target_body);
-
-    // ---- 4. 获取实际轮线速度 (直接从编码器, 避免 forward→inverse 噪声放大) ----
-    const WheelVelocity& actual_wheels = odometry.getWheelVelocity();
-
-    // ---- 5. FF + PID 闭环 ----
-    for (int i = 0; i < 3; i++) {
-        float target_v = target_wheels.v[i];
-        float actual_v = actual_wheels.v[i];
-
-        // 死区: 目标速度太小就直接停
-        if (fabsf(target_v) < MOTOR_MIN_SPEED && fabsf(target_body.vx) < MOTOR_MIN_SPEED
-            && fabsf(target_body.vy) < MOTOR_MIN_SPEED && fabsf(target_body.omega) < 0.01f) {
-            pid[i].reset();
-            motors.motor(i).stop();
-            continue;
+            // 立即回传状态
+            JsonDocument resp;
+            robot.fillStatus(resp);
+            wifi.send(resp);
         }
 
-        float pwm_f = pid[i].compute(target_v, actual_v, dt);
-        int16_t pwm = (int16_t)pwm_f;
-        pwm = constrain(pwm, -PWM_MAX, PWM_MAX);
-        motors.motor(i).setSpeed(pwm);
+        // 定期状态回传
+        if (millis() - last_status > (1000 / STATUS_RATE_HZ)) {
+            JsonDocument status;
+            robot.fillStatus(status);
+            wifi.send(status);
+            last_status = millis();
+        }
+
+        vTaskDelay(pdMS_TO_TICKS(5));  // 200Hz 轮询
     }
-
-    // ---- 6. 填充并发布 odom 消息 ----
-    const Pose2D& pose = odometry.getPose();
-    const BodyVelocity& vel = odometry.getVelocity();
-
-    // Header
-    unsigned long now_ms = millis();
-    odom_msg.header.stamp.sec     = (int32_t)(now_ms / 1000);
-    odom_msg.header.stamp.nanosec = (uint32_t)((now_ms % 1000) * 1000000);
-
-    // Position
-    odom_msg.pose.pose.position.x = pose.x;
-    odom_msg.pose.pose.position.y = pose.y;
-    odom_msg.pose.pose.position.z = 0.0;
-
-    // Orientation (yaw → quaternion)
-    float half_theta = pose.theta * 0.5f;
-    odom_msg.pose.pose.orientation.x = 0.0;
-    odom_msg.pose.pose.orientation.y = 0.0;
-    odom_msg.pose.pose.orientation.z = sinf(half_theta);
-    odom_msg.pose.pose.orientation.w = cosf(half_theta);
-
-    // Velocity
-    odom_msg.twist.twist.linear.x  = vel.vx;
-    odom_msg.twist.twist.linear.y  = vel.vy;
-    odom_msg.twist.twist.linear.z  = 0.0;
-    odom_msg.twist.twist.angular.x = 0.0;
-    odom_msg.twist.twist.angular.y = 0.0;
-    odom_msg.twist.twist.angular.z = vel.omega;
-
-    rcl_ret_t rc = rcl_publish(&odom_pub, &odom_msg, NULL);
-    (void)rc;
 }
 
-// ============================================================
-// micro-ROS 错误处理宏
-// ============================================================
-#define RCCHECK(fn) { rcl_ret_t rc = (fn); if (rc != RCL_RET_OK) { \
-    Serial.printf("micro-ROS error: %d at %s:%d\n", (int)rc, __FILE__, __LINE__); \
-    while(1) { delay(100); } } }
+static void printHelp() {
+    Serial.println(F("命令: s=状态 p=参数 t=遥测  m<0/1/2/a>=选电机"));
+    Serial.println(F("  kp/ki/kd/kf/il <v>=PID  v=速度 la=前瞻 gt=容差 kl=循线增益"));
+    Serial.println(F("  area <x y w h sp>  pos <x y th>  go=开始 x=停止 h=帮助"));
+}
 
-// ============================================================
-// setup
-// ============================================================
+// 处理一行串口命令
+static void handleSerialLine(char* line) {
+    // 拆出命令字与参数串
+    char* cmd = strtok(line, " \t");
+    if (!cmd) return;
+    char* args = strtok(nullptr, "");   // 余下全部作为参数
+
+    auto arg1 = [&](float def) -> float { return args ? atof(args) : def; };
+
+    // --- 复用 handleCommand 的命令 (与 UDP 同一套逻辑) ---
+    if (strcmp(cmd, "go") == 0) {
+        JsonDocument d; d["cmd"] = "start"; robot.handleCommand(d);
+    } else if (strcmp(cmd, "x") == 0 || strcmp(cmd, "stop") == 0) {
+        JsonDocument d; d["cmd"] = "stop"; robot.handleCommand(d);
+    } else if (strcmp(cmd, "v") == 0) {
+        JsonDocument d; d["cmd"] = "set_speed"; d["v"] = arg1(MAX_LINEAR_SPEED);
+        robot.handleCommand(d);
+    } else if (strcmp(cmd, "area") == 0) {
+        float x = 0, y = 0, w = 0.1f, h = 0.1f, sp = 0.02f;
+        if (args) sscanf(args, "%f %f %f %f %f", &x, &y, &w, &h, &sp);
+        JsonDocument d;
+        d["cmd"] = "area"; d["x"] = x; d["y"] = y; d["w"] = w; d["h"] = h; d["spacing"] = sp;
+        robot.handleCommand(d);
+    } else if (strcmp(cmd, "pos") == 0) {
+        float x = 0, y = 0, th = 0;
+        if (args) sscanf(args, "%f %f %f", &x, &y, &th);
+        JsonDocument d;
+        d["cmd"] = "pos"; d["x"] = x; d["y"] = y; d["theta"] = th;
+        robot.handleCommand(d);
+    }
+    // --- 串口专属: 调参 / 诊断 ---
+    else if (strcmp(cmd, "s") == 0) {
+        JsonDocument status; robot.fillStatus(status);
+        serializeJsonPretty(status, Serial); Serial.println();
+    } else if (strcmp(cmd, "p") == 0) {
+        robot.printParams(Serial);
+    } else if (strcmp(cmd, "t") == 0) {
+        telemetry_on = !telemetry_on;
+        Serial.printf("遥测 %s\n", telemetry_on ? "ON" : "OFF");
+    } else if (strcmp(cmd, "m") == 0) {
+        if (args && (args[0] == 'a' || args[0] == 'A')) tune_motor = -1;
+        else tune_motor = constrain((int)arg1(-1), -1, 2);
+        Serial.printf("选中电机: %s\n", tune_motor < 0 ? "全部" : (String("M") + tune_motor).c_str());
+    } else if (strcmp(cmd, "kp") == 0) { robot.tunePid(tune_motor, 'p', arg1(0));
+    } else if (strcmp(cmd, "ki") == 0) { robot.tunePid(tune_motor, 'i', arg1(0));
+    } else if (strcmp(cmd, "kd") == 0) { robot.tunePid(tune_motor, 'd', arg1(0));
+    } else if (strcmp(cmd, "kf") == 0) { robot.tunePid(tune_motor, 'f', arg1(0));
+    } else if (strcmp(cmd, "il") == 0) { robot.tunePid(tune_motor, 'l', arg1(0));
+    } else if (strcmp(cmd, "la") == 0) { float vv = arg1(LOOK_AHEAD_DIST); robot.setLookAhead(vv);
+        Serial.printf("lookahead=%.3f\n", vv);
+    } else if (strcmp(cmd, "gt") == 0) { float vv = arg1(GOAL_TOLERANCE); robot.setGoalTolerance(vv);
+        Serial.printf("goal_tol=%.3f\n", vv);
+    } else if (strcmp(cmd, "kl") == 0) { float vv = arg1(KP_LINEAR); robot.setLinearGain(vv);
+        Serial.printf("kp_lin=%.2f\n", vv);
+    } else if (strcmp(cmd, "h") == 0 || strcmp(cmd, "?") == 0) {
+        printHelp();
+    } else {
+        Serial.printf("未知命令 '%s' (h=帮助)\n", cmd);
+    }
+}
+
 void setup() {
     Serial.begin(115200);
     delay(500);
+    Serial.println(F("\n============================"));
+    Serial.println(F("  WhiteBoardBot 自主固件"));
+    Serial.println(F("============================"));
 
-    // ---- 硬件初始化 ----
-    motors.begin();
-    odometry.begin();
-    last_control_us = micros();
-    last_cmd_vel_ms = millis();
+    robot.begin();
+    wifi.begin(WIFI_SSID, WIFI_PASS);
 
-    // ---- FF + PID 初始化 ----
-    const float pid_kp[3]   = {PID_KP_M0, PID_KP_M1, PID_KP_M2};
-    const float pid_ki[3]   = {PID_KI_M0, PID_KI_M1, PID_KI_M2};
-    const float pid_kd[3]   = {PID_KD_M0, PID_KD_M1, PID_KD_M2};
-    const float pid_kf[3]   = {PID_KF_M0, PID_KF_M1, PID_KF_M2};
-    const float pid_ilim[3] = {PID_ILIM_M0, PID_ILIM_M1, PID_ILIM_M2};
+    Serial.printf("UDP listen: %d, report: %d\n", UDP_LISTEN_PORT, UDP_REPORT_PORT);
+    printHelp();
 
-    for (int i = 0; i < 3; i++) {
-        pid[i].setGains(pid_kp[i], pid_ki[i], pid_kd[i], pid_kf[i]);
-        pid[i].setOutputLimits(-PWM_MAX, PWM_MAX);
-        pid[i].setIntegralLimit(pid_ilim[i]);
-        // PWM 变化率限制: 最多 1500 PWM/s → 在 50Hz 控制下每周期最多变化 30 PWM
-        pid[i].setSlewRate(1500.0f);
-    }
-
-    Serial.println("WhiteBoardBot: hardware + PID initialized.");
-
-    // ---- micro-ROS transport 初始化 ----
-#ifdef MICRO_ROS_TRANSPORT_WIFI
-    WiFi.begin(WIFI_SSID, WIFI_PASS);
-    Serial.print("Connecting to WiFi");
-    while (WiFi.status() != WL_CONNECTED) {
-        delay(500);
-        Serial.print(".");
-    }
-    Serial.printf("\nWiFi connected: %s\n", WiFi.localIP().toString().c_str());
-    set_microros_wifi_transports(WIFI_SSID, WIFI_PASS, AGENT_IP, AGENT_PORT);
-#else
-    set_microros_serial_transports(Serial);
-#endif
-
-    allocator = rcl_get_default_allocator();
-
-    // 初始化 support
-    RCCHECK(rclc_support_init(&support, 0, NULL, &allocator));
-
-    // 创建节点
-    RCCHECK(rclc_node_init_default(&node, "whiteboardbot", "", &support));
-
-    // 创建 odom publisher
-    RCCHECK(rclc_publisher_init_default(
-        &odom_pub, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(nav_msgs, msg, Odometry),
-        "/odom"));
-
-    // 创建 cmd_vel subscriber (best_effort QoS，兼容所有 publisher)
-    RCCHECK(rclc_subscription_init_best_effort(
-        &cmd_vel_sub, &node,
-        ROSIDL_GET_MSG_TYPE_SUPPORT(geometry_msgs, msg, Twist),
-        "/cmd_vel"));
-
-    // 创建控制定时器
-    RCCHECK(rclc_timer_init_default(
-        &control_timer, &support,
-        RCL_MS_TO_NS(CONTROL_PERIOD_MS),
-        control_timer_callback));
-
-    // 初始化 executor (1 timer + 1 subscription)
-    RCCHECK(rclc_executor_init(&executor, &support.context, 2, &allocator));
-    RCCHECK(rclc_executor_add_timer(&executor, &control_timer));
-    RCCHECK(rclc_executor_add_subscription(
-        &executor, &cmd_vel_sub, &cmd_vel_msg,
-        &cmd_vel_callback, ON_NEW_DATA));
-
-    // 初始化 odom 消息的 frame_id
-    static char odom_frame[] = ODOM_FRAME_ID;
-    static char base_frame[] = BASE_FRAME_ID;
-    odom_msg.header.frame_id.data    = odom_frame;
-    odom_msg.header.frame_id.size    = strlen(odom_frame);
-    odom_msg.header.frame_id.capacity = sizeof(odom_frame);
-    odom_msg.child_frame_id.data     = base_frame;
-    odom_msg.child_frame_id.size     = strlen(base_frame);
-    odom_msg.child_frame_id.capacity  = sizeof(base_frame);
-
-    Serial.println("WhiteBoardBot: micro-ROS initialized. Waiting for agent...");
+    // 控制循环固定在 Core 1
+    xTaskCreatePinnedToCore(controlTask, "control", 4096, NULL, 19, NULL, 1);
+    // 通信任务在 Core 0
+    xTaskCreatePinnedToCore(commTask, "comm", 8192, NULL, 5, NULL, 0);
 }
 
-// ============================================================
-// loop
-// ============================================================
 void loop() {
-    // micro-ROS executor spin (非阻塞, 超时 100ms)
-    rclc_executor_spin_some(&executor, RCL_MS_TO_NS(100));
+    // 行缓冲串口命令
+    static char buf[64];
+    static int len = 0;
+    while (Serial.available()) {
+        char c = Serial.read();
+        if (c == '\n' || c == '\r') {
+            if (len > 0) { buf[len] = '\0'; handleSerialLine(buf); len = 0; }
+        } else if (len < (int)sizeof(buf) - 1) {
+            buf[len++] = c;
+        }
+    }
+
+    // 遥测流 (10Hz)
+    static unsigned long last_tele = 0;
+    if (telemetry_on && millis() - last_tele >= 100) {
+        robot.printTelemetry(Serial);
+        last_tele = millis();
+    }
+
+    vTaskDelay(pdMS_TO_TICKS(20));
 }

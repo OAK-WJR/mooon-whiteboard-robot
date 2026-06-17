@@ -9,8 +9,11 @@
 //
 // 使用方法：
 //   cp include/config.example.h include/config.h
-// 然后在 config.h 中填入真实的 WiFi 凭证与 Agent IP。
+// 然后在 config.h 中填入真实的 WiFi 凭证 (WIFI_SSID / WIFI_PASS)。
 // config.h 已被 .gitignore 忽略，不会提交到仓库。
+//
+// 调参提示：下面的 PID / 速度 / 前瞻是上电默认值；运行时可用串口控制台
+// 实时改 (见 src/main.cpp 顶部命令表)，调好后再把满意的值写回这里固化。
 // ============================================================
 
 // --- 全向轮参数 (38mm omni wheel) ---
@@ -97,20 +100,14 @@
 #define CONTROL_RATE_HZ     50       // 控制/里程计更新频率
 #define CONTROL_PERIOD_MS   (1000 / CONTROL_RATE_HZ)
 
-// --- micro-ROS (legacy) ---
-#define ODOM_FRAME_ID       "odom"
-#define BASE_FRAME_ID       "base_link"
-
 // --- WiFi（请填入真实值）---
 #define WIFI_SSID           "YOUR_WIFI_SSID"
 #define WIFI_PASS           "YOUR_WIFI_PASSWORD"
-#define AGENT_IP            IPAddress(192, 168, 1, 100)  // 上位机/micro-ROS Agent IP
-#define AGENT_PORT          8888
 
-// --- 自主模式 WiFi UDP ---
-#define UDP_LISTEN_PORT     8888    // ESP32 监听端口
-#define UDP_REPORT_PORT     8889    // ESP32 回传端口
-#define STATUS_RATE_HZ      10      // 状态回传频率
+// --- 自主模式 WiFi UDP（上位机 whiteboard_app.py 通信）---
+#define UDP_LISTEN_PORT     8888    // ESP32 监听端口（接收命令）
+#define UDP_REPORT_PORT     8889    // ESP32 回传端口（状态）
+#define STATUS_RATE_HZ      10      // 状态回传频率 (Hz)
 
 // --- 轨迹跟踪 ---
 #define LOOK_AHEAD_DIST     0.06f   // 前瞻距离 (m)

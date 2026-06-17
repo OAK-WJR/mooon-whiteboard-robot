@@ -552,12 +552,11 @@ void loop() {
             }
         }
 
-        // Serial Studio 帧: $tgt,act,pwm,FF,P,I,D (选中电机)
-        // 输出所有三个电机: tgt0,act0,pwm0 tgt1,act1,pwm1 tgt2,act2,pwm2
-        Serial.printf("M0:%.3f/%.3f(PWM%4d)  M1:%.3f/%.3f(PWM%4d)  M2:%.3f/%.3f(PWM%4d)\n",
-                      target_speed[0], act_speed[0], pwm[0],
-                      target_speed[1], act_speed[1], pwm[1],
-                      target_speed[2], act_speed[2], pwm[2]);
+        // pid_tuner.py / Serial Studio 帧: $tgt,act,pwm,FF,P,I,D (选中电机)
+        Serial.printf("$%.4f,%.4f,%d,%.0f,%.0f,%.0f,%.0f\n",
+                      target_speed[selected], act_speed[selected], pwm[selected],
+                      pid[selected].getFFTerm(), pid[selected].getPTerm(),
+                      pid[selected].getITerm(), pid[selected].getDTerm());
     }
 
     // 开环模式: 每 500ms 打印状态

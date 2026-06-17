@@ -27,6 +27,15 @@ public:
 
     RobotState getState() const { return state_; }
 
+    // --- 运行时调参 (串口) ---
+    // motor: -1=全部三轮, 0..2=单轮; which: 'p' 'i' 'd' 'f' 'l'(I限幅)
+    void tunePid(int motor, char which, float val);
+    void setLookAhead(float d)     { follower_.setLookAhead(d); }
+    void setGoalTolerance(float d) { follower_.setGoalTolerance(d); }
+    void setLinearGain(float kp)   { follower_.setLinearGain(kp); }
+    void printParams(Print& out) const;     // 打印所有可调参数
+    void printTelemetry(Print& out) const;  // 打印每轮 目标/实际/PWM
+
 private:
     RobotState state_ = STATE_IDLE;
 
@@ -39,8 +48,12 @@ private:
 
     float max_speed_ = MAX_LINEAR_SPEED;
 
+    // 遥测快照 (control loop 每拍更新, 供串口打印)
+    float   last_target_[3] = {0, 0, 0};
+    float   last_actual_[3] = {0, 0, 0};
+    int16_t last_pwm_[3]    = {0, 0, 0};
+
     void stopMotors();
-    void controlLoop(float dt);
 };
 
 #endif
