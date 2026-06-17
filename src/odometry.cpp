@@ -162,11 +162,11 @@ void Odometry::update(float dt) {
         // 进 ENC1), 丢弃这帧 (按 0 处理), 防止幽灵恒速把 PID 顶到饱和。
         if (fabsf(raw_vel) > MAX_WHEEL_VEL) raw_vel = 0.0f;
 
-        // 一阶低通滤波: 平滑轮速测量，减少 PID 对噪声的过度反应
-        // alpha=0.3 → 截止频率 ≈ 50Hz * 0.3 / (2π) ≈ 2.4Hz
-        constexpr float VELOCITY_FILTER_ALPHA = 0.3f;
-        wv.v[i] = VELOCITY_FILTER_ALPHA * raw_vel
-                 + (1.0f - VELOCITY_FILTER_ALPHA) * wheel_velocity_.v[i];
+        // 一阶低通滤波: 平滑轮速测量，减少 PID 对噪声的过度反应。
+        // M1(索引1, ENC1 GPIO36/39) 串扰噪声大, 用更重的低通(更小 alpha)压平,
+        // 否则噪声经 PID 放大成 PWM 乱跳(实测 jerk 56 vs M0/M2 的 6/12)。
+        const float alpha = (i == 1) ? 0.15f : 0.3f;
+        wv.v[i] = alpha * raw_vel + (1.0f - alpha) * wheel_velocity_.v[i];
     }
 
     wheel_velocity_ = wv;

@@ -158,12 +158,19 @@ void RobotController::update(float dt) {
         }
 
         float pwm_f = pid_[i].compute(target_v, actual_v, dt);
-        // 静摩擦破除: 仅当命令运动但轮子还卡住时给一脚, 转起来就撤
-        // (实测每电机不同; 撤掉避免持续偏置在空转时过冲/引入旋转)
+        // 平滑库仑摩擦前馈: 静止时补满破静摩擦, 速度起来后线性撤掉 (无硬开关 -> 不抖)。
+        // frac: |actual|=0 时为 1, 到 MOTOR_BREAKAWAY_VEL 时为 0, 中间线性过渡。
         static const float kStiction[3] =
             {MOTOR_STICTION_M0, MOTOR_STICTION_M1, MOTOR_STICTION_M2};
-        if (fabsf(target_v) > MOTOR_MIN_SPEED && fabsf(actual_v) < MOTOR_BREAKAWAY_VEL)
-            pwm_f += (target_v > 0 ? kStiction[i] : -kStiction[i]);
+        if (fabsf(target_v) > MOTOR_MIN_SPEED) {
+            float frac = 1.0f - fminf(fabsf(actual_v) / MOTOR_BREAKAWAY_VEL, 1.0f);
+            pwm_f += (target_v > 0 ? 1.0f : -1.0f) * kStiction[i] * frac;
+        }
+        // 输出变化率限幅(slew): 每拍最多变这么多 PWM, 直接压平抖动(含静摩擦项)。
+        // M1(ENC1 串扰大)限得更紧 -> PWM 不再乱跳; M0/M2 限松保持响应。
+        const float max_dpwm = (i == 1) ? 12.0f : 45.0f;
+        float prev = (float)last_pwm_[i];
+        pwm_f = fmaxf(prev - max_dpwm, fminf(prev + max_dpwm, pwm_f));
         int16_t pwm = constrain((int16_t)pwm_f, -PWM_MAX, PWM_MAX);
         motors_.motor(i).setSpeed(pwm);
         last_pwm_[i] = pwm;
