@@ -100,14 +100,14 @@
 #define PID_KF_M0           470.0f
 #define PID_ILIM_M0         250.0f
 
-// M1: 纯前馈开环 (Kp=Ki=Kd=0, 只留 Kf)。M1 编码器(ENC1 GPIO36/39)串扰严重,
-// 闭环会把噪声放大成 PWM 乱跳; 干脆不闭环 —— PWM = Kf×目标速度, 平滑不抖。
-// 代价: M1 速度不靠反馈校正(靠 Kf 标定 + 静摩擦), 低速桌面机器人够用。
-#define PID_KP_M1           0.0f
-#define PID_KI_M1           0.0f
+// M1: 闭环温和增益。注意 M1 编码器(ENC1 GPIO36/39)有 PWM 串扰, 闭环会抖;
+// 但开环又没法控速(跑太快)。两难的根在编码器, 必须硬件修(上拉+分线)才能既顺又准。
+// 这里先用闭环(速度受控), 抖是编码器的锅。
+#define PID_KP_M1           63.4f
+#define PID_KI_M1           3.9f
 #define PID_KD_M1           0.0f
 #define PID_KF_M1           636.0f
-#define PID_ILIM_M1         0.0f
+#define PID_ILIM_M1         250.0f
 
 #define PID_KP_M2           108.0f
 #define PID_KI_M2           7.7f
