@@ -68,9 +68,13 @@
 // 需实测校正: 以下为初始估算值
 #define MOTOR_MAX_SPEED     0.40f    // 最大轮线速度 (m/s), 待实测校正
 #define MOTOR_MIN_SPEED     0.005f   // 死区阈值 (m/s), 低于此值直接输出 0
-// 静摩擦前馈: 命令运动时叠加的破静摩擦 PWM。实测电机 ~150-200 才掀动,
-// FF 低速只给 ~100, 故补一段。太大低速会窜, 太小掀不动。
-#define MOTOR_STICTION_PWM  80.0f
+// 静摩擦破除 (实测破静摩擦 PWM, 2026-06-17, 开环阶梯法): M0=100 M1=140 M2=140。
+// 仅在轮子卡住(|实际速度|<MOTOR_BREAKAWAY_VEL)时叠加, 掀动后撤掉,
+// 避免持续偏置在空转时过冲/引入旋转。
+#define MOTOR_STICTION_M0   100.0f
+#define MOTOR_STICTION_M1   140.0f
+#define MOTOR_STICTION_M2   140.0f
+#define MOTOR_BREAKAWAY_VEL 0.02f
 
 // --- FF + PID 参数 (每个电机) ---
 // 注意: 更换驱动芯片后 Kf 可能需要重新标定

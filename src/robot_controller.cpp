@@ -158,9 +158,12 @@ void RobotController::update(float dt) {
         }
 
         float pwm_f = pid_[i].compute(target_v, actual_v, dt);
-        // 静摩擦前馈: 命令运动时叠加固定 PWM, 掀过启动摩擦 (低速也能动)
-        if (fabsf(target_v) > MOTOR_MIN_SPEED)
-            pwm_f += (target_v > 0 ? MOTOR_STICTION_PWM : -MOTOR_STICTION_PWM);
+        // 静摩擦破除: 仅当命令运动但轮子还卡住时给一脚, 转起来就撤
+        // (实测每电机不同; 撤掉避免持续偏置在空转时过冲/引入旋转)
+        static const float kStiction[3] =
+            {MOTOR_STICTION_M0, MOTOR_STICTION_M1, MOTOR_STICTION_M2};
+        if (fabsf(target_v) > MOTOR_MIN_SPEED && fabsf(actual_v) < MOTOR_BREAKAWAY_VEL)
+            pwm_f += (target_v > 0 ? kStiction[i] : -kStiction[i]);
         int16_t pwm = constrain((int16_t)pwm_f, -PWM_MAX, PWM_MAX);
         motors_.motor(i).setSpeed(pwm);
         last_pwm_[i] = pwm;
