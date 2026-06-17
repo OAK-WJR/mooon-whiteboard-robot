@@ -29,6 +29,8 @@ build/
 .piolibdeps/
 .piobuild/
 platformio.ini.bak
+# 项目内隔离的工具链/框架缓存 (core_dir = .platformio)
+.platformio/
 
 # clangd 自动生成
 compile_commands.json
