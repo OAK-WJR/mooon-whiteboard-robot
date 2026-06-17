@@ -1,0 +1,8 @@
+# WhiteBoardBot 依赖
+# 与 ESP32 串口通信
+pyserial>=3.5
+# PlatformIO（ESP32 编译/烧录）
+platformio>=6.1
+# 可选：如需图像/白板处理可取消注释
+# numpy>=1.24.0
+# opencv-python>=4.8.0

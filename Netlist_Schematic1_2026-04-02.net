@@ -1,0 +1,1435 @@
+PROTEL NETLIST 2.0
+[
+DESIGNATOR
+CN1
+FOOTPRINT
+CONN-TH_XT30PW-M
+PARTTYPE
+XT30PW-M30.G.Y
+DESCRIPTION
+Socket,DCsupply,XT30,male,PIN:2
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+XT30PW-M
+Designator
+CN1
+Device
+XT30PW-M30.G.Y
+Unique ID
+gge1
+Name
+XT30PW-M30.G.Y
+Reuse Block
+
+Group ID
+
+Channel ID
+
+LCSC Part Name
+AMASS(艾迈斯)航模插头 卧式弯脚 XT30PW-M公头
+Supplier Part
+C431092
+Manufacturer
+AMASS(艾迈斯)
+Manufacturer Part
+XT30PW-M30.G.Y
+Supplier Footprint
+-
+JLCPCB Part Class
+Extended Part
+Datasheet
+https://item.szlcsc.com/datasheet/XT30PW-M30.G.Y/426930.html
+Supplier
+LCSC
+3D Model Title
+CONN-TH_XT30PW-M
+Rated current
+15A
+Rated voltage
+500VDC
+Connector type
+航模插头
+Wire gauge
+16/18/20AWG
+contact resistance
+1.2mΩ
+Size/Specification
+2pin
+interface form
+公头
+Description
+Socket,DCsupply,XT30,male,PIN:2
+
+*
+]
+[
+DESIGNATOR
+Motor1
+FOOTPRINT
+CONN-SMD_6P-P1.50_ZX-ZH1.5-6PWT
+PARTTYPE
+ZX-ZH1.5-6PWT
+DESCRIPTION
+插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+ZX-ZH1.5-6PWT
+Designator
+Motor1
+Device
+ZX-ZH1.5-6PWT
+Unique ID
+gge2
+Name
+ZX-ZH1.5-6PWT
+Reuse Block
+
+Group ID
+
+Channel ID
+
+LCSC Part Name
+1x6P 间距:1.5mm 卧贴 系列:ZH
+Supplier Part
+C19272409
+Manufacturer
+Megastar(兆星)
+Manufacturer Part
+ZX-ZH1.5-6PWT
+Supplier Footprint
+SMD,P=1.5mm,卧贴
+JLCPCB Part Class
+Extended Part
+Datasheet
+https://item.szlcsc.com/datasheet/ZX-ZH1.5-6PWT/20550420.html
+Supplier
+LCSC
+3D Model Title
+CONN-SMD_6P-P1.50_ZX-ZH1.5-6PWT
+Pins Structure
+1x6P
+Pitch
+1.5mm
+Mounting Type
+卧贴
+Reference Series
+ZH
+Number of Pins
+6P
+Number of Rows
+1
+Number of PINs Per Row
+6
+Row Spacing
+-
+Current Rating
+1A
+Contact Material
+黄铜
+Contact Plating
+锡
+Operating Temperature
+-25℃~+85℃
+Voltage Rating
+250V
+Plastic Material
+LCP
+Flame Retardant Rating
+-
+Supplementary Features
+辅助焊脚
+Color
+米色
+Z-Height of the Board
+3.8mm
+X-Length of Bottom Edge on Board (Spacing Line)
+12mm
+Y-Width of Bottom Edge on Board
+6mm
+Description
+插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+
+*
+]
+[
+DESIGNATOR
+controller1
+FOOTPRINT
+SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL
+PARTTYPE
+RZ7899-MS
+DESCRIPTION
+DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+RZ7899-MS
+Designator
+controller1
+Device
+RZ7899-MS
+Name
+RZ7899-MS
+Unique ID
+gge5
+Reuse Block
+
+Group ID
+
+Channel ID
+
+LCSC Part Name
+DC双向马达驱动电路
+Supplier Part
+C22462553
+Manufacturer
+MSKSEMI(美森科)
+Manufacturer Part
+RZ7899-MS
+Supplier Footprint
+SOP-8
+JLCPCB Part Class
+Extended Part
+Datasheet
+https://item.szlcsc.com/datasheet/RZ7899-MS/24148603.html
+Supplier
+LCSC
+3D Model Title
+SOIC-8_L4.9-W3.9-H1.7-LS6.0-P1.27
+Technology
+是
+Number of H-bridges
+1
+Output Current
+6A
+Voltage - Supply
+3V~30V
+RDS(on)
+80mΩ
+Quiescent Current(Iq)
+1mA
+Operating Temperature
+-25℃~+85℃
+Description
+DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+
+*
+]
+[
+DESIGNATOR
+Motor2
+FOOTPRINT
+CONN-SMD_6P-P1.50_ZX-ZH1.5-6PWT
+PARTTYPE
+ZX-ZH1.5-6PWT
+DESCRIPTION
+插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+ZX-ZH1.5-6PWT
+Designator
+Motor2
+Device
+ZX-ZH1.5-6PWT
+Name
+ZX-ZH1.5-6PWT
+Unique ID
+gge6
+Reuse Block
+
+Group ID
+
+Channel ID
+
+LCSC Part Name
+1x6P 间距:1.5mm 卧贴 系列:ZH
+Supplier Part
+C19272409
+Manufacturer
+Megastar(兆星)
+Manufacturer Part
+ZX-ZH1.5-6PWT
+Supplier Footprint
+SMD,P=1.5mm,卧贴
+JLCPCB Part Class
+Extended Part
+Datasheet
+https://item.szlcsc.com/datasheet/ZX-ZH1.5-6PWT/20550420.html
+Supplier
+LCSC
+3D Model Title
+CONN-SMD_6P-P1.50_ZX-ZH1.5-6PWT
+Pins Structure
+1x6P
+Pitch
+1.5mm
+Mounting Type
+卧贴
+Reference Series
+ZH
+Number of Pins
+6P
+Number of Rows
+1
+Number of PINs Per Row
+6
+Row Spacing
+-
+Current Rating
+1A
+Contact Material
+黄铜
+Contact Plating
+锡
+Operating Temperature
+-25℃~+85℃
+Voltage Rating
+250V
+Plastic Material
+LCP
+Flame Retardant Rating
+-
+Supplementary Features
+辅助焊脚
+Color
+米色
+Z-Height of the Board
+3.8mm
+X-Length of Bottom Edge on Board (Spacing Line)
+12mm
+Y-Width of Bottom Edge on Board
+6mm
+Description
+插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+
+*
+]
+[
+DESIGNATOR
+Motor3
+FOOTPRINT
+CONN-SMD_6P-P1.50_ZX-ZH1.5-6PWT
+PARTTYPE
+ZX-ZH1.5-6PWT
+DESCRIPTION
+插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+ZX-ZH1.5-6PWT
+Designator
+Motor3
+Device
+ZX-ZH1.5-6PWT
+Name
+ZX-ZH1.5-6PWT
+Unique ID
+gge8
+Reuse Block
+
+Group ID
+
+Channel ID
+
+LCSC Part Name
+1x6P 间距:1.5mm 卧贴 系列:ZH
+Supplier Part
+C19272409
+Manufacturer
+Megastar(兆星)
+Manufacturer Part
+ZX-ZH1.5-6PWT
+Supplier Footprint
+SMD,P=1.5mm,卧贴
+JLCPCB Part Class
+Extended Part
+Datasheet
+https://item.szlcsc.com/datasheet/ZX-ZH1.5-6PWT/20550420.html
+Supplier
+LCSC
+3D Model Title
+CONN-SMD_6P-P1.50_ZX-ZH1.5-6PWT
+Pins Structure
+1x6P
+Pitch
+1.5mm
+Mounting Type
+卧贴
+Reference Series
+ZH
+Number of Pins
+6P
+Number of Rows
+1
+Number of PINs Per Row
+6
+Row Spacing
+-
+Current Rating
+1A
+Contact Material
+黄铜
+Contact Plating
+锡
+Operating Temperature
+-25℃~+85℃
+Voltage Rating
+250V
+Plastic Material
+LCP
+Flame Retardant Rating
+-
+Supplementary Features
+辅助焊脚
+Color
+米色
+Z-Height of the Board
+3.8mm
+X-Length of Bottom Edge on Board (Spacing Line)
+12mm
+Y-Width of Bottom Edge on Board
+6mm
+Description
+插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+
+*
+]
+[
+DESIGNATOR
+C1
+FOOTPRINT
+CAP-SMD_BD6.3-L6.6-W6.6-LS7.3-FD-H7.7
+PARTTYPE
+JVJ25V220M6x8
+DESCRIPTION
+容值:220uF;精度:±20%;额定电压:25V;纹波电流:120mA@120Hz;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+JVJ25V220M6X8
+Designator
+C1
+Device
+JVJ25V220M6x8
+Unique ID
+gge10
+LCSC Part Name
+220uF ±20% 25V
+Supplier Part
+C46550404
+Manufacturer
+JIERR(捷而瑞)
+Manufacturer Part
+JVJ25V220M6x8
+Supplier Footprint
+SMD,D6.3xL7.7mm
+JLCPCB Part Class
+Extended Part
+Datasheet
+https://item.szlcsc.com/datasheet/JVJ25V220M6x8/48680098.html
+Supplier
+LCSC
+3D Model Title
+CAP-SMD_BD6.3-L6.6-W6.6-LS7.3-FD-H7.7
+Value
+220uF
+Tolerance
+±20%
+Voltage Rating
+25V
+Ripple Current
+120mA@120Hz
+Diameter
+6.3mm
+Height - Seated (Max)
+7.7mm
+Lifetime
+2000hrs@105℃
+Operating Temperature
+-55℃~+105℃
+Name
+220uF
+Description
+容值:220uF;精度:±20%;额定电压:25V;纹波电流:120mA@120Hz;
+Reuse Block
+
+Group ID
+
+Channel ID
+
+
+*
+]
+[
+DESIGNATOR
+C2
+FOOTPRINT
+C0805
+PARTTYPE
+CC0805KRX7R9BB104
+DESCRIPTION
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+CC0805KRX7R9BB104
+Designator
+C2
+Device
+CC0805KRX7R9BB104
+Unique ID
+gge11
+LCSC Part Name
+100nF ±10% 50V
+Supplier Part
+C49678
+Manufacturer
+YAGEO(国巨)
+Manufacturer Part
+CC0805KRX7R9BB104
+Supplier Footprint
+0805
+JLCPCB Part Class
+Basic Part
+Datasheet
+https://item.szlcsc.com/datasheet/CC0805KRX7R9BB104/50686.html
+Supplier
+LCSC
+3D Model Title
+C0805_L2.0-W1.3-H1.3
+Value
+100nF
+Tolerance
+±10%
+Voltage Rating
+50V
+Temperature Coefficient
+X7R
+Name
+100nF
+Description
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Reuse Block
+
+Group ID
+
+Channel ID
+
+
+*
+]
+[
+DESIGNATOR
+C5
+FOOTPRINT
+C0805
+PARTTYPE
+CC0805KRX7R9BB104
+DESCRIPTION
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+CC0805KRX7R9BB104
+Designator
+C5
+Device
+CC0805KRX7R9BB104
+Unique ID
+gge12
+LCSC Part Name
+100nF ±10% 50V
+Supplier Part
+C49678
+Manufacturer
+YAGEO(国巨)
+Manufacturer Part
+CC0805KRX7R9BB104
+Supplier Footprint
+0805
+JLCPCB Part Class
+Basic Part
+Datasheet
+https://item.szlcsc.com/datasheet/CC0805KRX7R9BB104/50686.html
+Supplier
+LCSC
+3D Model Title
+C0805_L2.0-W1.3-H1.3
+Value
+100nF
+Tolerance
+±10%
+Voltage Rating
+50V
+Temperature Coefficient
+X7R
+Name
+100nF
+Description
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Reuse Block
+
+Group ID
+
+Channel ID
+
+
+*
+]
+[
+DESIGNATOR
+controller2
+FOOTPRINT
+SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL
+PARTTYPE
+RZ7899-MS
+DESCRIPTION
+DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+RZ7899-MS
+Designator
+controller2
+Device
+RZ7899-MS
+Name
+RZ7899-MS
+Unique ID
+gge5_1
+Reuse Block
+
+Group ID
+
+Channel ID
+
+LCSC Part Name
+DC双向马达驱动电路
+Supplier Part
+C22462553
+Manufacturer
+MSKSEMI(美森科)
+Manufacturer Part
+RZ7899-MS
+Supplier Footprint
+SOP-8
+JLCPCB Part Class
+Extended Part
+Datasheet
+https://item.szlcsc.com/datasheet/RZ7899-MS/24148603.html
+Supplier
+LCSC
+3D Model Title
+SOIC-8_L4.9-W3.9-H1.7-LS6.0-P1.27
+Technology
+是
+Number of H-bridges
+1
+Output Current
+6A
+Voltage - Supply
+3V~30V
+RDS(on)
+80mΩ
+Quiescent Current(Iq)
+1mA
+Operating Temperature
+-25℃~+85℃
+Description
+DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+
+*
+]
+[
+DESIGNATOR
+C3
+FOOTPRINT
+C0805
+PARTTYPE
+CC0805KRX7R9BB104
+DESCRIPTION
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+CC0805KRX7R9BB104
+Designator
+C3
+Device
+CC0805KRX7R9BB104
+Unique ID
+gge13
+LCSC Part Name
+100nF ±10% 50V
+Supplier Part
+C49678
+Manufacturer
+YAGEO(国巨)
+Manufacturer Part
+CC0805KRX7R9BB104
+Supplier Footprint
+0805
+JLCPCB Part Class
+Basic Part
+Datasheet
+https://item.szlcsc.com/datasheet/CC0805KRX7R9BB104/50686.html
+Supplier
+LCSC
+3D Model Title
+C0805_L2.0-W1.3-H1.3
+Value
+100nF
+Tolerance
+±10%
+Voltage Rating
+50V
+Temperature Coefficient
+X7R
+Name
+100nF
+Description
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Reuse Block
+
+Group ID
+
+Channel ID
+
+
+*
+]
+[
+DESIGNATOR
+C6
+FOOTPRINT
+C0805
+PARTTYPE
+CC0805KRX7R9BB104
+DESCRIPTION
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+CC0805KRX7R9BB104
+Designator
+C6
+Device
+CC0805KRX7R9BB104
+Unique ID
+gge14
+LCSC Part Name
+100nF ±10% 50V
+Supplier Part
+C49678
+Manufacturer
+YAGEO(国巨)
+Manufacturer Part
+CC0805KRX7R9BB104
+Supplier Footprint
+0805
+JLCPCB Part Class
+Basic Part
+Datasheet
+https://item.szlcsc.com/datasheet/CC0805KRX7R9BB104/50686.html
+Supplier
+LCSC
+3D Model Title
+C0805_L2.0-W1.3-H1.3
+Value
+100nF
+Tolerance
+±10%
+Voltage Rating
+50V
+Temperature Coefficient
+X7R
+Name
+100nF
+Description
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Reuse Block
+
+Group ID
+
+Channel ID
+
+
+*
+]
+[
+DESIGNATOR
+controller3
+FOOTPRINT
+SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL
+PARTTYPE
+RZ7899-MS
+DESCRIPTION
+DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+RZ7899-MS
+Designator
+controller3
+Device
+RZ7899-MS
+Name
+RZ7899-MS
+Unique ID
+gge5_2
+Reuse Block
+
+Group ID
+
+Channel ID
+
+LCSC Part Name
+DC双向马达驱动电路
+Supplier Part
+C22462553
+Manufacturer
+MSKSEMI(美森科)
+Manufacturer Part
+RZ7899-MS
+Supplier Footprint
+SOP-8
+JLCPCB Part Class
+Extended Part
+Datasheet
+https://item.szlcsc.com/datasheet/RZ7899-MS/24148603.html
+Supplier
+LCSC
+3D Model Title
+SOIC-8_L4.9-W3.9-H1.7-LS6.0-P1.27
+Technology
+是
+Number of H-bridges
+1
+Output Current
+6A
+Voltage - Supply
+3V~30V
+RDS(on)
+80mΩ
+Quiescent Current(Iq)
+1mA
+Operating Temperature
+-25℃~+85℃
+Description
+DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+
+*
+]
+[
+DESIGNATOR
+C4
+FOOTPRINT
+C0805
+PARTTYPE
+CC0805KRX7R9BB104
+DESCRIPTION
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+CC0805KRX7R9BB104
+Designator
+C4
+Device
+CC0805KRX7R9BB104
+Unique ID
+gge15
+LCSC Part Name
+100nF ±10% 50V
+Supplier Part
+C49678
+Manufacturer
+YAGEO(国巨)
+Manufacturer Part
+CC0805KRX7R9BB104
+Supplier Footprint
+0805
+JLCPCB Part Class
+Basic Part
+Datasheet
+https://item.szlcsc.com/datasheet/CC0805KRX7R9BB104/50686.html
+Supplier
+LCSC
+3D Model Title
+C0805_L2.0-W1.3-H1.3
+Value
+100nF
+Tolerance
+±10%
+Voltage Rating
+50V
+Temperature Coefficient
+X7R
+Name
+100nF
+Description
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Reuse Block
+
+Group ID
+
+Channel ID
+
+
+*
+]
+[
+DESIGNATOR
+C7
+FOOTPRINT
+C0805
+PARTTYPE
+CC0805KRX7R9BB104
+DESCRIPTION
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+CC0805KRX7R9BB104
+Designator
+C7
+Device
+CC0805KRX7R9BB104
+Unique ID
+gge16
+LCSC Part Name
+100nF ±10% 50V
+Supplier Part
+C49678
+Manufacturer
+YAGEO(国巨)
+Manufacturer Part
+CC0805KRX7R9BB104
+Supplier Footprint
+0805
+JLCPCB Part Class
+Basic Part
+Datasheet
+https://item.szlcsc.com/datasheet/CC0805KRX7R9BB104/50686.html
+Supplier
+LCSC
+3D Model Title
+C0805_L2.0-W1.3-H1.3
+Value
+100nF
+Tolerance
+±10%
+Voltage Rating
+50V
+Temperature Coefficient
+X7R
+Name
+100nF
+Description
+容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Reuse Block
+
+Group ID
+
+Channel ID
+
+
+*
+]
+[
+DESIGNATOR
+C8
+FOOTPRINT
+C0805
+PARTTYPE
+CL21A106KAYNNNE_C15850
+DESCRIPTION
+容值:10uF;精度:±10%;额定电压:25V;温度系数:X5R;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+CL21A106KAYNNNE
+Designator
+C8
+Device
+CL21A106KAYNNNE_C15850
+Unique ID
+gge17
+LCSC Part Name
+10uF ±10% 25V
+Supplier Part
+C15850
+Manufacturer
+SAMSUNG(三星)
+Manufacturer Part
+CL21A106KAYNNNE
+Supplier Footprint
+0805
+JLCPCB Part Class
+Basic Part
+Datasheet
+https://item.szlcsc.com/datasheet/CL21A106KAYNNNE/16532.html
+Supplier
+LCSC
+3D Model Title
+C0805_L2.0-W1.3-H1.3
+Value
+10uF
+Tolerance
+±10%
+Voltage Rating
+25V
+Temperature Coefficient
+X5R
+Name
+10uF
+Description
+容值:10uF;精度:±10%;额定电压:25V;温度系数:X5R;
+Reuse Block
+
+Group ID
+
+Channel ID
+
+
+*
+]
+[
+DESIGNATOR
+U2
+FOOTPRINT
+HDR-TH_19P-P2.54-V-F
+PARTTYPE
+KH-2.54FH-1X19P-H8.5
+DESCRIPTION
+插孔结构:1x19P;间距:2.54mm;行距:-;圆孔/方孔:方孔;安装方式:直插;排数:单排;总孔位数:19P;额定电流:3A;额定电压:-;插孔方向:顶部;塑高:8.5mm;工作温度:-40℃~+105℃;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+KH-2.54FH-1X19P-H8.5
+Designator
+U2
+Device
+KH-2.54FH-1X19P-H8.5
+Unique ID
+gge18
+Name
+KH-2.54FH-1X19P-H8.5
+Reuse Block
+
+Group ID
+
+Channel ID
+
+LCSC Part Name
+间距:2.54mm 1x19P 直插
+Supplier Part
+C2932678
+Manufacturer
+kinghelm(金航标)
+Manufacturer Part
+KH-2.54FH-1X19P-H8.5
+Supplier Footprint
+插件,P=2.54mm
+JLCPCB Part Class
+Extended Part
+Datasheet
+https://item.szlcsc.com/datasheet/KH-2.54FH-1X19P-H8.5/3278199.html
+Supplier
+LCSC
+3D Model Title
+HDR-TH_19P-P2.54-F-LI-1X19P
+Holes Structure
+1x19P
+Pitch
+2.54mm
+Row Spacing
+-
+Circular Hole / Square Hole
+方孔
+Mounting Type
+直插
+Number of Rows
+单排
+Number of Positions
+19P
+Current Rating
+3A
+Voltage Rating (Max)
+-
+Holes Direction
+顶部
+Insulation Height
+8.5mm
+Operating Temperature
+-40℃~+105℃
+Description
+插孔结构:1x19P;间距:2.54mm;行距:-;圆孔/方孔:方孔;安装方式:直插;排数:单排;总孔位数:19P;额定电流:3A;额定电压:-;插孔方向:顶部;塑高:8.5mm;工作温度:-40℃~+105℃;
+
+*
+]
+[
+DESIGNATOR
+U3
+FOOTPRINT
+HDR-TH_19P-P2.54-V-F
+PARTTYPE
+KH-2.54FH-1X19P-H8.5
+DESCRIPTION
+插孔结构:1x19P;间距:2.54mm;行距:-;圆孔/方孔:方孔;安装方式:直插;排数:单排;总孔位数:19P;额定电流:3A;额定电压:-;插孔方向:顶部;塑高:8.5mm;工作温度:-40℃~+105℃;
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+KH-2.54FH-1X19P-H8.5
+Designator
+U3
+Device
+KH-2.54FH-1X19P-H8.5
+Unique ID
+gge19
+Name
+KH-2.54FH-1X19P-H8.5
+Reuse Block
+
+Group ID
+
+Channel ID
+
+LCSC Part Name
+间距:2.54mm 1x19P 直插
+Supplier Part
+C2932678
+Manufacturer
+kinghelm(金航标)
+Manufacturer Part
+KH-2.54FH-1X19P-H8.5
+Supplier Footprint
+插件,P=2.54mm
+JLCPCB Part Class
+Extended Part
+Datasheet
+https://item.szlcsc.com/datasheet/KH-2.54FH-1X19P-H8.5/3278199.html
+Supplier
+LCSC
+3D Model Title
+HDR-TH_19P-P2.54-F-LI-1X19P
+Holes Structure
+1x19P
+Pitch
+2.54mm
+Row Spacing
+-
+Circular Hole / Square Hole
+方孔
+Mounting Type
+直插
+Number of Rows
+单排
+Number of Positions
+19P
+Current Rating
+3A
+Voltage Rating (Max)
+-
+Holes Direction
+顶部
+Insulation Height
+8.5mm
+Operating Temperature
+-40℃~+105℃
+Description
+插孔结构:1x19P;间距:2.54mm;行距:-;圆孔/方孔:方孔;安装方式:直插;排数:单排;总孔位数:19P;额定电流:3A;额定电压:-;插孔方向:顶部;塑高:8.5mm;工作温度:-40℃~+105℃;
+
+*
+]
+[
+DESIGNATOR
+U1
+FOOTPRINT
+PWRM-TH_JETEKPS_K78XX-1000R3
+PARTTYPE
+K7803-1000R3_C5379714
+DESCRIPTION
+非隔离稳压单路输出 工作温度范围：-40℃ ~ +85℃ 支持负输出、过热保护、短路保护 引脚与 LM78xx 系列兼容，是 LM78xx 系列三端线性稳压器的理想替代品 效率高，损耗小，使用时无需外加散热片
+Component Kind
+Standard
+Add into BOM
+yes
+Convert to PCB
+yes
+Symbol
+K7803-1000R3_C5379714
+Designator
+U1
+Device
+K7803-1000R3_C5379714
+Unique ID
+gge20
+LCSC Part Name
+DC-DC模块
+Supplier Part
+C5379714
+Manufacturer
+JETEKPS(健特)
+Manufacturer Part
+K7803-1000R3
+Supplier Footprint
+SIP,11.6x7.5mm
+JLCPCB Part Class
+Extended Part
+Datasheet
+https://item.szlcsc.com/datasheet/K7803-1000R3/6244272.html
+Supplier
+LCSC
+Function
+降压型
+Number of Outputs
+1
+Voltage - Supply
+6.5V~30V
+Output Voltage
+3.3V
+Output Current(Max)
+1A
+Output Power
+3.3W
+Capacitive Load(Max)
+680uF
+Features
+-
+Name
+K7803-1000R3
+Description
+非隔离稳压单路输出 工作温度范围：-40℃ ~ +85℃ 支持负输出、过热保护、短路保护 引脚与 LM78xx 系列兼容，是 LM78xx 系列三端线性稳压器的理想替代品 效率高，损耗小，使用时无需外加散热片
+Output Voltage Accuracy
+±3%
+Conversion Efficiency
+93%
+Supply Current (Iq)
+10mA
+Switching Frequency
+330kHz
+Ripple Noise
+75mVp-p
+Length
+-
+Width
+-
+Height
+-
+Operating Temperature Range
+-40℃~+85℃
+
+*
+]
+(
+GND 
+CN1-1 XT30PW-M30.G.Y-- Passive 
+Motor1-2 ZX-ZH1.5-6PWT-2 Passive 
+controller1-3 RZ7899-MS-GND Passive 
+Motor2-2 ZX-ZH1.5-6PWT-2 Passive 
+Motor3-2 ZX-ZH1.5-6PWT-2 Passive 
+C1-2 JVJ25V220M6x8-2 Input   
+C2-1 CC0805KRX7R9BB104-1 Passive 
+C5-2 CC0805KRX7R9BB104-2 Passive 
+controller2-3 RZ7899-MS-GND Passive 
+C3-1 CC0805KRX7R9BB104-1 Passive 
+C6-2 CC0805KRX7R9BB104-2 Passive 
+controller3-3 RZ7899-MS-GND Passive 
+C4-1 CC0805KRX7R9BB104-1 Passive 
+C7-2 CC0805KRX7R9BB104-2 Passive 
+C8-1 CL21A106KAYNNNE_C15850-1 Passive 
+U2-1 KH-2.54FH-1X19P-H8.5-1 Passive 
+U1-2 K7803-1000R3_C5379714-GND Passive 
+)
+(
+BAT+ 
+CN1-2 XT30PW-M30.G.Y-+ Passive 
+controller1-4 RZ7899-MS-VCC Passive 
+C1-1 JVJ25V220M6x8-1 Input   
+C2-2 CC0805KRX7R9BB104-2 Passive 
+controller2-4 RZ7899-MS-VCC Passive 
+C3-2 CC0805KRX7R9BB104-2 Passive 
+controller3-4 RZ7899-MS-VCC Passive 
+C4-2 CC0805KRX7R9BB104-2 Passive 
+U1-1 K7803-1000R3_C5379714-Vin Passive 
+)
+(
+$1N55 
+Motor1-1 ZX-ZH1.5-6PWT-1 Passive 
+controller1-5 RZ7899-MS-FO Passive 
+controller1-6 RZ7899-MS-FO Passive 
+)
+(
+$1N51 
+Motor1-3 ZX-ZH1.5-6PWT-3 Passive 
+U3-5 KH-2.54FH-1X19P-H8.5-5 Passive 
+)
+(
+$1N52 
+Motor1-4 ZX-ZH1.5-6PWT-4 Passive 
+U3-6 KH-2.54FH-1X19P-H8.5-6 Passive 
+)
+(
+3V3 
+Motor1-5 ZX-ZH1.5-6PWT-5 Passive 
+Motor2-5 ZX-ZH1.5-6PWT-5 Passive 
+Motor3-5 ZX-ZH1.5-6PWT-5 Passive 
+C5-1 CC0805KRX7R9BB104-1 Passive 
+C6-1 CC0805KRX7R9BB104-1 Passive 
+C7-1 CC0805KRX7R9BB104-1 Passive 
+C8-2 CL21A106KAYNNNE_C15850-2 Passive 
+U3-1 KH-2.54FH-1X19P-H8.5-1 Passive 
+U1-3 K7803-1000R3_C5379714-Vout Passive 
+)
+(
+$1N56 
+Motor1-6 ZX-ZH1.5-6PWT-6 Passive 
+controller1-7 RZ7899-MS-BO Passive 
+controller1-8 RZ7899-MS-BO Passive 
+)
+(
+$1N66 
+controller1-1 RZ7899-MS-BI Passive 
+U3-8 KH-2.54FH-1X19P-H8.5-8 Passive 
+)
+(
+$1N67 
+controller1-2 RZ7899-MS-FI Passive 
+U3-7 KH-2.54FH-1X19P-H8.5-7 Passive 
+)
+(
+$1N114 
+Motor2-1 ZX-ZH1.5-6PWT-1 Passive 
+controller2-5 RZ7899-MS-FO Passive 
+controller2-6 RZ7899-MS-FO Passive 
+)
+(
+$1N82 
+Motor2-3 ZX-ZH1.5-6PWT-3 Passive 
+U3-3 KH-2.54FH-1X19P-H8.5-3 Passive 
+)
+(
+$1N83 
+Motor2-4 ZX-ZH1.5-6PWT-4 Passive 
+U3-4 KH-2.54FH-1X19P-H8.5-4 Passive 
+)
+(
+$1N76 
+Motor2-6 ZX-ZH1.5-6PWT-6 Passive 
+controller2-7 RZ7899-MS-BO Passive 
+controller2-8 RZ7899-MS-BO Passive 
+)
+(
+$1N121 
+Motor3-1 ZX-ZH1.5-6PWT-1 Passive 
+controller3-5 RZ7899-MS-FO Passive 
+controller3-6 RZ7899-MS-FO Passive 
+)
+(
+$1N90 
+Motor3-3 ZX-ZH1.5-6PWT-3 Passive 
+U2-9 KH-2.54FH-1X19P-H8.5-9 Passive 
+)
+(
+$1N91 
+Motor3-4 ZX-ZH1.5-6PWT-4 Passive 
+U2-8 KH-2.54FH-1X19P-H8.5-8 Passive 
+)
+(
+$1N88 
+Motor3-6 ZX-ZH1.5-6PWT-6 Passive 
+controller3-7 RZ7899-MS-BO Passive 
+controller3-8 RZ7899-MS-BO Passive 
+)
+(
+$1N73 
+controller2-1 RZ7899-MS-BI Passive 
+U3-10 KH-2.54FH-1X19P-H8.5-10 Passive 
+)
+(
+$1N72 
+controller2-2 RZ7899-MS-FI Passive 
+U3-9 KH-2.54FH-1X19P-H8.5-9 Passive 
+)
+(
+$1N93 
+controller3-1 RZ7899-MS-BI Passive 
+U3-12 KH-2.54FH-1X19P-H8.5-12 Passive 
+)
+(
+$1N92 
+controller3-2 RZ7899-MS-FI Passive 
+U3-11 KH-2.54FH-1X19P-H8.5-11 Passive 
+)
