@@ -71,30 +71,34 @@
 
 // --- FF + PID 参数 (每个电机) ---
 // 注意: 更换驱动芯片后 Kf 可能需要重新标定
-#define PID_KF              600.0f   // 前馈增益 (实测校正)
-#define PID_KP              500.0f   // 比例增益
-#define PID_KI              10.0f    // 积分增益
-#define PID_KD              25.0f    // 微分增益
-#define PID_INTEGRAL_LIMIT  300.0f   // I项输出限幅
+// 全局缺省 = 自动调参 (tools/autotune.cpp) M1 标称结果
+#define PID_KF              640.0f   // 前馈增益 = 电机直流增益 PWM/(m/s)
+#define PID_KP              102.0f   // 比例增益
+#define PID_KI              8.9f     // 积分增益 (消稳态误差)
+#define PID_KD              0.0f     // 微分增益 (50Hz 下 Kd>0 易引发极限环, 自动调参取 0)
+#define PID_INTEGRAL_LIMIT  250.0f   // I项输出限幅
 
 // 每个电机独立 PID（默认先与全局一致，后续可单独调）
-#define PID_KP_M0           500.0f
-#define PID_KI_M0           10.0f
-#define PID_KD_M0           25.0f
+// 每个电机独立 PID —— 自动调参结果 (tools/autotune.cpp), 三轮各不相同。
+// 仿真模型: M0(kf=600,τ=45ms) M1(kf=640,τ=50ms) M2(kf=560,τ=60ms)。
+// 真机标定: 用 motor_test 量每个电机的 kf_true/tau 填回 autotune 再生成。
+#define PID_KP_M0           88.7f
+#define PID_KI_M0           7.3f
+#define PID_KD_M0           0.0f
 #define PID_KF_M0           600.0f
-#define PID_ILIM_M0         300.0f
+#define PID_ILIM_M0         250.0f
 
-#define PID_KP_M1           500.0f
-#define PID_KI_M1           10.0f
-#define PID_KD_M1           25.0f
-#define PID_KF_M1           600.0f
-#define PID_ILIM_M1         300.0f
+#define PID_KP_M1           102.0f
+#define PID_KI_M1           8.9f
+#define PID_KD_M1           0.0f
+#define PID_KF_M1           640.0f
+#define PID_ILIM_M1         250.0f
 
-#define PID_KP_M2           500.0f
-#define PID_KI_M2           10.0f
-#define PID_KD_M2           25.0f
-#define PID_KF_M2           600.0f
-#define PID_ILIM_M2         300.0f
+#define PID_KP_M2           164.3f
+#define PID_KI_M2           15.1f
+#define PID_KD_M2           0.0f
+#define PID_KF_M2           560.0f
+#define PID_ILIM_M2         250.0f
 
 // --- 控制频率 ---
 #define CONTROL_RATE_HZ     50       // 控制/里程计更新频率
