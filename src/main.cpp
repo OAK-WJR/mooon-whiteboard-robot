@@ -80,9 +80,9 @@ static void commTask(void* param) {
 }
 
 static void printHelp() {
-    Serial.println(F("命令: s=状态 p=参数 t=遥测  m<0/1/2/a>=选电机"));
+    Serial.println(F("命令: s=状态 p=参数 t=遥测 g=机读增益  m<0/1/2/a>=选电机"));
     Serial.println(F("  kp/ki/kd/kf/il <v>=PID  v=速度 la=前瞻 gt=容差 kl=循线增益"));
-    Serial.println(F("  area <x y w h sp>  pos <x y th>  go=开始 x=停止 h=帮助"));
+    Serial.println(F("  w <i> <v>=单轮定速(调参)  w x=停  area/pos/goto/go/x/h"));
 }
 
 // 处理一行串口命令
@@ -147,6 +147,16 @@ static void handleSerialLine(char* line) {
         Serial.printf("goal_tol=%.3f\n", vv);
     } else if (strcmp(cmd, "kl") == 0) { float vv = arg1(KP_LINEAR); robot.setLinearGain(vv);
         Serial.printf("kp_lin=%.2f\n", vv);
+    } else if (strcmp(cmd, "g") == 0) {          // 机读增益 (调参器)
+        robot.printGains(Serial);
+    } else if (strcmp(cmd, "w") == 0) {          // 单轮定速: w <i> <v>  /  w x=停
+        if (!args || args[0] == 'x' || args[0] == 'a' || args[0] == 'A') {
+            robot.setWheelTest(-1, 0.0f);
+        } else {
+            int wi = -1; float wv = 0.0f;
+            sscanf(args, "%d %f", &wi, &wv);
+            robot.setWheelTest(wi, wv);
+        }
     } else if (strcmp(cmd, "h") == 0 || strcmp(cmd, "?") == 0) {
         printHelp();
     } else {
@@ -186,9 +196,9 @@ void loop() {
         }
     }
 
-    // 遥测流 (10Hz)
+    // 遥测流 (50Hz, 供实时调参绘制阶跃响应)
     static unsigned long last_tele = 0;
-    if (telemetry_on && millis() - last_tele >= 100) {
+    if (telemetry_on && millis() - last_tele >= 20) {
         robot.printTelemetry(Serial);
         last_tele = millis();
     }

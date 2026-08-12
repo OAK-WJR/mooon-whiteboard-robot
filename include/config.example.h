@@ -27,6 +27,36 @@
 // 正转: FI=PWM, BI=LOW    反转: FI=LOW, BI=PWM
 // 刹车: FI=LOW, BI=LOW
 
+#ifdef CONFIG_IDF_TARGET_ESP32C6
+// ===================== ESP32-C6 (转接板 + Waveshare C6-LCD-1.47) =====================
+// 索引 = 物理电机号 (motor[0]=Motor1, [1]=Motor2, [2]=Motor3), 与运动学一致。
+// 注意: 转接板排针与底板座子的实测配对是错位的 —— M0头→底板H2(电机1)、
+//       M1头→底板H1(电机3)、M2头→底板H3(电机2)。所以这里按物理电机顺序绑定引脚,
+//       [1] 取 M2 头的脚、[2] 取 M1 头的脚, 运动学矩阵无需改动。
+// C6 禁用脚: GPIO12/13(USB-Serial/JTAG 烧录), GPIO9(BOOT), 6/7/8/14/15/21/22(屏幕板占用)
+
+// 电机 0 = 物理 Motor1 (走转接板 M0 头 -> 底板 H2 -> controller1)
+#define MOTOR0_FI_PIN       0        // GPIO0
+#define MOTOR0_BI_PIN       1        // GPIO1
+
+// 电机 1 = 物理 Motor2 (走转接板 M2 头 -> 底板 H3 -> controller2)
+#define MOTOR1_FI_PIN       4        // GPIO4
+#define MOTOR1_BI_PIN       5        // GPIO5
+
+// 电机 2 = 物理 Motor3 (走转接板 M1 头 -> 底板 H1 -> controller3)
+#define MOTOR2_FI_PIN       2        // GPIO2
+#define MOTOR2_BI_PIN       3        // GPIO3
+
+// --- 编码器引脚 (AB 相), 同样按物理电机顺序 ---
+#define ENC0_A_PIN          16       // GPIO16 (UART0 TXD, 经转接板 100Ω 串阻)
+#define ENC0_B_PIN          17       // GPIO17 (UART0 RXD)
+#define ENC1_A_PIN          20       // GPIO20  <- M2 头
+#define ENC1_B_PIN          23       // GPIO23  <- M2 头
+#define ENC2_A_PIN          18       // GPIO18  <- M1 头
+#define ENC2_B_PIN          19       // GPIO19  <- M1 头
+
+#else
+// ===================== ESP32 (旧的一体板, 保留以便回退) =====================
 // 电机 0 (controller1, Motor1)
 #define MOTOR0_FI_PIN       32       // GPIO32 - controller1 FI (正向输入)
 #define MOTOR0_BI_PIN       33       // GPIO33 - controller1 BI (反向输入)
@@ -43,12 +73,13 @@
 // motor0 编码器 (Motor1 connector) — 实测确认
 #define ENC0_A_PIN          34       // GPIO34 - Motor1 Enc A (仅输入, 无内部上拉)
 #define ENC0_B_PIN          35       // GPIO35 - Motor1 Enc B (仅输入, 无内部上拉)
-// motor1 编码器 (Motor2 connector) — 实测确认
-#define ENC1_A_PIN          36       // GPIO36 - Motor2 Enc A (仅输入, 无内部上拉)
-#define ENC1_B_PIN          39       // GPIO39 - Motor2 Enc B (仅输入, 无内部上拉)
+// motor1 编码器 (Motor2 connector) — v2 板走线改到 GPIO22/23 (普通脚, 有内部上拉)
+#define ENC1_A_PIN          22       // GPIO22 - Motor2 Enc A (内部上拉, 免外部电阻)
+#define ENC1_B_PIN          23       // GPIO23 - Motor2 Enc B (内部上拉, 免外部电阻)
 // motor2 编码器 (Motor3 connector) — 实测确认
 #define ENC2_A_PIN          19       // GPIO19 - Motor3 Enc A
 #define ENC2_B_PIN          18       // GPIO18 - Motor3 Enc B
+#endif
 
 // --- 编码器方向修正 ---
 // 约定: +1 保持原方向, -1 取反
@@ -75,6 +106,15 @@
 #define MOTOR_STICTION_M1   140.0f
 #define MOTOR_STICTION_M2   140.0f
 #define MOTOR_BREAKAWAY_VEL 0.02f
+
+// --- 堵转保护 ---
+// 判据: PWM 已经很大(在用力) 但实际速度几乎为 0(没动) 且持续若干拍 -> 判定堵转。
+// 撞墙/笔卡住/轮子压线时, 避免 PID 把 PWM 长期顶满(那是所有发热与过流的最坏工况)。
+#define STALL_PWM_THRESH    200      // |PWM| 超过此值才算"在用力"
+#define STALL_VEL_THRESH    0.01f    // |实际轮速| 低于此值算"没动" (m/s)
+#define STALL_TRIP_TICKS    25       // 连续多少拍判定 (50Hz -> 500ms)
+#define STALL_COOLDOWN_MS   1000     // 触发后停多久再自动重试
+#define STALL_MAX_TRIPS     3        // 连续触发这么多次后锁定该轮, 等上位机干预
 
 // 轮速合理性闸: 实测最快轮速 ~0.38 m/s, 超过此值判为编码器噪声/串扰直接丢弃。
 // 主要挡 M1 电机 PWM 串扰进 ENC1(GPIO36/39) 造成的幽灵恒速 (~0.58 m/s)。
@@ -119,7 +159,13 @@
 #define CONTROL_RATE_HZ     50       // 控制/里程计更新频率
 #define CONTROL_PERIOD_MS   (1000 / CONTROL_RATE_HZ)
 
-// --- WiFi（请填入真实值）---
+// --- 工作模式 ---
+// 0 = USB 串口模式 (默认): 不启 WiFi/UDP, 命令走串口, 位姿走 'j' 流, 调参走 pid_tuner。
+//     启动不阻塞, 无 WiFiUdp 报错, 且消除 ENC1(GPIO36/39) 射频噪声。
+// 1 = WiFi 模式: 连 WIFI_SSID/PASS, 走 UDP 与上位机通信。
+#define USE_WIFI            0
+
+// --- WiFi（USE_WIFI=1 时请填入真实值）---
 #define WIFI_SSID           "YOUR_WIFI_SSID"
 #define WIFI_PASS           "YOUR_WIFI_PASSWORD"
 

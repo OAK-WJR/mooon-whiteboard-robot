@@ -1,6 +1,14 @@
 #include "wifi_comm.h"
 
 void WifiComm::begin(const char* ssid, const char* pass) {
+#if !USE_WIFI
+    // USB 串口工作模式: 完全不碰 WiFi/UDP —— 不阻塞启动, 不刷 WiFiUdp 报错,
+    // 也消除 GPIO36/39(ENC1) 的射频噪声。命令走串口, 位姿走 'j' JSON 流。
+    (void)ssid; (void)pass;
+    WiFi.mode(WIFI_OFF);
+    Serial.println("WiFi 关闭 (USB 串口模式, USE_WIFI=0)");
+    return;
+#else
     WiFi.begin(ssid, pass);
     Serial.print("WiFi connecting");
     // 非阻塞: 超时后继续运行, 不卡启动 (USB/串口模式无需 WiFi)
@@ -17,9 +25,12 @@ void WifiComm::begin(const char* ssid, const char* pass) {
         return;                // USB 模式不需要 UDP
     }
     udp_.begin(UDP_LISTEN_PORT);
+    active_ = true;            // 连上且 UDP 已 begin, 才允许 receive/send
+#endif
 }
 
 bool WifiComm::receive(JsonDocument& doc) {
+    if (!active_) return false;           // USB 模式: 不碰 UDP (否则刷 WiFiUdp 报错)
     int len = udp_.parsePacket();
     if (len == 0) return false;
 
@@ -42,7 +53,7 @@ bool WifiComm::receive(JsonDocument& doc) {
 }
 
 void WifiComm::send(const JsonDocument& doc) {
-    if (!has_remote_) return;
+    if (!active_ || !has_remote_) return;
 
     char buf[256];
     size_t n = serializeJson(doc, buf, sizeof(buf));

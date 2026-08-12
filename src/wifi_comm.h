@@ -23,6 +23,7 @@ private:
     IPAddress remote_ip_;
     uint16_t remote_port_ = 0;
     bool has_remote_ = false;
+    bool active_ = false;   // 仅当 WiFi 连上且 UDP 已 begin 才收发 (USB 模式下为 false, 不碰 UDP)
 };
 
 #endif

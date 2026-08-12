@@ -15,7 +15,8 @@ enum RobotState {
     STATE_PLANNING,
     STATE_READY,
     STATE_RUNNING,
-    STATE_DONE
+    STATE_DONE,
+    STATE_WHEEL_TEST    // 单轮定速测试 (PID 调参用)
 };
 
 class RobotController {
@@ -35,6 +36,11 @@ public:
     void setLinearGain(float kp)   { follower_.setLinearGain(kp); }
     void printParams(Print& out) const;     // 打印所有可调参数
     void printTelemetry(Print& out) const;  // 打印每轮 目标/实际/PWM
+    void printGains(Print& out) const;      // 机读增益行 (调参器解析)
+
+    // 单轮定速: idx 0..2 让该轮定速跟踪 v (m/s), 其余轮停; idx<0 退出测试。
+    // 跑的是与导航完全相同的 FF+PID+静摩擦+slew 管线, 供实时调参。
+    void setWheelTest(int idx, float v);
 
 private:
     RobotState state_ = STATE_IDLE;
@@ -48,12 +54,23 @@ private:
 
     float max_speed_ = MAX_LINEAR_SPEED;
 
+    // 单轮测试状态
+    int   wheel_test_idx_ = -1;
+    float wheel_test_v_   = 0.0f;
+
     // 遥测快照 (control loop 每拍更新, 供串口打印)
     float   last_target_[3] = {0, 0, 0};
     float   last_actual_[3] = {0, 0, 0};
     int16_t last_pwm_[3]    = {0, 0, 0};
 
+    // 堵转保护状态 (每轮独立)
+    uint16_t      stall_cnt_[3]    = {0, 0, 0};  // 连续"用力但不动"的拍数
+    uint8_t       stall_trips_[3]  = {0, 0, 0};  // 已触发次数, 达 STALL_MAX_TRIPS 则锁定
+    unsigned long stall_resume_[3] = {0, 0, 0};  // 冷却到期时刻 (millis), 0=未在冷却
+
     void stopMotors();
+    // 目标轮速 -> FF+PID+静摩擦+slew -> PWM (导航与单轮测试共用同一管线)
+    void driveWheels(const WheelVelocity& target, const BodyVelocity& body, float dt);
 };
 
 #endif

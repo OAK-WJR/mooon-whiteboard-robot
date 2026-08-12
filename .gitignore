@@ -42,3 +42,9 @@ include/config.h
 # 系统
 .DS_Store
 Thumbs.db
+pcb-analysis/
+c6_selftest/.venv/
+c6_selftest/.pio/
+c6-test/.venv/
+c6-test/.pio/
+c6-test/*.log

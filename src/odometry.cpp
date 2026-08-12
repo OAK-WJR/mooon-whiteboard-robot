@@ -1,7 +1,9 @@
 #include "odometry.h"
 #include "config.h"
 #include <math.h>
-#include <driver/adc.h>  // adc_power_acquire(): 修复 GPIO36/39 噪声 (ESP32 Errata 3.11)
+// 历史: 这里曾 #include <driver/adc.h> 调 adc_power_acquire(), 用来压 v1 板
+// GPIO36/39 上的 ESP32 Errata 3.11 噪声。v2 板已把 ENC1 挪到 GPIO22/23,
+// 且该 API 在 Arduino core 3.x / 新 IDF 中已移除, 故删除。
 
 // ============================================================
 // 编码器中断 (全局)
@@ -74,20 +76,22 @@ static void IRAM_ATTR enc2_b_isr() {
 }
 
 void encoders_init() {
-    // 修复 ESP32 Errata 3.11: ADC 电源常开, 消除 GPIO36/39 噪声毛刺
-    adc_power_acquire();
-
-    // Motor0 编码器: GPIO34/35 — 仅输入引脚, 无内部上拉
+#ifdef CONFIG_IDF_TARGET_ESP32C6
+    // C6: 编码器脚全是普通数字 IO, 均支持内部上拉, 无需 ADC errata 补丁
+    // ENC0_A=GPIO16 是 UART0 TXD, 转接板已串 100Ω 隔离开机 ROM 日志
+    pinMode(ENC0_A_PIN, INPUT_PULLUP);
+    pinMode(ENC0_B_PIN, INPUT_PULLUP);
+#else
+    // Motor0 编码器: GPIO34/35 — 仅输入引脚, 无内部上拉(靠编码器推挽输出驱动)
     pinMode(ENC0_A_PIN, INPUT);
     pinMode(ENC0_B_PIN, INPUT);
+#endif
     attachInterrupt(digitalPinToInterrupt(ENC0_A_PIN), enc0_a_isr, CHANGE);
     attachInterrupt(digitalPinToInterrupt(ENC0_B_PIN), enc0_b_isr, CHANGE);
 
-    // Motor1 编码器: GPIO36 + GPIO2 — 实测确认
-    // GPIO36: 仅输入, 无内部上拉, adc_power_acquire() 已消除噪声
-    // GPIO2: strapping pin, 有内部上拉, 启动时需保持高电平
-    pinMode(ENC1_A_PIN, INPUT);          // GPIO36
-    pinMode(ENC1_B_PIN, INPUT_PULLUP);   // GPIO2
+    // Motor1 编码器: GPIO22/23 (v2 板) — 普通数字脚, 均支持内部上拉, 免外部电阻
+    pinMode(ENC1_A_PIN, INPUT_PULLUP);   // GPIO22
+    pinMode(ENC1_B_PIN, INPUT_PULLUP);   // GPIO23
     enc1_prev_state_ = (digitalRead(ENC1_A_PIN) << 1) | digitalRead(ENC1_B_PIN);
     attachInterrupt(digitalPinToInterrupt(ENC1_A_PIN), enc1_isr, CHANGE);
     attachInterrupt(digitalPinToInterrupt(ENC1_B_PIN), enc1_isr, CHANGE);

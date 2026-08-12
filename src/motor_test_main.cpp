@@ -13,7 +13,6 @@
 #ifdef MOTOR_TEST_MODE
 
 #include <Arduino.h>
-#include <driver/adc.h>
 #include "config.h"
 #include "motor_driver.h"
 #include "pid_controller.h"
@@ -199,8 +198,8 @@ void setup() {
     Serial.begin(115200);
     delay(500);
 
-    // 修复 ESP32 Errata 3.11: ADC 电源常开, 消除 GPIO36/39 噪声
-    adc_power_acquire();
+    // (曾在此调 adc_power_acquire() 压 v1 板 GPIO36/39 的 Errata 3.11 噪声;
+    //  v2 板 ENC1 已挪到 GPIO22/23, 且该 API 在新 core 中已移除)
 
     Serial.println("\n============================");
     Serial.println("  三电机独立测试");

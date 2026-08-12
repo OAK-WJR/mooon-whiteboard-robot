@@ -8,6 +8,7 @@ static const char* stateStr(RobotState s) {
         case STATE_READY:    return "ready";
         case STATE_RUNNING:  return "running";
         case STATE_DONE:     return "done";
+        case STATE_WHEEL_TEST: return "wheeltest";
         default:             return "unknown";
     }
 }
@@ -36,6 +37,10 @@ void RobotController::stopMotors() {
     for (int i = 0; i < 3; i++) {
         pid_[i].reset();
         motors_.motor(i).stop();
+        last_pwm_[i]     = 0;
+        stall_cnt_[i]    = 0;   // 停车即清堵转状态, 锁定的轮子也在此解锁
+        stall_trips_[i]  = 0;
+        stall_resume_[i] = 0;
     }
 }
 
@@ -121,6 +126,16 @@ void RobotController::update(float dt) {
         for (int i = 0; i < 3; i++) last_actual_[i] = wv.v[i];
     }
 
+    // 单轮定速测试: 绕过导航, 直接让选中轮跟踪设定速度 (调参用)
+    if (state_ == STATE_WHEEL_TEST) {
+        WheelVelocity tw = {{0, 0, 0}};
+        if (wheel_test_idx_ >= 0 && wheel_test_idx_ <= 2)
+            tw.v[wheel_test_idx_] = wheel_test_v_;
+        BodyVelocity tb = {wheel_test_v_, 0.0f, 0.0f};  // 非零 -> 保持活轮不被死区门停掉
+        driveWheels(tw, tb, dt);
+        return;
+    }
+
     if (state_ != STATE_RUNNING) {
         for (int i = 0; i < 3; i++) { last_target_[i] = 0; last_pwm_[i] = 0; }
         return;
@@ -138,23 +153,71 @@ void RobotController::update(float dt) {
         return;
     }
 
-    // 逆运动学 → 轮速度
+    // 逆运动学 → 轮速度 → 与单轮测试共用的驱动管线
     WheelVelocity target_wheels = kinematics_.inverse(target_body);
+    driveWheels(target_wheels, target_body, dt);
+}
+
+// 目标轮速 -> FF+PID+静摩擦+slew -> PWM。导航与单轮测试共用, 保证两者行为一致。
+void RobotController::driveWheels(const WheelVelocity& target, const BodyVelocity& body, float dt) {
     const WheelVelocity& actual_wheels = odometry_.getWheelVelocity();
 
-    // FF+PID
+    unsigned long now = millis();
+
     for (int i = 0; i < 3; i++) {
-        float target_v = target_wheels.v[i];
+        float target_v = target.v[i];
         float actual_v = actual_wheels.v[i];
 
         last_target_[i] = target_v;
 
-        if (fabsf(target_v) < MOTOR_MIN_SPEED && fabsf(target_body.vx) < MOTOR_MIN_SPEED
-            && fabsf(target_body.vy) < MOTOR_MIN_SPEED) {
+        if (fabsf(target_v) < MOTOR_MIN_SPEED && fabsf(body.vx) < MOTOR_MIN_SPEED
+            && fabsf(body.vy) < MOTOR_MIN_SPEED) {
+            pid_[i].reset();
+            motors_.motor(i).stop();
+            last_pwm_[i] = 0;
+            stall_cnt_[i] = 0;              // 本来就没让它动, 不算堵转
+            continue;
+        }
+
+        // --- 堵转保护 ---
+        // 冷却中: 该轮保持断电, 时间到了自动放行再试一次
+        if (stall_resume_[i] != 0) {
+            if (now < stall_resume_[i]) {
+                pid_[i].reset();
+                motors_.motor(i).stop();
+                last_pwm_[i] = 0;
+                continue;
+            }
+            stall_resume_[i] = 0;
+            stall_cnt_[i]    = 0;
+            Serial.printf("STALL M%d 冷却结束, 重试 (第%d次)\n", i, stall_trips_[i]);
+        }
+        // 已达上限: 锁定该轮, 等 stop/新指令清零
+        if (stall_trips_[i] >= STALL_MAX_TRIPS) {
             pid_[i].reset();
             motors_.motor(i).stop();
             last_pwm_[i] = 0;
             continue;
+        }
+        // 判据: 在用力(PWM大) 但没动(速度≈0)
+        if (abs(last_pwm_[i]) >= STALL_PWM_THRESH && fabsf(actual_v) < STALL_VEL_THRESH) {
+            if (++stall_cnt_[i] >= STALL_TRIP_TICKS) {
+                stall_trips_[i]++;
+                stall_resume_[i] = now + STALL_COOLDOWN_MS;
+                stall_cnt_[i]    = 0;
+                pid_[i].reset();
+                motors_.motor(i).stop();
+                last_pwm_[i] = 0;
+                Serial.printf("STALL M%d 堵转! PWM=%d 但轮速≈0 持续%dms -> 断电%dms (累计%d/%d)\n",
+                              i, STALL_PWM_THRESH, STALL_TRIP_TICKS * CONTROL_PERIOD_MS,
+                              STALL_COOLDOWN_MS, stall_trips_[i], STALL_MAX_TRIPS);
+                if (stall_trips_[i] >= STALL_MAX_TRIPS)
+                    Serial.printf("STALL M%d 连续%d次堵转, 已锁定该轮 (发 x/stop 复位)\n",
+                                  i, STALL_MAX_TRIPS);
+                continue;
+            }
+        } else {
+            stall_cnt_[i] = 0;              // 转起来了就清零
         }
 
         float pwm_f = pid_[i].compute(target_v, actual_v, dt);
@@ -229,4 +292,29 @@ void RobotController::printTelemetry(Print& out) const {
                last_target_[0], last_actual_[0], last_pwm_[0],
                last_target_[1], last_actual_[1], last_pwm_[1],
                last_target_[2], last_actual_[2], last_pwm_[2]);
+}
+
+// 机读增益行: 每电机一行, 供调参器开机读取当前值
+void RobotController::printGains(Print& out) const {
+    for (int i = 0; i < 3; i++) {
+        out.printf("GAINS M%d kp=%.3f ki=%.3f kd=%.3f kf=%.3f il=%.1f\n",
+                   i, pid_[i].getKp(), pid_[i].getKi(), pid_[i].getKd(),
+                   pid_[i].getKf(), pid_[i].getIntegralLimit());
+    }
+}
+
+void RobotController::setWheelTest(int idx, float v) {
+    if (idx < 0 || idx > 2) {           // 退出测试
+        wheel_test_idx_ = -1;
+        wheel_test_v_   = 0.0f;
+        stopMotors();
+        state_ = STATE_IDLE;
+        Serial.println("WHEELTEST off");
+        return;
+    }
+    wheel_test_idx_ = idx;
+    wheel_test_v_   = v;
+    for (int i = 0; i < 3; i++) pid_[i].reset();   // 清积分, 干净起步
+    state_ = STATE_WHEEL_TEST;
+    Serial.printf("WHEELTEST M%d v=%.3f\n", idx, v);
 }

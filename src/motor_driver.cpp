@@ -1,6 +1,17 @@
 #include "motor_driver.h"
 #include "config.h"
 
+// Arduino-ESP32 core 3.x 改了 LEDC 接口: 通道由内核自动分配, 一律按"引脚"操作。
+// core 2.x 仍需手工指定通道。用下面两个包装抹平差异 (C6 只能跑 3.x)。
+#if ESP_ARDUINO_VERSION_MAJOR >= 3
+  #define LEDC_SETUP(pin, ch, freq, res)  ledcAttach((pin), (freq), (res))
+  #define LEDC_WRITE(pin, ch, duty)       ledcWrite((pin), (duty))
+#else
+  #define LEDC_SETUP(pin, ch, freq, res)  do { ledcSetup((ch), (freq), (res)); \
+                                               ledcAttachPin((pin), (ch)); } while (0)
+  #define LEDC_WRITE(pin, ch, duty)       ledcWrite((ch), (duty))
+#endif
+
 // ---- MotorDriver (RZ7899-MS: FI + BI 双引脚控制) ----
 
 void MotorDriver::begin(uint8_t fi_pin, uint8_t bi_pin,
@@ -12,13 +23,8 @@ void MotorDriver::begin(uint8_t fi_pin, uint8_t bi_pin,
     bi_channel_ = bi_channel;
     pwm_max_    = (1 << pwm_res) - 1;
 
-    // FI 通道
-    ledcSetup(fi_channel_, pwm_freq, pwm_res);
-    ledcAttachPin(fi_pin_, fi_channel_);
-
-    // BI 通道
-    ledcSetup(bi_channel_, pwm_freq, pwm_res);
-    ledcAttachPin(bi_pin_, bi_channel_);
+    LEDC_SETUP(fi_pin_, fi_channel_, pwm_freq, pwm_res);
+    LEDC_SETUP(bi_pin_, bi_channel_, pwm_freq, pwm_res);
 
     stop();
 }
@@ -26,12 +32,12 @@ void MotorDriver::begin(uint8_t fi_pin, uint8_t bi_pin,
 void MotorDriver::setSpeed(int16_t speed) {
     if (speed > 0) {
         // 正转: FI=PWM, BI=LOW
-        ledcWrite(bi_channel_, 0);
-        ledcWrite(fi_channel_, constrain(speed, 0, pwm_max_));
+        LEDC_WRITE(bi_pin_, bi_channel_, 0);
+        LEDC_WRITE(fi_pin_, fi_channel_, constrain(speed, 0, pwm_max_));
     } else if (speed < 0) {
         // 反转: FI=LOW, BI=PWM
-        ledcWrite(fi_channel_, 0);
-        ledcWrite(bi_channel_, constrain(-speed, 0, pwm_max_));
+        LEDC_WRITE(fi_pin_, fi_channel_, 0);
+        LEDC_WRITE(bi_pin_, bi_channel_, constrain(-speed, 0, pwm_max_));
     } else {
         stop();
     }
@@ -39,8 +45,8 @@ void MotorDriver::setSpeed(int16_t speed) {
 
 void MotorDriver::stop() {
     // 刹车: FI=LOW, BI=LOW
-    ledcWrite(fi_channel_, 0);
-    ledcWrite(bi_channel_, 0);
+    LEDC_WRITE(fi_pin_, fi_channel_, 0);
+    LEDC_WRITE(bi_pin_, bi_channel_, 0);
 }
 
 // ---- TriMotorDriver (3x RZ7899-MS) ----
