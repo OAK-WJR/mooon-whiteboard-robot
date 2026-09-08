@@ -40,12 +40,16 @@ float PIDController::compute(float target, float measured, float dt) {
     float pre_output = ff_term_ + p_term_ + ki_ * integral_;
     bool saturated = (pre_output >= max_output_ && error > 0) ||
                      (pre_output <= min_output_ && error < 0);
-    if (!saturated) {
+    if (ki_ == 0.0f) {
+        integral_ = 0.0f;
+        i_term_ = 0.0f;
+    } else {
+      if (!saturated) {
         integral_ += error * dt;
+      }
+      i_term_ = clampf(ki_ * integral_, -max_integral_, max_integral_);
+      integral_ = i_term_ / ki_;
     }
-    i_term_ = ki_ * integral_;
-    i_term_ = clampf(i_term_, -max_integral_, max_integral_);
-    integral_ = i_term_ / ki_;
 
     // ---- D 项 (derivative on measurement, 避免 setpoint 突变尖峰) ----
     if (first_run_) {

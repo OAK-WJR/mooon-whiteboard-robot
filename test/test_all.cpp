@@ -431,12 +431,11 @@ static void test_pid_antiwindup() {
         pid.setOutputLimits(-10000, 10000);  // 放宽输出限幅, 只测积分限幅
         pid.setIntegralLimit(test_limit);
 
-        // 持续大误差让积分累积: error=1.0, dt=0.02 → 每步 +0.02
-        // 到 0.5 需要 25 步, 跑 100 步确保饱和
+        // 持续大误差，运行 100 步；检查限幅后的 I 项（PWM 输出单位）。
         for (int i = 0; i < 100; i++) {
             pid.compute(1.0f, 0.0f, dt);
         }
-        float integral = pid.getIntegral();
+        float integral = pid.getITerm(); // setIntegralLimit is a limit in PWM output units.
         printf("  累积后积分: %.3f (限幅: ±%.1f)\n",
                (double)integral, (double)test_limit);
         ASSERT_TRUE(fabsf(integral) <= test_limit + 0.001f,
@@ -455,11 +454,11 @@ static void test_pid_antiwindup() {
 
         // 先饱和到正上限
         for (int i = 0; i < 100; i++) pid.compute(1.0f, 0, dt);
-        ASSERT_NEAR(pid.getIntegral(), test_limit, 0.01f, "先饱和到上限");
+        ASSERT_NEAR(pid.getITerm(), test_limit, 0.01f, "I项先饱和到上限");
 
         // 反向误差, 积分应该下降并饱和到负上限
         for (int i = 0; i < 200; i++) pid.compute(-1.0f, 0, dt);
-        float integral = pid.getIntegral();
+        float integral = pid.getITerm();
         printf("  反向后积分: %.3f\n", (double)integral);
         ASSERT_NEAR(integral, -test_limit, 0.01f,
                     "反向后积分退绕到负上限");
@@ -493,6 +492,17 @@ static void test_pid_antiwindup() {
         }
         ASSERT_TRUE(settled, "从高速切低速后收敛");
         ASSERT_NEAR(actual, 0.02f, 0.005f, "切换后稳态精度");
+    }
+    // Disabling integral control must not divide by zero and poison future output.
+    {
+        PIDController pid;
+        pid.setGains(20, 0, 0, 100);
+        for(int i=0;i<10;++i) {
+            ASSERT_TRUE(std::isfinite(pid.compute(.1f,0,.02f)), "Ki=0 输出有限");
+            ASSERT_NEAR(pid.getITerm(),0,.0001f,"Ki=0 积分项清零");
+        }
+        pid.setKi(2);
+        ASSERT_TRUE(std::isfinite(pid.compute(.1f,0,.02f)), "恢复Ki后输出有限");
     }
     SECTION_END("Anti-windup");
 }

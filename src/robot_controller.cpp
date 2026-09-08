@@ -40,7 +40,8 @@ void RobotController::stopMotors() {
         last_pwm_[i]     = 0;
         stall_cnt_[i]    = 0;   // 停车即清堵转状态, 锁定的轮子也在此解锁
         stall_trips_[i]  = 0;
-        stall_resume_[i] = 0;
+        stall_started_[i] = 0;
+        stall_cooling_[i] = false;
     }
 }
 
@@ -54,6 +55,7 @@ void RobotController::handleCommand(JsonDocument& doc) {
         float h = doc["h"] | 0.1f;
         float spacing = doc["spacing"] | 0.02f;
 
+        stopMotors();
         state_ = STATE_PLANNING;
         int n = planner_.generateZigzag(x, y, w, h, spacing);
         Serial.printf("Path: %d waypoints for area (%.2f,%.2f,%.2f,%.2f) spacing=%.3f\n",
@@ -72,6 +74,7 @@ void RobotController::handleCommand(JsonDocument& doc) {
         float x = doc["x"] | 0.0f;
         float y = doc["y"] | 0.0f;
         const Pose2D& pose = odometry_.getPose();
+        stopMotors();
         state_ = STATE_PLANNING;
         int n = planner_.generateGoto(pose.x, pose.y, x, y);
         Serial.printf("Goto (%.3f,%.3f)->(%.3f,%.3f): %d pts\n", pose.x, pose.y, x, y, n);
@@ -160,9 +163,14 @@ void RobotController::update(float dt) {
 
 // 目标轮速 -> FF+PID+静摩擦+slew -> PWM。导航与单轮测试共用, 保证两者行为一致。
 void RobotController::driveWheels(const WheelVelocity& target, const BodyVelocity& body, float dt) {
+    if (!motors_.ready()) {
+        stopMotors();
+        state_ = STATE_IDLE;
+        return;
+    }
     const WheelVelocity& actual_wheels = odometry_.getWheelVelocity();
 
-    unsigned long now = millis();
+    uint32_t now = millis();
 
     for (int i = 0; i < 3; i++) {
         float target_v = target.v[i];
@@ -173,29 +181,29 @@ void RobotController::driveWheels(const WheelVelocity& target, const BodyVelocit
         if (fabsf(target_v) < MOTOR_MIN_SPEED && fabsf(body.vx) < MOTOR_MIN_SPEED
             && fabsf(body.vy) < MOTOR_MIN_SPEED) {
             pid_[i].reset();
-            motors_.motor(i).stop();
+            if (!motors_.motor(i).stop()) { stopMotors(); state_=STATE_IDLE; return; }
             last_pwm_[i] = 0;
             stall_cnt_[i] = 0;              // 本来就没让它动, 不算堵转
             continue;
         }
 
         // --- 堵转保护 ---
-        // 冷却中: 该轮保持断电, 时间到了自动放行再试一次
-        if (stall_resume_[i] != 0) {
-            if (now < stall_resume_[i]) {
+        // 冷却中保持 PWM 停止。按经过时间判断，跨 millis() 回绕也等待完整冷却期。
+        if (stall_cooling_[i]) {
+            if (uint32_t(now - stall_started_[i]) < uint32_t(STALL_COOLDOWN_MS)) {
                 pid_[i].reset();
-                motors_.motor(i).stop();
+                if (!motors_.motor(i).stop()) { stopMotors(); state_=STATE_IDLE; return; }
                 last_pwm_[i] = 0;
                 continue;
             }
-            stall_resume_[i] = 0;
+            stall_cooling_[i] = false;
             stall_cnt_[i]    = 0;
             Serial.printf("STALL M%d 冷却结束, 重试 (第%d次)\n", i, stall_trips_[i]);
         }
         // 已达上限: 锁定该轮, 等 stop/新指令清零
         if (stall_trips_[i] >= STALL_MAX_TRIPS) {
             pid_[i].reset();
-            motors_.motor(i).stop();
+            if (!motors_.motor(i).stop()) { stopMotors(); state_=STATE_IDLE; return; }
             last_pwm_[i] = 0;
             continue;
         }
@@ -203,12 +211,13 @@ void RobotController::driveWheels(const WheelVelocity& target, const BodyVelocit
         if (abs(last_pwm_[i]) >= STALL_PWM_THRESH && fabsf(actual_v) < STALL_VEL_THRESH) {
             if (++stall_cnt_[i] >= STALL_TRIP_TICKS) {
                 stall_trips_[i]++;
-                stall_resume_[i] = now + STALL_COOLDOWN_MS;
+                stall_started_[i] = now;
+                stall_cooling_[i] = true;
                 stall_cnt_[i]    = 0;
                 pid_[i].reset();
-                motors_.motor(i).stop();
+                if (!motors_.motor(i).stop()) { stopMotors(); state_=STATE_IDLE; return; }
                 last_pwm_[i] = 0;
-                Serial.printf("STALL M%d 堵转! PWM=%d 但轮速≈0 持续%dms -> 断电%dms (累计%d/%d)\n",
+                Serial.printf("STALL M%d 堵转! PWM=%d 但轮速≈0 持续%dms -> PWM停止%dms (累计%d/%d)\n",
                               i, STALL_PWM_THRESH, STALL_TRIP_TICKS * CONTROL_PERIOD_MS,
                               STALL_COOLDOWN_MS, stall_trips_[i], STALL_MAX_TRIPS);
                 if (stall_trips_[i] >= STALL_MAX_TRIPS)
@@ -235,7 +244,7 @@ void RobotController::driveWheels(const WheelVelocity& target, const BodyVelocit
         float prev = (float)last_pwm_[i];
         pwm_f = fmaxf(prev - max_dpwm, fminf(prev + max_dpwm, pwm_f));
         int16_t pwm = constrain((int16_t)pwm_f, -PWM_MAX, PWM_MAX);
-        motors_.motor(i).setSpeed(pwm);
+        if (!motors_.motor(i).setSpeed(pwm)) { stopMotors(); state_=STATE_IDLE; return; }
         last_pwm_[i] = pwm;
     }
 }
@@ -249,6 +258,28 @@ void RobotController::fillStatus(JsonDocument& doc) {
     doc["progress"] = follower_.getProgress();
     doc["wp"] = follower_.getCurrentWaypoint();
     doc["wp_total"] = follower_.getTotalWaypoints();
+    doc["pwm_ready"] = motors_.ready();
+    JsonArray pwmChannels = doc["motor_pwm_ready"].to<JsonArray>();
+    for (int i = 0; i < 3; ++i) pwmChannels.add(motors_.motor(i).ready());
+#ifdef WBB_TOP_BOARD_V2
+    JsonArray faults = doc["motor_pwm_fault"].to<JsonArray>();
+    for (int i = 0; i < 3; ++i) faults.add(motors_.motor(i).fault());
+    volatile long counts[3];
+    odometry_.getEncoderCounts(counts);
+    JsonArray encoders = doc["encoder_counts"].to<JsonArray>();
+    JsonArray measured = doc["wheel_speed_mps"].to<JsonArray>();
+    JsonArray commanded = doc["pwm_command"].to<JsonArray>();
+    for (int i = 0; i < 3; ++i) {
+        encoders.add(long(counts[i]));
+        measured.add(last_actual_[i]);
+        commanded.add(last_pwm_[i]);
+    }
+    // Main control/kinematics arrays use physical Motor1/2/3; header order differs.
+    JsonArray physical = doc["physical_motors"].to<JsonArray>();
+    for (int number : {1, 2, 3}) physical.add(number);
+    JsonArray headers = doc["header_order"].to<JsonArray>();
+    for (const char* header : {"M0", "M2", "M1"}) headers.add(header);
+#endif
 }
 
 // ============================================================

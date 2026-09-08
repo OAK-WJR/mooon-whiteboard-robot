@@ -25,7 +25,7 @@
 
 // --- RZ7899-MS 驱动 (每颗单 H 桥, 2 引脚控制: FI + BI) ---
 // 正转: FI=PWM, BI=LOW    反转: FI=LOW, BI=PWM
-// 刹车: FI=LOW, BI=LOW
+// 滑行停止: FI=LOW, BI=LOW；RZ7889-MS 主动刹车为两脚 HIGH
 
 #ifdef CONFIG_IDF_TARGET_ESP32C6
 // ===================== ESP32-C6 (转接板 + Waveshare C6-LCD-1.47) =====================
@@ -48,7 +48,11 @@
 #define MOTOR2_BI_PIN       3        // GPIO3
 
 // --- 编码器引脚 (AB 相), 同样按物理电机顺序 ---
+#ifdef WBB_TOP_BOARD_V2
+#define ENC0_A_PIN          7        // New integrated board: GPIO16 remains UART TX.
+#else
 #define ENC0_A_PIN          16       // GPIO16 (UART0 TXD, 经转接板 100Ω 串阻)
+#endif
 #define ENC0_B_PIN          17       // GPIO17 (UART0 RXD)
 #define ENC1_A_PIN          20       // GPIO20  <- M2 头
 #define ENC1_B_PIN          23       // GPIO23  <- M2 头
@@ -190,5 +194,12 @@
 // 落地 + M1 编码器干净(theta 可信)后改成 ~3.0 启用, 才能拉直。
 #define KP_ANGULAR          0.0f    // 航向保持比例增益 (0=关; 落地可信后设 3.0)
 #define MAX_ANGULAR_SPEED   1.5f    // 最大角速度 (rad/s)
+
+// R3 environments force these public defaults before private config.h is read.
+// Wireless credentials are provisioned to NVS by the integrated runtime.
+// The profile is intentionally unqualified for both three-6V and three-12V sets.
+#ifdef WBB_TOP_BOARD_R3
+#include "board_profile_r3.h"
+#endif
 
 #endif // CONFIG_H

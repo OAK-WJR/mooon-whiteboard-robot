@@ -1,5 +1,7 @@
 #include "odometry.h"
-#include "config.h"
+#include "firmware_config.h"
+#include <freertos/FreeRTOS.h>
+#include <freertos/task.h>
 #include <math.h>
 // 历史: 这里曾 #include <driver/adc.h> 调 adc_power_acquire(), 用来压 v1 板
 // GPIO36/39 上的 ESP32 Errata 3.11 噪声。v2 板已把 ENC1 挪到 GPIO22/23,
@@ -14,10 +16,24 @@
 // AB 相状态转移, 忽略非法跳变
 // ============================================================
 
-static volatile long enc_counts_[3] = {0, 0, 0};
+// Fixed-width modular counters: signed ++/-- is undefined at the limit.
+// One lock also makes read/reset consistent with ISRs on dual-core ESP32.
+static volatile uint32_t enc_counts_[3] = {0, 0, 0};
+static portMUX_TYPE encoder_mux_ = portMUX_INITIALIZER_UNLOCKED;
 static constexpr int8_t kEncoderDirSign[3] = {
     ENCODER_DIR_M0, ENCODER_DIR_M1, ENCODER_DIR_M2
 };
+static_assert((ENCODER_DIR_M0 == 1 || ENCODER_DIR_M0 == -1) &&
+              (ENCODER_DIR_M1 == 1 || ENCODER_DIR_M1 == -1) &&
+              (ENCODER_DIR_M2 == 1 || ENCODER_DIR_M2 == -1),
+              "Encoder directions must be +1 or -1");
+
+// Map the 32-bit window to signed telemetry without an out-of-range cast or
+// negating INT32_MIN. The same conversion decodes modular count differences.
+static long signed_count(uint32_t value) {
+    if (value <= INT32_MAX) return static_cast<long>(value);
+    return -1L - static_cast<long>(UINT32_MAX - value);
+}
 
 // --- 编码器 1 状态机去抖 (GPIO36/39 WiFi 干扰防护) ---
 // AB 相合法状态转移表: 00→01→11→10→00 (正转) / 反向 (反转)
@@ -35,50 +51,61 @@ static const int8_t ENC_STATE_TABLE[16] = {
 
 // --- 编码器 0 ISR (GPIO34/35, 标准四倍频) ---
 static void IRAM_ATTR enc0_a_isr() {
+    taskENTER_CRITICAL_ISR(&encoder_mux_);
     if (digitalRead(ENC0_A_PIN) == digitalRead(ENC0_B_PIN))
-        enc_counts_[0]--;
+        enc_counts_[0] = enc_counts_[0] - 1U;
     else
-        enc_counts_[0]++;
+        enc_counts_[0] = enc_counts_[0] + 1U;
+    taskEXIT_CRITICAL_ISR(&encoder_mux_);
 }
 static void IRAM_ATTR enc0_b_isr() {
+    taskENTER_CRITICAL_ISR(&encoder_mux_);
     if (digitalRead(ENC0_A_PIN) == digitalRead(ENC0_B_PIN))
-        enc_counts_[0]++;
+        enc_counts_[0] = enc_counts_[0] + 1U;
     else
-        enc_counts_[0]--;
+        enc_counts_[0] = enc_counts_[0] - 1U;
+    taskEXIT_CRITICAL_ISR(&encoder_mux_);
 }
 
 // --- 编码器 1 ISR (GPIO36/39, 状态机去抖) ---
 // adc_power_acquire() 消除硬件噪声, 状态机过滤残余毛刺
 static void IRAM_ATTR enc1_isr() {
+    taskENTER_CRITICAL_ISR(&encoder_mux_);
     uint8_t a = digitalRead(ENC1_A_PIN);
     uint8_t b = digitalRead(ENC1_B_PIN);
     uint8_t new_state = (a << 1) | b;
     uint8_t idx = (enc1_prev_state_ << 2) | new_state;
     int8_t delta = ENC_STATE_TABLE[idx];
     if (delta != 0) {
-        enc_counts_[1] += delta;
+        if (delta > 0) enc_counts_[1] = enc_counts_[1] + 1U;
+        else enc_counts_[1] = enc_counts_[1] - 1U;
         enc1_prev_state_ = new_state;
     }
+    taskEXIT_CRITICAL_ISR(&encoder_mux_);
 }
 
 // --- 编码器 2 ISR (GPIO18/19, 标准四倍频) ---
 static void IRAM_ATTR enc2_a_isr() {
+    taskENTER_CRITICAL_ISR(&encoder_mux_);
     if (digitalRead(ENC2_A_PIN) == digitalRead(ENC2_B_PIN))
-        enc_counts_[2]--;
+        enc_counts_[2] = enc_counts_[2] - 1U;
     else
-        enc_counts_[2]++;
+        enc_counts_[2] = enc_counts_[2] + 1U;
+    taskEXIT_CRITICAL_ISR(&encoder_mux_);
 }
 static void IRAM_ATTR enc2_b_isr() {
+    taskENTER_CRITICAL_ISR(&encoder_mux_);
     if (digitalRead(ENC2_A_PIN) == digitalRead(ENC2_B_PIN))
-        enc_counts_[2]++;
+        enc_counts_[2] = enc_counts_[2] + 1U;
     else
-        enc_counts_[2]--;
+        enc_counts_[2] = enc_counts_[2] - 1U;
+    taskEXIT_CRITICAL_ISR(&encoder_mux_);
 }
 
 void encoders_init() {
-#ifdef CONFIG_IDF_TARGET_ESP32C6
-    // C6: 编码器脚全是普通数字 IO, 均支持内部上拉, 无需 ADC errata 补丁
-    // ENC0_A=GPIO16 是 UART0 TXD, 转接板已串 100Ω 隔离开机 ROM 日志
+#if defined(CONFIG_IDF_TARGET_ESP32C6) || defined(WBB_TOP_BOARD_PICO)
+    // C6/Pico profile encoder pins support input pullups. The Pico mapping is
+    // GPIO10/11 here; UART43/44 and ARM16 are never encoder inputs.
     pinMode(ENC0_A_PIN, INPUT_PULLUP);
     pinMode(ENC0_B_PIN, INPUT_PULLUP);
 #else
@@ -92,7 +119,9 @@ void encoders_init() {
     // Motor1 编码器: GPIO22/23 (v2 板) — 普通数字脚, 均支持内部上拉, 免外部电阻
     pinMode(ENC1_A_PIN, INPUT_PULLUP);   // GPIO22
     pinMode(ENC1_B_PIN, INPUT_PULLUP);   // GPIO23
+    taskENTER_CRITICAL(&encoder_mux_);
     enc1_prev_state_ = (digitalRead(ENC1_A_PIN) << 1) | digitalRead(ENC1_B_PIN);
+    taskEXIT_CRITICAL(&encoder_mux_);
     attachInterrupt(digitalPinToInterrupt(ENC1_A_PIN), enc1_isr, CHANGE);
     attachInterrupt(digitalPinToInterrupt(ENC1_B_PIN), enc1_isr, CHANGE);
 
@@ -104,19 +133,22 @@ void encoders_init() {
 }
 
 void encoders_read(volatile long counts[3]) {
-    noInterrupts();
-    counts[0] = enc_counts_[0] * kEncoderDirSign[0];
-    counts[1] = enc_counts_[1] * kEncoderDirSign[1];
-    counts[2] = enc_counts_[2] * kEncoderDirSign[2];
-    interrupts();
+    uint32_t snapshot[3];
+    taskENTER_CRITICAL(&encoder_mux_);
+    for (int i = 0; i < 3; ++i) snapshot[i] = enc_counts_[i];
+    taskEXIT_CRITICAL(&encoder_mux_);
+    for (int i = 0; i < 3; ++i) {
+        uint32_t directed = kEncoderDirSign[i] > 0 ? snapshot[i] : uint32_t(0) - snapshot[i];
+        counts[i] = signed_count(directed);
+    }
 }
 
 void encoders_reset() {
-    noInterrupts();
+    taskENTER_CRITICAL(&encoder_mux_);
     enc_counts_[0] = 0;
     enc_counts_[1] = 0;
     enc_counts_[2] = 0;
-    interrupts();
+    taskEXIT_CRITICAL(&encoder_mux_);
 }
 
 // ============================================================
@@ -143,7 +175,7 @@ void Odometry::reset() {
 }
 
 void Odometry::update(float dt) {
-    if (dt <= 0.0f) return;
+    if (!isfinite(dt) || dt <= 0.0f) return;
 
     // 读取当前编码器计数
     volatile long counts[3];
@@ -151,13 +183,16 @@ void Odometry::update(float dt) {
 
     // 计算各轮线速度
     // 四倍频: 实际脉冲数 = encoder_cpr_ * 4
-    float cpr4 = (float)(encoder_cpr_ * 4);
+    float cpr4 = static_cast<float>(encoder_cpr_) * 4.0f;
     float wheel_circumference = 2.0f * M_PI * kin_.getWheelRadius();
 
     WheelVelocity wv;
     for (int i = 0; i < 3; i++) {
-        long delta = counts[i] - prev_counts_[i];
-        prev_counts_[i] = counts[i];
+        // Unsigned subtraction preserves a small positive/negative movement at
+        // both the signed reporting boundary and the full 32-bit rollover.
+        uint32_t current = static_cast<uint32_t>(counts[i]);
+        long delta = signed_count(current - prev_counts_[i]);
+        prev_counts_[i] = current;
 
         float revolutions = (float)delta / cpr4;
         float raw_vel = (revolutions * wheel_circumference) / dt;

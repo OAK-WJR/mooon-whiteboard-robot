@@ -13,7 +13,7 @@
 #ifdef MOTOR_TEST_MODE
 
 #include <Arduino.h>
-#include "config.h"
+#include "firmware_config.h"
 #include "motor_driver.h"
 #include "pid_controller.h"
 #include "kinematics.h"

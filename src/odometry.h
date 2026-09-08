@@ -48,7 +48,7 @@ public:
         pose_.x = x; pose_.y = y; pose_.theta = theta;
     }
 
-    /** 获取原始编码器计数 (调试用) */
+    /** 方向校正后的 32 位有符号计数窗口；累计越界时回绕 (调试用) */
     void getEncoderCounts(volatile long counts[3]) const;
 
 private:
@@ -60,7 +60,8 @@ private:
     WheelVelocity wheel_velocity_;
 
     // 上一次的编码器计数 (用于计算差值)
-    long prev_counts_[3] = {0, 0, 0};
+    // A sample interval must contain fewer than 2^31 net encoder edges.
+    uint32_t prev_counts_[3] = {0, 0, 0};
 };
 
 // ---- 编码器中断相关 (全局) ----

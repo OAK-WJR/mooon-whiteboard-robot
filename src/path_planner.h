@@ -1,7 +1,7 @@
 #ifndef PATH_PLANNER_H
 #define PATH_PLANNER_H
 
-#include "config.h"
+#include "firmware_config.h"
 
 struct Waypoint {
     float x;

@@ -7,8 +7,8 @@
 #include "pid_controller.h"
 #include "path_planner.h"
 #include "trajectory_follower.h"
-#include "wifi_comm.h"
-#include "config.h"
+#include <ArduinoJson.h>
+#include "firmware_config.h"
 
 enum RobotState {
     STATE_IDLE,
@@ -22,6 +22,9 @@ enum RobotState {
 class RobotController {
 public:
     void begin();
+
+    // Hardware/task initialization failures must be able to stop all outputs.
+    void stopMotors();
     void update(float dt);           // 50Hz 控制循环调用
     void handleCommand(JsonDocument& doc);  // 处理 UDP 命令
     void fillStatus(JsonDocument& doc);     // 填充状态回传
@@ -66,9 +69,9 @@ private:
     // 堵转保护状态 (每轮独立)
     uint16_t      stall_cnt_[3]    = {0, 0, 0};  // 连续"用力但不动"的拍数
     uint8_t       stall_trips_[3]  = {0, 0, 0};  // 已触发次数, 达 STALL_MAX_TRIPS 则锁定
-    unsigned long stall_resume_[3] = {0, 0, 0};  // 冷却到期时刻 (millis), 0=未在冷却
+    uint32_t      stall_started_[3] = {0, 0, 0};  // 冷却开始时刻，按 32 位回绕求已用时间
+    bool          stall_cooling_[3] = {false, false, false};  // 时间值 0 也是合法时刻
 
-    void stopMotors();
     // 目标轮速 -> FF+PID+静摩擦+slew -> PWM (导航与单轮测试共用同一管线)
     void driveWheels(const WheelVelocity& target, const BodyVelocity& body, float dt);
 };

@@ -4,7 +4,7 @@
 #include <WiFi.h>
 #include <WiFiUdp.h>
 #include <ArduinoJson.h>
-#include "config.h"
+#include "firmware_config.h"
 
 class WifiComm {
 public:

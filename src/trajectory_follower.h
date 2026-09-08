@@ -3,7 +3,7 @@
 
 #include "path_planner.h"
 #include "kinematics.h"
-#include "config.h"
+#include "firmware_config.h"
 #include <math.h>
 
 class TrajectoryFollower {
