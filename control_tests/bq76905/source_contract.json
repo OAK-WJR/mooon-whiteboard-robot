@@ -1,0 +1,61 @@
+{
+  "purpose": "Source oracle for the independent monitor tests, not a fabrication or charging approval",
+  "research": "hyperresearch search returned no local vault; existing retained TI PDFs and bounded official TI software guide used; no external API keys",
+  "retained_base": "hardware/top_board_v2/kiss_6v/cell_monitor_integration/sources",
+  "retained_sha256": {
+    "bq76905.pdf": "00976fdb82eef27c4c515c8bb565dd9ef332fc9224986567dab44a2506ac57b1",
+    "bq76905.txt": "e1c6501fc165eb6b85c6061d891c4edad760befbae3cc666d0d63cc15550e0fd",
+    "bq76905_trm.pdf": "24a062743e4eaecf79eb3b4b3d9b9618acbbc599cff0bfe12363df2a333e0f81",
+    "bq76905_trm.txt": "3ff14e23fffc5dd622afa743b3bfdf04bc13581e8d441d0ede367ad3a6816507"
+  },
+  "primary_sources": [
+    {"id": "SLUSE97", "url": "https://www.ti.com/lit/ds/symlink/bq76905.pdf", "revision": "November 2023"},
+    {"id": "SLUUCI8", "url": "https://www.ti.com/lit/ug/sluuci8/sluuci8.pdf", "revision": "November 2023"},
+    {"id": "SLUAAM4_device", "url": "https://www.ti.com/document-viewer/lit/html/SLUAAM4/GUID-4CF2CBF4-59FC-4D52-BF6B-6DBF6FD985E0", "section": "2.1", "device_number": "0x7605"},
+    {"id": "SLUAAM4_crc", "url": "https://www.ti.com/document-viewer/lit/html/SLUAAM4/GUID-8BA27471-7E9C-46CC-9D03-ECBD6DC8419B", "section": "4", "captured_crc_vectors": [
+      {"bytes": [16, 62, 34], "crc": 99},
+      {"bytes": [0], "crc": 0},
+      {"bytes": [16, 20, 17, 197], "crc": 121},
+      {"bytes": [11], "crc": 49}
+    ]}
+  ],
+  "trm_text_checks": [
+    {"fact": "Cell1 I2 at 0x14, table 11-1", "regex": "^\\s*0x14\\s+Cell 1 Voltage\\s+mV\\s+I2"},
+    {"fact": "Cell5 I2 at 0x1C, table 11-1", "regex": "^\\s*0x1C\\s+Cell 5 Voltage\\s+mV\\s+I2"},
+    {"fact": "Stack unsigned U2", "regex": "^\\s*0x26\\s+Stack Voltage\\s+mV\\s+U2"},
+    {"fact": "TS raw I2 at 0x2A", "regex": "^\\s*0x2A\\s+TS Measurement\\s+ADC\\s+I2"},
+    {"fact": "Battery Status at 0x12", "regex": "^\\s*0x12\\s+Battery Status"},
+    {"fact": "FET CONTROL H1 at 0x68", "regex": "^\\s*0x68\\s+FET CONTROL\\s+Hex\\s+H1"},
+    {"fact": "enter config command", "regex": "^\\s*0x0090\\s+SET_CFGUPDATE"},
+    {"fact": "exit config command", "regex": "^\\s*0x0092\\s+EXIT_CFGUPDATE"},
+    {"fact": "device number subcommand", "regex": "^\\s*0x0001\\s+DEVICE_NUMBER"},
+    {"fact": "balancing status H1", "regex": "^\\s*0x0083\\s+CB_ACTIVE_CELLS[^\\n]*Hex\\s+H1"},
+    {"fact": "VcellMode is ONE byte, not software guide's erroneous H2 summary", "regex": "0x901B\\s+Vcell Mode\\s+H1"},
+    {"fact": "2S uses bottom Cell1 and physical Cell5", "regex": "2 = Two actual cells are in use \\(VC5-VC4A, VC1-VC0\\)"},
+    {"fact": "upper-cell lower-voltage validity constraint", "regex": "not measured correctly if the lower cell voltage drops below 2 V, because then VC4A is below 2 V"},
+    {"fact": "CRC startup default is disabled", "regex": "initially powers up by default with CRC disabled"},
+    {"fact": "I2C Config H2 default", "regex": "0x9017\\s+I2C Config\\s+H2[^\\n]*0x3400"},
+    {"fact": "data acquisition H2", "regex": "0x9019\\s+DA Config\\s+H2"},
+    {"fact": "balancing lock address", "regex": "0x9020\\s+Balancing Configuration\\s+H1"},
+    {"fact": "REGOUT configuration H1", "regex": "0x9015\\s+REGOUT Config\\s+H1"},
+    {"fact": "I2C address configuration H1", "regex": "0x9016\\s+I2C Address\\s+H1"},
+    {"fact": "length read advances the window", "regex": "When the data length in 0x61 is read, the device automatically increments"},
+    {"fact": "length written last commits", "regex": "data length must be\\s+written last, after the checksum has been written"},
+    {"fact": "RAW FULLSCAN is a pulse, not latched", "regex": "7\\s+FULLSCAN\\s+This bit pulses high briefly"},
+    {"fact": "sample/startup event latch", "regex": "2\\s+INITCOMP\\s+This bit is latched when the device completes the startup measurement sequence"},
+    {"fact": "Enabled A bit order 7..0, table 12-10", "regex": "COV\\s+CUV\\s+SCD\\s+OCD1\\s+OCD2\\s+OCC\\s+CURLATCH\\s+REGOUT"},
+    {"fact": "Enabled B bit order 7..0, table 12-11", "regex": "RSVD0_1\\s+RSVD0_0\\s+OTD\\s+OTC\\s+UTD\\s+UTC\\s+OTINT\\s+HWD"},
+    {"fact": "DSG route bit order 7..0 differs from Enabled A, table 12-12", "regex": "CUV\\s+SCD\\s+OCD1\\s+OCD2\\s+HWD\\s+OTD\\s+UTD\\s+OTINT"},
+    {"fact": "CHG route bit order 7..0 differs from DSG and Enabled A, table 12-13", "regex": "COV\\s+SCD\\s+OCC\\s+RSVD0\\s+HWD\\s+OTC\\s+UTC\\s+OTINT"},
+    {"fact": "Both route bit order 7..0 has no OTINT, table 12-14", "regex": "RSVD0_4\\s+RSVD0_3\\s+RSVD0_2\\s+RSVD0_1\\s+RSVD0_0\\s+VREF\\s+VSS\\s+REGOUT"},
+    {"fact": "Safety Status B bit order 7..0 differs from Enabled B, table 11-4", "regex": "OTD\\s+OTC\\s+UTD\\s+UTC\\s+OTINT\\s+HWD\\s+VREF\\s+VSS"},
+    {"fact": "DSG routing address", "regex": "0x9026\\s+DSG FET Protections A\\s+H1"},
+    {"fact": "CHG routing address", "regex": "0x9027\\s+CHG FET Protections A\\s+H1"},
+    {"fact": "Both routing address", "regex": "0x9028\\s+Both FET Protections B\\s+H1"}
+  ],
+  "source_conflicts": [
+    "SLUUCI8 section 5.1.2 prose contains stale Cell1/upper-cell addresses. Tables 5-1 and 11-1 and SLUAAM4 section 1.2 establish 0x14 / physical Cell5 at 0x1C.",
+    "SLUAAM4 section 3.4 summary labels Vcell Mode H2. SLUUCI8 table 12-6 and address summary establish H1 at 0x901B; 0x901C is a different setting.",
+    "REGOUT default summary 0x08 and the voltage-field prose default disagree. Driver uses actual live and DM readback, refuses mismatch before EXIT_CFGUPDATE, and never overwrites REGOUT voltage or address."
+  ]
+}
