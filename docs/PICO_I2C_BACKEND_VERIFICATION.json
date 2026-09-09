@@ -1,0 +1,82 @@
+{
+  "status": "PROJECT_LOCAL_BACKEND_OFFLINE_VERIFIED_NOT_SILICON_QUALIFIED",
+  "date": "2026-09-08",
+  "sdk": "ESP-IDF5.5.4",
+  "installed_commit": "735507283d",
+  "source_manifest": "../third_party/esp_idf_i2c_no_clear/source_manifest.json",
+  "upstream_commit_comparison": "All three retained v5.5.4 files compared byte-for-byte with the official installed commit published sources during implementation.",
+  "tests": [
+    {
+      "command": "python3 -B control_tests/pico_i2c_backend/verify_driver.py --build",
+      "result": "PASS",
+      "groups": 13,
+      "scope": "Actual extracted changed C waits/dispatch/quiesce; fake RTOS/FIFO boundaries; ASan/UBSan"
+    },
+    {
+      "command": "python3 -B control_tests/pico_i2c_backend/verify_adapter.py",
+      "result": "PASS",
+      "groups": 10,
+      "scope": "Actual C++ adapter with fake C API; ASan/UBSan"
+    },
+    {
+      "command": "python3 -B control_tests/pico_i2c/verify.py --tsan",
+      "result": "PASS",
+      "groups": 8,
+      "cancellation_races": 200,
+      "scope": "Actual shared worker with native RTOS/backend; separate ASan/UBSan and TSan runs"
+    }
+  ],
+  "shared_base_abi": {
+    "size": 52,
+    "members": {
+      "port_num": 0,
+      "is_lp_i2c": 4,
+      "spinlock": 8,
+      "hal": 16,
+      "clk_src": 20,
+      "clk_src_freq_hz": 24,
+      "sda_num": 28,
+      "scl_num": 32,
+      "pull_up_enable": 36,
+      "intr_handle": 40,
+      "pm_lock": 44,
+      "bus_mode": 48
+    },
+    "evidence": "Actual installed SDK archive and project object DWARF; compared by verify_driver.py --build"
+  },
+  "initial_forced_link_builds": {
+    "Pico": {
+      "ram_bytes": 56796,
+      "flash_bytes": 1196720
+    },
+    "R3": {
+      "ram_bytes": 51652,
+      "flash_bytes": 1417536
+    }
+  },
+  "current_runtime_verification": "PICO_RAIL_RUNTIME_VERIFICATION.json",
+  "limits": [
+    "No physical bus, USB, reset or load operation performed.",
+    "No whole-silicon peripheral simulation, hard real-time latency, analog waveform or actual I2C acceptance.",
+    "Abort releases peripheral lines without a recovery clock train; not a promise of zero electrical transitions.",
+    "Error partial transfer counts remain unknown; completed buffer counts are not per-byte ACK evidence.",
+    "A failed cleanup retains context and must be reported; no automatic recovery.",
+    "BQ runtime and scheduling with long BQ transfers are still unintegrated."
+  ],
+  "public_file_sha256": {
+    "include/pico_i2c_native.h": "dc1dea3c8ca816ca1a244606e07d0c3e04fd2cf971ed6ab6874e7fecadc2f324",
+    "include/pico_i2c_esp_backend.h": "99b3c74d5bec15510bf4cab6e4df3c91fc9373219b3f5c234db7867736931a7c",
+    "include/pico_i2c_transport.h": "27132308f23ec288f0cbdac34474d3f54f0520ba04373f2418d49f312935e03c",
+    "src/pico_i2c_native.c": "9d9dc04a1e2af0040a0e1fa4e456094b3edf1649f4d296b7d1db5e786b2a5b0b",
+    "src/pico_i2c_esp_backend.cpp": "deb702d6f968cd39169008db9c27f06da2a24eab55b8d02cbd045a78ca57a6f8",
+    "src/pico_i2c_transport.cpp": "b2cb732a217194724cedc0d9c6b61fd526f0de7bc8731052146a1cf3897eac98",
+    "control_tests/pico_i2c_backend/verify_driver.py": "e846ca5e23ceeee80836681f7b979dfed968304eb3a4687a522b73c4b4b6cc8d",
+    "control_tests/pico_i2c_backend/test_driver_waits.c": "d80470a11704ed57c218bcef72ff2a2990c21b0bbc80ab3541b9a30a01c2cb06",
+    "control_tests/pico_i2c_backend/verify_adapter.py": "9d282c6a83efc6fff80ec17714b962e996cbba2828ef210193791e2168ce06c9",
+    "control_tests/pico_i2c_backend/test_adapter.cpp": "f47b55906ade1731c9da7dde9514f30f79351f959ca87224be718a866de03488",
+    "control_tests/pico_i2c/verify.py": "3e47968737fd837fec965e6e842350d617f4c0a5adb97a18e82c2fe857d10535",
+    "control_tests/pico_i2c/test_transport.cpp": "d13775ee93662f0019976bb729f452cc5e4f67982281abfd442c04e5fb998de3",
+    "third_party/esp_idf_i2c_no_clear/adapt.py": "793650408fb05b332344886b989dcdb6aab254b93af2cecbd449752648db945d",
+    "third_party/esp_idf_i2c_no_clear/source_manifest.json": "30efb22d0beb98d7d0ceb29747c47ae6f18d4c4a22a12abd3526f631ebc1a3db"
+  }
+}

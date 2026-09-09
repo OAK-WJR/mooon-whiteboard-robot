@@ -1,0 +1,133 @@
+{
+  "status": "BQ_WAKE_READOUT_AND_HOST_OFFLINE_ONLY_PROTECTION_AND_PCB_OPEN",
+  "date": "2026-09-08",
+  "scope": "Finite GPIO39 wake, BQ monitor configuration/readout, shared INA scheduling and cell_status/cells integration. No device I/O or flashing; charging/motion/source-cycle remain disabled.",
+  "tests": [
+    {
+      "command": "python3 -B control_tests/verify_pico_profile.py",
+      "result": "PASS",
+      "gpio_cases": 27,
+      "runtime_cases": 38,
+      "watchdog_cases": 14,
+      "stage": "After shared service and GPIO changes; before dedicated cell report. GPIO21 matched native14-sheet netlist before/after."
+    },
+    {
+      "command": "python3 -B control_tests/bq76905/run_tests.py",
+      "result": "PASS",
+      "groups": 18,
+      "initialization_fault_positions": 296,
+      "source_contracts": 32
+    },
+    {
+      "command": "python3 -B control_tests/verify_pico_rails.py",
+      "result": "PASS",
+      "cases": 18,
+      "stage": "After BQ service integration."
+    },
+    {
+      "command": "python3 -B control_tests/verify_pico_cells.py --build",
+      "result": "PASS",
+      "cases": 14,
+      "scope": "Actual setup/loop/service/BQ/INA/serializer with fake worker/device/SDK; ASAN/UBSAN. Includes final wake GPIO failure stop."
+    },
+    {
+      "command": "python3 -B control_tests/pico_i2c/verify.py --tsan",
+      "result": "PASS",
+      "groups": 8,
+      "cancel_races": 200,
+      "scope": "ASAN/UBSAN plus TSAN; physical-idle false while cancelled transfer drains."
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m unittest discover -s control_tests -p 'test_pico*host.py' -v",
+      "result": "PASS",
+      "cases": 74,
+      "breakdown": {
+        "Pico": 23,
+        "rail": 36,
+        "cell": 15
+      },
+      "scope": "12 actual cell serializer fixtures; schema/HMAC/device identity/fake USB/WiFi/BLE. First fixture macro compile error fixed before successful run."
+    },
+    {
+      "command": "PYTHONDONTWRITEBYTECODE=1 .venv/bin/python -m unittest discover -s control_tests -p test_host.py -q",
+      "result": "PASS",
+      "cases": 14,
+      "scope": "Relevant existing host/R3 regressions."
+    }
+  ],
+  "public_builds": {
+    "Pico": {
+      "ram_bytes": 59116,
+      "flash_bytes": 1217132
+    },
+    "R3": {
+      "ram_bytes": 51652,
+      "flash_bytes": 1417536
+    }
+  },
+  "runtime_link": "Normal application, no forced-link flags; BQ Monitor::tick, INA Monitor::tick, Service::tickWake and namespaced native backend retained; stock master transfer absent.",
+  "timing_choices": {
+    "wake_pulse_us": 100000,
+    "wake_release_settle_us": 100000,
+    "late_wake_fault_us": 150000,
+    "physical_qualification": false
+  },
+  "hardware_baseline": {
+    "main_sheets": 14,
+    "boundary_nets": 52,
+    "component_pins": 587,
+    "unresolved_erc": 8,
+    "hardware_design_modified_by_firmware_work": false
+  },
+  "limits": [
+    "No real electrical readings, TS waveform, wireless timing or silicon bus tests.",
+    "Default BQ profile has no battery-specific protection thresholds; all CHG/DSG and load permissions remain OFF.",
+    "A mid-configuration fault can leave CONFIG_UPDATE active; verified BQ reset/recovery is still missing.",
+    "wake_requested is software state, not physical TS feedback.",
+    "Cell sample age is measured from publication at serialization; excludes transport and host latency, readout is not an atomic ADC frame.",
+    "Current and battery temperature are unmeasured/null.",
+    "Power dynamic qualification, exact motor/harness, complete electrical PCB/manual routing and real assembly tests remain unfinished.",
+    "Prior failed MOS transient simulations remain failed."
+  ],
+  "historical_checkpoints_preserved": [
+    "docs/PICO_RAIL_RUNTIME_VERIFICATION.json",
+    "docs/PICO_I2C_BACKEND_VERIFICATION.json",
+    "hardware/top_board_v2/kiss_6v/power_integration/pico_cell_defaults_review.json"
+  ],
+  "public_file_sha256": {
+    "include/pico_gpio_safe.h": "dbade36f5381de2173cc108e335a281ccfbb2a49ddf82b2eb7dbdaa8e701db76",
+    "include/pico_i2c_transport.h": "9467b21eb6cd52f3bb7baa8d7f6a17bcb0dea81dd2d1e7d2676cb35854001ae6",
+    "include/pico_rail_service.h": "a8225c18cb7de3709d73fc8ccebdc8d98622f313be9ecdd759158629cf706aa4",
+    "include/bq76905_monitor.h": "592e47e6a6317bb906adb814880e0ebdf1ea598423027309bfba1d42bf0d2de8",
+    "include/ina3221_monitor.h": "265dafac151a8201d0c3c1d67404bcad9dbf4a34ee5dda42a6442a02d2825817",
+    "src/pico_i2c_transport.cpp": "d4a7f0e3697ab48b2465eaf692604bdb55a68b96845a6295c5670b4c1ce69fe7",
+    "src/pico_rail_service.cpp": "dd8c3c0020c80733bd3e12fa576ea325d262eb48d4a67cff35198e32ad1a484d",
+    "src/pico_rail_platform.cpp": "d71a900dee8cca121287031020980eaeee01eebf51bcddad1bef4aa34499da93",
+    "src/bq76905_monitor.cpp": "167b1a9e63b9eb317ee99f4b7aec85e3e24c88951de1273995704437252ad4b2",
+    "src/ina3221_monitor.cpp": "a50908f24f092d4c8e9b27c502b8f71c08dfc03bf6245a952e636bebbd32fcea",
+    "src/top_v2_main.cpp": "c94d4de80c6609a68f839c3d712a69c73ac988f29e77f331bb6e792da5a4f65d",
+    "scripts/robot_control.py": "c7930396ea5ff4435f79dbbf8efc95a030d8e5effc615ac446f505b9003c1bd3",
+    "control_tests/test_pico_gpio_safe.cpp": "44627d5037aa7a90d5b92318778ba0e1e99d2f504ae3fee8549d70f91f0dba34",
+    "control_tests/test_pico_profile.cpp": "7a3b36496e4b62260592db56b60f591d79d47840cd454733cf2bcab75c8210d6",
+    "control_tests/test_pico_cells.cpp": "ac4f5ece81bdcc15f2d6d68f0fc80f029e7846dfa567e33281e9d6618fb99cc2",
+    "control_tests/verify_pico_cells.py": "b3f89dd73fef79b5ace3b63563b5f4b523b01379ed59cf1a0d7482660312291a",
+    "control_tests/pico_cell_host_fixture.cpp": "5137f64d3838d8f3326da6562858098e4272d8052d799be3de2bf3bc566cd5a9",
+    "control_tests/pico_rail_mock.h": "3469a63a95d1b7e14a4f1c53eec5fb51b02eb5ad3c5890bac90e26a9f7676f81",
+    "control_tests/test_pico_cell_host.py": "69bb109b5ba633dccc9de0cab484eb34eaaab054d3b547385e25a7e904f7fa03",
+    "control_tests/test_pico_rail_host.py": "b357b8749919c1a84161bdf347073a84697f09542d7ffc549d393de0ba29628c",
+    "control_tests/bq76905/device_model.h": "0290802fcdce55a18253b3e75856e5ab2004ffa64e8321d74711c824f34274f1",
+    "control_tests/bq76905/test_monitor.cpp": "91b7114b77adfb67fdcf5e80ed31edc9d508b4b690b4ec4dacfda19aca91ec7b",
+    "control_tests/bq76905/run_tests.py": "cf510b8f6d6560cce68a6665550fc21775cac615a126afb3690802e54f961e7e",
+    "control_tests/pico_i2c/test_transport.cpp": "04906b5e71aa0741372c5dad17faadfa3627e68053203606ca880f1c37afdb7a",
+    "platformio.ini": "a7d50b8e3dff1effbfee0f57b1336b8f4fd27dc132dcebe40d0ab46a0e859130"
+  },
+  "local_test_log_sha256": {
+    "/tmp/wbb-cell-profile.log": "8dd1c2fd128c4eb4322ce5aa8ef23b80f6b75601b77039458606dcbe175ecf6f",
+    "/tmp/wbb-cell-core.log": "372710557b681241b19fef34785b71f01c30c4e5d566c5c4382648931f29b7f7",
+    "/tmp/wbb-cell-rails.log": "9c9b5bc0d80a5cb4f71ace67d6153d2debe0fbe58544fd16d19da146f88f8335",
+    "/tmp/wbb-cell-runtime.log": "b2c85149fe9a0bc484aae6d3f22ef9718591b2b117a1e1bfd33dc7903b730ec0",
+    "/tmp/wbb-cell-build.log": "f3a33c40c39d14840c42f2ab0775fe328fb6d9d040dcd679a72c53dd43455d2d",
+    "/tmp/wbb-cell-transport.log": "17e363d480185f3ed804448fb7ad616b93c25b79bcdfd61f13bda49fd8065a9a",
+    "/tmp/wbb-cell-host.log": "eece911e018b4cbc003851213e76c125b07ee261d678ebc8945bc3e3584c927c"
+  }
+}

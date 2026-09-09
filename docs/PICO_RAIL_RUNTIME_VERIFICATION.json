@@ -1,0 +1,107 @@
+{
+  "status": "INA_RUNTIME_AND_HOST_CONNECTED_OFFLINE_ONLY_NOT_FOR_FABRICATION",
+  "date": "2026-09-08",
+  "description": "Actual project backend instantiated for INA3221, complete fresh sample groups and error state serialized on USB/Wi-Fi/BLE. No BQ wake/configuration or load enable.",
+  "tests": [
+    {
+      "command": "python3 -B control_tests/verify_pico_rails.py --build",
+      "result": "PASS",
+      "runtime_cases": 18,
+      "scope": "Actual service/monitor/setup/loop/serializer with mock worker/device/SDK; ASan/UBSan"
+    },
+    {
+      "command": "python3 -B control_tests/verify_pico_profile.py",
+      "result": "PASS",
+      "gpio_cases": 24,
+      "runtime_cases": 38,
+      "watchdog_cases": 14,
+      "scope": "Actual selected consumers, safe defaults, controller, transports, meaningful R3/legacy regressions; before and after native 14-sheet netlist exports"
+    },
+    {
+      "command": "Public-only test_pico_profile.cpp status_budget focused rerun",
+      "result": "PASS",
+      "scope": "Maximum counters and widened rail metadata after final serializer fixture changes; ASan/UBSan"
+    },
+    {
+      "command": ".venv/bin/python -m unittest discover -s control_tests -p 'test_pico*host.py' -v",
+      "result": "PASS",
+      "cases": 59,
+      "breakdown": {
+        "Pico_host": 23,
+        "rail_host": 36
+      },
+      "verified_by": "Gauss worker; final changes read by main",
+      "scope": "Actual native firmware serializer plus independent hostile schema/UTF8/HMAC/fake USB and delayed BLE examples"
+    },
+    {
+      "result": "PASS",
+      "cases": 25,
+      "scope": "Additional offline R3/legacy host regressions",
+      "verified_by": "Gauss worker report"
+    }
+  ],
+  "public_builds": {
+    "Pico": {
+      "ram_bytes": 58332,
+      "flash_bytes": 1204656
+    },
+    "R3": {
+      "ram_bytes": 51652,
+      "flash_bytes": 1417536
+    }
+  },
+  "actual_runtime_link": "No force-link flags; final Pico ELF contains wbb_i2c_open/transfer/close and wbb_idf554_i2c_master_transmit_receive, rejects stock i2c_new_master_bus/master_transmit_receive/master_cmd_begin.",
+  "hardware_baseline": {
+    "main_sheets": 14,
+    "boundary_nets": 52,
+    "component_pins": 587,
+    "unresolved_erc": 8,
+    "electrical_layout_changed": false,
+    "existing_gpio_checkpoint": "../hardware/top_board_v2/kiss_6v/power_integration/pico_cell_defaults_review.json",
+    "note": "Prior checkpoint and its historical hashes preserved; new firmware evidence is recorded here."
+  },
+  "limits": [
+    "No real voltage readings or physical bus/radio timing qualification.",
+    "Sample age is at serialization, excludes UART/radio/BLE/host transit and cannot prove freshness at receipt.",
+    "Voltage/current accuracy, source capacity and power-cycle interlocks remain unqualified.",
+    "motor_current_ma and rail_3v3_mv remain null; no shunt/3V3 monitor added.",
+    "Motion, charging, BQ wake and source-cycle enable remain inactive.",
+    "Power transient qualification, exact motor/harness qualification, final electrical layout/manual routing and physical tests remain unfinished.",
+    "Prior failed MOS transient simulations remain failed, not superseded by these software tests."
+  ],
+  "public_file_sha256": {
+    "include/pico_i2c_native.h": "dc1dea3c8ca816ca1a244606e07d0c3e04fd2cf971ed6ab6874e7fecadc2f324",
+    "include/pico_i2c_esp_backend.h": "99b3c74d5bec15510bf4cab6e4df3c91fc9373219b3f5c234db7867736931a7c",
+    "include/pico_i2c_transport.h": "27132308f23ec288f0cbdac34474d3f54f0520ba04373f2418d49f312935e03c",
+    "src/pico_i2c_native.c": "9d9dc04a1e2af0040a0e1fa4e456094b3edf1649f4d296b7d1db5e786b2a5b0b",
+    "src/pico_i2c_esp_backend.cpp": "deb702d6f968cd39169008db9c27f06da2a24eab55b8d02cbd045a78ca57a6f8",
+    "src/pico_i2c_transport.cpp": "b2cb732a217194724cedc0d9c6b61fd526f0de7bc8731052146a1cf3897eac98",
+    "control_tests/pico_i2c_backend/verify_driver.py": "e846ca5e23ceeee80836681f7b979dfed968304eb3a4687a522b73c4b4b6cc8d",
+    "control_tests/pico_i2c_backend/test_driver_waits.c": "d80470a11704ed57c218bcef72ff2a2990c21b0bbc80ab3541b9a30a01c2cb06",
+    "control_tests/pico_i2c_backend/verify_adapter.py": "9d282c6a83efc6fff80ec17714b962e996cbba2828ef210193791e2168ce06c9",
+    "control_tests/pico_i2c_backend/test_adapter.cpp": "f47b55906ade1731c9da7dde9514f30f79351f959ca87224be718a866de03488",
+    "control_tests/pico_i2c/verify.py": "3e47968737fd837fec965e6e842350d617f4c0a5adb97a18e82c2fe857d10535",
+    "control_tests/pico_i2c/test_transport.cpp": "d13775ee93662f0019976bb729f452cc5e4f67982281abfd442c04e5fb998de3",
+    "third_party/esp_idf_i2c_no_clear/adapt.py": "793650408fb05b332344886b989dcdb6aab254b93af2cecbd449752648db945d",
+    "third_party/esp_idf_i2c_no_clear/source_manifest.json": "30efb22d0beb98d7d0ceb29747c47ae6f18d4c4a22a12abd3526f631ebc1a3db",
+    "include/pico_rail_service.h": "5997422cdf602d0800bcbaef411a06c270607fd4259263e5b33cf599debf7a13",
+    "src/pico_rail_service.cpp": "1b2b134ae0dde0edfcacd9c636b9b826b7ede480e02b7616d3fff41d94f8e49c",
+    "src/pico_rail_platform.cpp": "d7a089f4c9de1b7af517fda60314daa151ef3e7de6efc1d65b914749a3e7f871",
+    "include/ina3221_monitor.h": "265dafac151a8201d0c3c1d67404bcad9dbf4a34ee5dda42a6442a02d2825817",
+    "src/ina3221_monitor.cpp": "a50908f24f092d4c8e9b27c502b8f71c08dfc03bf6245a952e636bebbd32fcea",
+    "src/top_v2_main.cpp": "f0e42aa90175da57f2ae69d7735c4ee61a6e423e9ef9f4e03497636d2e23f7d9",
+    "src/top_v2_platform.h": "3516df7320e2210b78d82a22b1da2fbcb41c44d2cff648c178b8d0df3ab70933",
+    "src/control_transport.h": "4028ad5c5701eea93bbd6820ad4c5b55a2a2fdc0505a69941b168e0e673c1268",
+    "src/control_transport.cpp": "646aa831322851b7ad77a61020a587eb04b0ef7944afc8e01b34bfa35d91c085",
+    "control_tests/pico_rail_mock.h": "008c72a4fb6af93ff4ce0fec73117d64704c4e4f5c8ea6448c5fe9c42893b382",
+    "control_tests/test_pico_profile.cpp": "c88a539118357ddbbf36db23d009f57657c0d9ac911b236ea5d3326a3a391694",
+    "control_tests/test_pico_rails.cpp": "47b9f995ab7d59619a800571f0709fe15010a74010a12319763acf3a692ad34a",
+    "control_tests/verify_pico_rails.py": "de5b07f19f55310973aa6b4bfee369c3dde5a64a28383bc34c0a8955ad8732c5",
+    "control_tests/verify_pico_profile.py": "e094f1f3c1e84f3c8c239f2dbcd198d15c181e9c65ba1069b2f5b5595b4de3b1",
+    "control_tests/pico_host_status_fixture.cpp": "ba02fadaae6a8d4287417b72873bc41228ea0c5248f9293b767e212ae0b7491e",
+    "control_tests/test_pico_host.py": "20ed0a4a8fa30dc8a81bd3aea68d98f7d8de2e48f251638c65f803e9f612cad3",
+    "control_tests/test_pico_rail_host.py": "344b4a7e0f9651329faeef45daa263de58d6b0c145b0e06dcab6036d3ff205b6",
+    "scripts/robot_control.py": "60444c05299c36a6435cbbd1ba1257b5f10d5399e4816c959e83fff7519b964a",
+    "platformio.ini": "a7d50b8e3dff1effbfee0f57b1336b8f4fd27dc132dcebe40d0ab46a0e859130"
+  }
+}

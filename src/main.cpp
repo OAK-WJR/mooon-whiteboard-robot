@@ -4,7 +4,7 @@
  * ESP32 自己做: 路径规划 + 循线 + FF/PID。上位机 (scripts/whiteboard_app.py)
  * 只通过 WiFi UDP 发目标区域 / 位置校正, 并接收状态回传。
  *
- * 双任务: controlTask(Core1, 50Hz 控制) + commTask(Core0, WiFi 收发)。
+ * 双任务: controlTask(50Hz 控制) + commTask(WiFi 收发)。C6 两者都在 Core0。
  * loop() 跑一个串口调参控制台 —— 运行时改 PID/速度/前瞻, 无需重新烧录。
  *
  * 串口命令 (115200, 行结束发送):
@@ -24,11 +24,23 @@
  *   h / ?          帮助
  */
 
+#if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO) || defined(WBB_TOP_BOARD_KISS_C6)
+#include <Arduino.h>
+#include <type_traits>
+// Check the installed core's actual alias for factory UART bridge profiles.
+static_assert(std::is_same<decltype(Serial), HardwareSerial>::value,
+              "Factory bridge Serial must be HardwareSerial, not native USB CDC");
+static_assert(&Serial == &Serial0, "Factory bridge console must use hardware UART0");
+#endif
+
+#if defined(WBB_R3_DIAGNOSTIC)
+#include "../c6_selftest/src/main.cpp"
+#elif !defined(WBB_TOP_BOARD_V2)
 #include <Arduino.h>
 #include <ArduinoJson.h>
 #include "robot_controller.h"
 #include "wifi_comm.h"
-#include "config.h"
+#include "firmware_config.h"
 
 static RobotController robot;
 static WifiComm wifi;
@@ -38,7 +50,7 @@ static int  tune_motor = -1;       // -1=全部三轮
 static bool telemetry_on = false;
 static bool json_stream  = false;  // j: 串口流式输出位姿 JSON (USB 导航可视化)
 
-// FreeRTOS 控制任务 (Core 1, 高优先级, 50Hz)
+// FreeRTOS 控制任务 (高优先级, 50Hz)
 static void controlTask(void* param) {
     (void)param;
     TickType_t last_wake = xTaskGetTickCount();
@@ -177,10 +189,21 @@ void setup() {
     Serial.printf("UDP listen: %d, report: %d\n", UDP_LISTEN_PORT, UDP_REPORT_PORT);
     printHelp();
 
-    // 控制循环固定在 Core 1
-    xTaskCreatePinnedToCore(controlTask, "control", 4096, NULL, 19, NULL, 1);
-    // 通信任务在 Core 0
-    xTaskCreatePinnedToCore(commTask, "comm", 8192, NULL, 5, NULL, 0);
+    // ESP32-C6 只有 Core0；双核 ESP32 才使用 Core1。
+    constexpr BaseType_t controlCore = portNUM_PROCESSORS > 1 ? 1 : 0;
+    TaskHandle_t controlHandle = nullptr;
+    const BaseType_t controlResult = xTaskCreatePinnedToCore(
+        controlTask, "control", 4096, NULL, 19, &controlHandle, controlCore);
+    const BaseType_t commResult = controlResult == pdPASS
+        ? xTaskCreatePinnedToCore(commTask, "comm", 8192, NULL, 5, NULL, 0)
+        : pdFAIL;
+    if (controlResult != pdPASS || commResult != pdPASS) {
+        if (controlHandle) vTaskDelete(controlHandle);
+        robot.stopMotors();
+        Serial.println(F("FAULT TASK_INIT: control/communication task could not start"));
+        // 不进入能接收运动命令的 loop()；复位后重新初始化。
+        for (;;) delay(1000);
+    }
 }
 
 void loop() {
@@ -213,3 +236,4 @@ void loop() {
 
     vTaskDelay(pdMS_TO_TICKS(20));
 }
+#endif // legacy ESP32 / C6 adapter entry point

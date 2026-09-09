@@ -1,0 +1,23 @@
+{
+  "version": "ESP-IDF5.5.4",
+  "license": "Apache-2.0",
+  "sources": {
+    "i2c_master.c": {
+      "url": "https://raw.githubusercontent.com/espressif/esp-idf/v5.5.4/components/esp_driver_i2c/i2c_master.c",
+      "sha256": "ec60ff88f7c922bb16d43b99a006e4e8d7fbaf6d1677737b077e25e05b81294b"
+    },
+    "i2c_private.h": {
+      "url": "https://raw.githubusercontent.com/espressif/esp-idf/v5.5.4/components/esp_driver_i2c/i2c_private.h",
+      "sha256": "89534a28f2566308c04f8d97e21faa95bdd8f2e04a2c65023a154d73f27eef26"
+    },
+    "i2c_common.c": {
+      "url": "https://raw.githubusercontent.com/espressif/esp-idf/v5.5.4/components/esp_driver_i2c/i2c_common.c",
+      "sha256": "249000fe10e9214ec46554268b25da6c7a09082ca816b54004ca52243d755f95"
+    }
+  },
+  "adapted_sha256": {
+    "i2c_master.c": "05e11dc00dacd350a0ad6a062e5d6fef5b1367a9016029a87ab3d410df39686e",
+    "i2c_private.h": "063ad2b5e9a0867052d078f9e469592b2090e7603eb751b550e259e70dda2022",
+    "namespace.h": "0a54b27f0971b14b35a8860a0a44d2e584bfcae1e217bd765c2a280f9bb37b65"
+  }
+}
