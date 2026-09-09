@@ -1,0 +1,15 @@
+{
+  "esptool_version": "5.3.0",
+  "source_sha256": {
+    "<repo>/.venv/lib/python3.13/site-packages/esptool/__init__.py": "34631a2163b50b5dadc4c9f9ffd9774fa21cd7e4b64a9f219d36a5eb4943696f",
+    "<repo>/.venv/lib/python3.13/site-packages/esptool/loader.py": "97f066b99aeef376ce850b309a3e79c392252863aab30787427cb817292bfcce",
+    "<repo>/.venv/lib/python3.13/site-packages/esptool/reset.py": "69995d88d7ca41f151f14412d260360691da2b62888a3d86908c36a4a146ac2b",
+    "<repo>/.venv/lib/python3.13/site-packages/esptool/config.py": "006f0cc1984ff41a6dcd74cb9ec8b276f936bee6195a973a9691e56d4e6fd908",
+    "<repo>/.venv/lib/python3.13/site-packages/esptool/targets/esp32c6.py": "e930d5c4c5715e2c6540d35da01401fee1814f89d6cf8de19c513ecee1a7e1f6"
+  },
+  "references": [
+    "https://github.com/espressif/esptool/blob/v5.3.0/esptool/reset.py",
+    "https://github.com/WCHSoftGroup/ch343ser_linux/blob/main/driver/ch343.c"
+  ],
+  "notes": "Source versions recorded after offline strategy tests; no serial inventory or device open."
+}
