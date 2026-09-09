@@ -1,0 +1,364 @@
+(kicad_sch
+  (version 20250114)
+  (generator whiteboardbot_kiss_logic)
+  (uuid aecd2725-675a-56c2-8eb4-1797c7355554)
+  (paper "A3")
+  (title_block
+    (title "TOP BOARD / INTEGRATED SCHEMATIC REVIEW")
+    (date "2026-09-08")
+    (rev "LOGIC REVIEW")
+    (company "WhiteBoardBot")
+  )
+  (lib_symbols)
+  (text "WHITEBOARDBOT / TOP BOARD"
+    (at 15.24 15.24 0)
+    (effects
+      (font
+        (size 1.778 1.778)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid c30a648e-74d3-5d49-a5ef-5d9a60179e64)
+  )
+  (text "TOP BOARD / INTEGRATED SCHEMATIC REVIEW"
+    (at 15.24 24.13 0)
+    (effects
+      (font
+        (size 1.778 1.778)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid 1aa27dcd-56c1-5fed-bf2b-7b827a7498a2)
+  )
+  (text "TOP-BOARD REVIEW - USB POWER / PROTECTION / ADC FIRMWARE / PCB NOT QUALIFIED"
+    (at 15.24 31.75 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 0079a240-9382-5e75-9c6a-01d7fafb6c01)
+  )
+  (text "01 / DRAWING INDEX"
+    (at 25.4 45.72 0)
+    (effects
+      (font
+        (size 1.524 1.524)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid c4131221-3748-505a-b31d-666fcc363e1e)
+  )
+  (polyline
+    (pts
+      (xy 25.4 49.53)
+      (xy 182.88 49.53)
+    )
+    (stroke
+      (width .254)
+      (type solid)
+    )
+    (uuid bfd56eda-2578-5534-8360-f400c0a173bf)
+  )
+  (sheet
+    (at 25.4 60.96)
+    (size 142.24 22.86)
+    (fields_autoplaced)
+    (stroke
+      (width 0.254)
+      (type solid)
+    )
+    (fill
+      (color 0 0 0 0)
+    )
+    (uuid f7a68b6e-36a6-5f43-8557-805fee22e77f)
+    (property "Sheetname" "CONTROLLER / DEFAULT STOP"
+      (at 25.4 59.69 0)
+      (effects
+        (font
+          (size 1.27 1.27)
+        )
+        (justify left bottom)
+      )
+    )
+    (property "Sheetfile" "controller.kicad_sch"
+      (at 25.4 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (justify left top)
+      )
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554"
+          (page "2")
+        )
+      )
+    )
+  )
+  (sheet
+    (at 25.4 99.06)
+    (size 142.24 22.86)
+    (fields_autoplaced)
+    (stroke
+      (width 0.254)
+      (type solid)
+    )
+    (fill
+      (color 0 0 0 0)
+    )
+    (uuid 8edb6fa1-2e6c-54d3-abb8-87e5f8f94654)
+    (property "Sheetname" "USB COMMUNICATION / AUTOMATIC RECOVERY"
+      (at 25.4 97.79 0)
+      (effects
+        (font
+          (size 1.27 1.27)
+        )
+        (justify left bottom)
+      )
+    )
+    (property "Sheetfile" "usb_recovery.kicad_sch"
+      (at 25.4 123.19 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (justify left top)
+      )
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554"
+          (page "3")
+        )
+      )
+    )
+  )
+  (sheet
+    (at 25.4 137.16)
+    (size 142.24 22.86)
+    (fields_autoplaced)
+    (stroke
+      (width 0.254)
+      (type solid)
+    )
+    (fill
+      (color 0 0 0 0)
+    )
+    (uuid 6296101b-7eed-52f3-b818-cb2b1ae69e62)
+    (property "Sheetname" "BOTTOM BOARD / THREE MOTOR INTERFACES"
+      (at 25.4 135.89 0)
+      (effects
+        (font
+          (size 1.27 1.27)
+        )
+        (justify left bottom)
+      )
+    )
+    (property "Sheetfile" "bottom_interfaces.kicad_sch"
+      (at 25.4 161.29 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (justify left top)
+      )
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554"
+          (page "4")
+        )
+      )
+    )
+  )
+  (sheet
+    (at 25.4 175.26)
+    (size 142.24 22.86)
+    (fields_autoplaced)
+    (stroke
+      (width 0.254)
+      (type solid)
+    )
+    (fill
+      (color 0 0 0 0)
+    )
+    (uuid 5dd4bd3e-22f0-5610-9b58-4889fa253cd4)
+    (property "Sheetname" "VOLTAGE DIVIDERS / ADC FILTERS"
+      (at 25.4 173.99 0)
+      (effects
+        (font
+          (size 1.27 1.27)
+        )
+        (justify left bottom)
+      )
+    )
+    (property "Sheetfile" "voltage_sense.kicad_sch"
+      (at 25.4 199.39 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (justify left top)
+      )
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554"
+          (page "5")
+        )
+      )
+    )
+  )
+  (sheet
+    (at 25.4 213.36)
+    (size 142.24 22.86)
+    (fields_autoplaced)
+    (stroke
+      (width 0.254)
+      (type solid)
+    )
+    (fill
+      (color 0 0 0 0)
+    )
+    (uuid ec95b900-7b01-5504-8768-e62ad05b5965)
+    (property "Sheetname" "LOGIC + 6V POWER CANDIDATE"
+      (at 25.4 212.09 0)
+      (effects
+        (font
+          (size 1.27 1.27)
+        )
+        (justify left bottom)
+      )
+    )
+    (property "Sheetfile" "power_stage.kicad_sch"
+      (at 25.4 237.49 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (justify left top)
+      )
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554"
+          (page "6")
+        )
+      )
+    )
+  )
+  (text "02 / TOP-BOARD SCOPE"
+    (at 208.28 45.72 0)
+    (effects
+      (font
+        (size 1.524 1.524)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid decd13a1-9e81-5de0-8ce5-642510a1d8fc)
+  )
+  (polyline
+    (pts
+      (xy 208.28 49.53)
+      (xy 388.62 49.53)
+    )
+    (stroke
+      (width .254)
+      (type solid)
+    )
+    (uuid 0abc3af0-fe80-51ab-baa6-08f3d346aa96)
+  )
+  (text "ESP32-C6, independent USB recovery and original 19 contacts."
+    (at 208.28 66.04 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid 85a5e8d2-fbef-5491-a4bc-341fb40fea93)
+  )
+  (text "Two supply converters; default ARM pull-down fitted once."
+    (at 208.28 78.74 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid 75810be3-c99a-5d47-b05b-f291105d669d)
+  )
+  (text "Voltage dividers included; ADC readout implemented, hardware unqualified."
+    (at 208.28 91.44 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid b6d3815a-5973-5285-bb30-8ff51e7cb67a)
+  )
+  (text "Existing bottom drivers are reused. No onboard charging circuit."
+    (at 208.28 104.14 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid ed8104da-0817-571c-841b-b92e8d696169)
+  )
+  (text "USB power allowance, inrush and off-state behavior are unresolved."
+    (at 208.28 137.16 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid 1e0a1049-ac7b-55f1-8982-a571078215b4)
+  )
+  (text "VBAT_PROTECTED is an input requirement, not implemented protection."
+    (at 208.28 149.86 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid ef3ccd0a-d222-5a72-b824-fa71c13b6763)
+  )
+  (text "Complete BOM, top-board layout/routing and physical validation remain."
+    (at 208.28 162.56 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid 9720aab9-7118-500b-9ba0-10b3cb777729)
+  )
+  (text "This integrated schematic is not a manufacturing release."
+    (at 208.28 193.04 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid ed1c13ce-85db-59eb-ad52-1bd37dec4a49)
+  )
+  (sheet_instances
+    (path "/"
+      (page "1")
+    )
+  )
+)

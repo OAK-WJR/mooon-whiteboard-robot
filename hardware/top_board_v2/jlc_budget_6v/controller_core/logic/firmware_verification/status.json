@@ -1,0 +1,82 @@
+{
+  "id": 1,
+  "ok": true,
+  "error": "",
+  "boot": "3c88596c5e8885db",
+  "lease": 0,
+  "state": "idle",
+  "x": null,
+  "y": null,
+  "theta": null,
+  "progress": 0,
+  "wp": 0,
+  "wp_total": 0,
+  "pwm_ready": false,
+  "motor_pwm_ready": [
+    false,
+    false,
+    false
+  ],
+  "motor_pwm_fault": [
+    0,
+    0,
+    0
+  ],
+  "encoder_counts": [
+    0,
+    0,
+    0
+  ],
+  "wheel_speed_mps": [
+    null,
+    null,
+    null
+  ],
+  "pwm_command": [
+    0,
+    0,
+    0
+  ],
+  "physical_motors": [
+    1,
+    2,
+    3
+  ],
+  "header_order": [
+    "M0",
+    "M2",
+    "M1"
+  ],
+  "protocol": 2,
+  "firmware": "wbb-control-2",
+  "profile": "top_board_v2_kiss_c6_review",
+  "charge_enabled": false,
+  "device": "WhiteBoardBot-789abc",
+  "uptime_ms": 1012,
+  "reset_reason": 1,
+  "motion_enabled": false,
+  "reason": "BOARD_POWER_UNREVIEWED",
+  "lease_ms": 750,
+  "owner": 0,
+  "wifi_connected": true,
+  "wifi_ip": "192.0.2.1",
+  "wifi_rssi_dbm": -50,
+  "wifi_reconnects": 0,
+  "ble_ready": true,
+  "ble_connected": true,
+  "authenticated_wireless": true,
+  "watchdog_ready": true,
+  "tx_dropped": 0,
+  "usb_reboot": true,
+  "reboot_pending": false,
+  "ble_tx_failures": 0,
+  "motor_voltage_mv": null,
+  "motor_current_ma": null,
+  "rail_3v3_mv": null,
+  "power_disconnect": false,
+  "control_gap_ms": 20,
+  "max_control_gap_ms": 20,
+  "control_overruns": 0,
+  "control_timing_fault": false,
+  "odometry_qualified": false
+}

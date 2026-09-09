@@ -1,0 +1,1295 @@
+(kicad_sch
+  (version 20250114)
+  (generator whiteboardbot_kiss_logic)
+  (uuid 5dd4bd3e-22f0-5610-9b58-4889fa253cd4)
+  (paper "A3")
+  (title_block
+    (title "SUPPLY VOLTAGE SENSING / HARDWARE REVIEW")
+    (date "2026-09-08")
+    (rev "LOGIC REVIEW")
+    (company "WhiteBoardBot")
+  )
+  (lib_symbols
+    (symbol "KISS_Core:C"
+      (pin_numbers
+        (hide yes)
+      )
+      (pin_names
+        (offset 0.254)
+      )
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (in_pos_files yes)
+      (duplicate_pin_numbers_are_jumpers no)
+      (property "Reference" "C"
+        (at 0.635 2.54 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+          (justify left)
+        )
+      )
+      (property "Value" "C"
+        (at 0.635 -2.54 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+          (justify left)
+        )
+      )
+      (property "Footprint" ""
+        (at 0.9652 -3.81 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Datasheet" ""
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Description" "Unpolarized capacitor"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "ki_keywords" "cap capacitor"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "ki_fp_filters" "C_*"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (symbol "C_0_1"
+        (polyline
+          (pts
+            (xy -2.032 0.762)
+            (xy 2.032 0.762)
+          )
+          (stroke
+            (width 0.508)
+            (type default)
+          )
+          (fill
+            (type none)
+          )
+        )
+        (polyline
+          (pts
+            (xy -2.032 -0.762)
+            (xy 2.032 -0.762)
+          )
+          (stroke
+            (width 0.508)
+            (type default)
+          )
+          (fill
+            (type none)
+          )
+        )
+      )
+      (symbol "C_1_1"
+        (pin passive line
+          (at 0 3.81 270)
+          (length 2.794)
+          (name ""
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+          (number "1"
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at 0 -3.81 90)
+          (length 2.794)
+          (name ""
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+          (number "2"
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+        )
+      )
+      (embedded_fonts no)
+    )
+    (symbol "KISS_Core:R"
+      (pin_numbers
+        (hide yes)
+      )
+      (pin_names
+        (offset 0)
+      )
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (in_pos_files yes)
+      (duplicate_pin_numbers_are_jumpers no)
+      (property "Reference" "R"
+        (at 2.032 0 90)
+        (show_name no)
+        (do_not_autoplace no)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Value" "R"
+        (at 0 0 90)
+        (show_name no)
+        (do_not_autoplace no)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Footprint" ""
+        (at -1.778 0 90)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Datasheet" ""
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Description" "Resistor"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "ki_keywords" "R res resistor"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "ki_fp_filters" "R_*"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (symbol "R_0_1"
+        (rectangle
+          (start -1.016 -2.54)
+          (end 1.016 2.54)
+          (stroke
+            (width 0.254)
+            (type default)
+          )
+          (fill
+            (type none)
+          )
+        )
+      )
+      (symbol "R_1_1"
+        (pin passive line
+          (at 0 3.81 270)
+          (length 1.27)
+          (name ""
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+          (number "1"
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at 0 -3.81 90)
+          (length 1.27)
+          (name ""
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+          (number "2"
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+        )
+      )
+      (embedded_fonts no)
+    )
+  )
+  (text "WHITEBOARDBOT / TOP BOARD"
+    (at 15.24 15.24 0)
+    (effects
+      (font
+        (size 1.778 1.778)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid 6de22e7f-3351-5135-8410-aa747f7cddbb)
+  )
+  (text "SUPPLY VOLTAGE SENSING / HARDWARE REVIEW"
+    (at 15.24 24.13 0)
+    (effects
+      (font
+        (size 1.778 1.778)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid b516517c-ff43-59ac-ad03-0eee8738838a)
+  )
+  (text "TOP-BOARD REVIEW - USB POWER / PROTECTION / ADC FIRMWARE / PCB NOT QUALIFIED"
+    (at 15.24 31.75 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid cf9fd6fb-1007-5c44-9180-3aca3279a113)
+  )
+  (text "VBAT_PROTECTED / GPIO4"
+    (at 20.32 45.72 0)
+    (effects
+      (font
+        (size 1.524 1.524)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid 075b5e03-a781-5d7f-bdd0-406f51aa5212)
+  )
+  (polyline
+    (pts
+      (xy 20.32 49.53)
+      (xy 193.04 49.53)
+    )
+    (stroke
+      (width .254)
+      (type solid)
+    )
+    (uuid 07a848b4-9cb6-5896-9af6-4c76189527b7)
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 83.82 86.36 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid f03aaebf-4198-5f0c-a97f-efac6e9e197d)
+    (property "Reference" "R33"
+      (at 93.98 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "120k 1%"
+      (at 93.98 88.9 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 83.82 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C25808"
+      (at 83.82 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C25808"
+      (at 83.82 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid e31e5b9a-ce04-58e8-80c7-06b93257f891)
+    )
+    (pin "2"
+      (uuid 57d8c067-2a28-55dd-958a-596a1f70782b)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/5dd4bd3e-22f0-5610-9b58-4889fa253cd4"
+          (reference "R33")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF1203T5E"
+      (at 83.82 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 83.82 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 83.82 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 83.82 124.46 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid da3e8e1d-5778-5b90-9ffb-0ca6418f618d)
+    (property "Reference" "R34"
+      (at 93.98 123.19 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "10k 1%"
+      (at 93.98 127 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 83.82 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C25804"
+      (at 83.82 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C25804"
+      (at 83.82 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid fac00ec8-8592-5312-9fb1-ce82ee7101e3)
+    )
+    (pin "2"
+      (uuid 0c2c48ce-fffb-572b-80a4-04171cf3986c)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/5dd4bd3e-22f0-5610-9b58-4889fa253cd4"
+          (reference "R34")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF1002T5E"
+      (at 83.82 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 83.82 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 83.82 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:C")
+    (at 144.78 124.46 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 261cc5c5-1381-5f0a-8143-d21b03aa3084)
+    (property "Reference" "C20"
+      (at 162.56 123.19 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "100n 50V X7R 10%"
+      (at 162.56 127 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+      (at 144.78 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C14663"
+      (at 144.78 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C14663"
+      (at 144.78 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 8f131aef-b29f-56bc-9810-d631f1f12b3a)
+    )
+    (pin "2"
+      (uuid 38f2f3bc-e2e0-5e95-8a96-86e80adbd37d)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/5dd4bd3e-22f0-5610-9b58-4889fa253cd4"
+          (reference "C20")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "CC0603KRX7R9BB104"
+      (at 144.78 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "YAGEO"
+      (at 144.78 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 144.78 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (wire
+    (pts
+      (xy 83.82 90.17)
+      (xy 83.82 120.65)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid ad812b6a-d515-5303-bfe8-49d78f13095e)
+  )
+  (wire
+    (pts
+      (xy 83.82 104.14)
+      (xy 180.34 104.14)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid aaf9531c-56a9-5db5-9998-9e5f430b1b97)
+  )
+  (global_label "VBAT_SENSE"
+    (shape bidirectional)
+    (at 180.34 104.14 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid eda435cb-fd34-5cd8-aa86-db80fb304ac5)
+  )
+  (wire
+    (pts
+      (xy 144.78 104.14)
+      (xy 144.78 120.65)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 9cd1ef0e-17ce-56ed-a11f-d1ef2e428262)
+  )
+  (junction
+    (at 83.82 104.14)
+    (diameter 0)
+    (color 0 0 0 0)
+    (uuid 221b1e44-ad50-5b79-8279-6f75d2619e56)
+  )
+  (junction
+    (at 144.78 104.14)
+    (diameter 0)
+    (color 0 0 0 0)
+    (uuid 3c974a81-96c0-564b-9aac-0e2313c7d2b1)
+  )
+  (text "Nominal ADC pin voltage = input / 13."
+    (at 20.32 157.48 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 3d4d338d-308f-5528-a42b-fad5cb4712af)
+  )
+  (text "120k + 10k / 1%; 100nF at the ADC pad."
+    (at 20.32 166.37 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 78e96337-a985-5109-b6b9-678e3ab384bc)
+  )
+  (text "VMOT / GPIO5"
+    (at 220.98 45.72 0)
+    (effects
+      (font
+        (size 1.524 1.524)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid c5f66409-ad66-51ab-acec-30e2df46a043)
+  )
+  (polyline
+    (pts
+      (xy 220.98 49.53)
+      (xy 393.7 49.53)
+    )
+    (stroke
+      (width .254)
+      (type solid)
+    )
+    (uuid c44835a4-b29a-55e4-bcd2-11f5f96640eb)
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 284.48 86.36 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 9a7af45a-55a0-57b9-8441-91cc07f96e4c)
+    (property "Reference" "R35"
+      (at 294.64 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "120k 1%"
+      (at 294.64 88.9 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 284.48 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C25808"
+      (at 284.48 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C25808"
+      (at 284.48 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 040350ae-da56-508d-b20c-34879ca8b328)
+    )
+    (pin "2"
+      (uuid b32ec58b-c47a-5f04-b962-9012b51f593a)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/5dd4bd3e-22f0-5610-9b58-4889fa253cd4"
+          (reference "R35")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF1203T5E"
+      (at 284.48 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 284.48 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 284.48 86.36 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 284.48 124.46 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 7dc6e6a9-afde-5ef9-b2cc-1baf5d39ec11)
+    (property "Reference" "R36"
+      (at 294.64 123.19 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "10k 1%"
+      (at 294.64 127 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 284.48 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C25804"
+      (at 284.48 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C25804"
+      (at 284.48 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid e39c2132-526b-5620-948a-dbc3c49e9737)
+    )
+    (pin "2"
+      (uuid bd458bda-c5a6-5e51-9256-3655f34d2722)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/5dd4bd3e-22f0-5610-9b58-4889fa253cd4"
+          (reference "R36")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF1002T5E"
+      (at 284.48 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 284.48 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 284.48 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:C")
+    (at 345.44 124.46 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 885d5904-70b9-5976-b91c-999682f08e5c)
+    (property "Reference" "C21"
+      (at 363.22 123.19 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "100n 50V X7R 10%"
+      (at 363.22 127 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Capacitor_SMD:C_0603_1608Metric"
+      (at 345.44 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C14663"
+      (at 345.44 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C14663"
+      (at 345.44 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 6b5760b3-3e18-5ff1-bbab-a0594722acda)
+    )
+    (pin "2"
+      (uuid d4afddb2-dae0-5de5-b4ae-18fcfe15de42)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/5dd4bd3e-22f0-5610-9b58-4889fa253cd4"
+          (reference "C21")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "CC0603KRX7R9BB104"
+      (at 345.44 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "YAGEO"
+      (at 345.44 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 345.44 124.46 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (wire
+    (pts
+      (xy 284.48 90.17)
+      (xy 284.48 120.65)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 5072bc75-53f5-51ec-b1e3-92d94995c3d5)
+  )
+  (wire
+    (pts
+      (xy 284.48 104.14)
+      (xy 381 104.14)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid c932829e-75c4-55ac-b4d0-aadc2bb9737f)
+  )
+  (global_label "VMOT_SENSE"
+    (shape bidirectional)
+    (at 381 104.14 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 452c14b7-84b9-5ae9-91a4-00216fd099e7)
+  )
+  (wire
+    (pts
+      (xy 345.44 104.14)
+      (xy 345.44 120.65)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 2b9dd864-c233-5fc6-bc36-69c52a23f5d6)
+  )
+  (junction
+    (at 284.48 104.14)
+    (diameter 0)
+    (color 0 0 0 0)
+    (uuid 005524d2-8b0b-5ed2-81b1-09ea33d4feef)
+  )
+  (junction
+    (at 345.44 104.14)
+    (diameter 0)
+    (color 0 0 0 0)
+    (uuid c30d1b51-d44d-5cce-ac55-2ad28217797c)
+  )
+  (text "Nominal ADC pin voltage = input / 13."
+    (at 220.98 157.48 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 6962cb7a-c9a8-5750-9a21-2fc8ec093e68)
+  )
+  (text "120k + 10k / 1%; 100nF at the ADC pad."
+    (at 220.98 166.37 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid ce9f5626-ee1d-59c1-a86a-3be3bc6639a3)
+  )
+  (text "ADC_ATTEN0 reference: 0-1.0V, calibrated DC data at 25C with Wi-Fi disabled."
+    (at 20.32 187.96 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 635dbc64-0816-5830-baa6-2d0bb78962ae)
+  )
+  (text "GPIO4/5 are SDIO edge straps. At 8.4V input, divider node stays below 0.66V (resistor corners)."
+    (at 20.32 198.12 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid b49729b7-007e-5912-9482-7f9bdf0e0074)
+  )
+  (text "Allow 10ms for the passive RC to settle before accepting a sample; firmware integration is pending."
+    (at 20.32 208.28 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 0f6cea2c-3711-55c5-82fa-4bb288e00c77)
+  )
+  (text "This senses total input and VMOT voltage; it is not per-cell protection or a current measurement."
+    (at 20.32 226.06 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid ee7cb16f-a3fa-510f-b2f2-fe230e886f68)
+  )
+  (text "Power-up/down, loss of MAIN_3V3, pin injection and external fault behavior remain unqualified."
+    (at 20.32 236.22 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 9e150f4c-bab8-5dd8-9812-92b501241ea2)
+  )
+  (text "Input may remain present while MCU supply fails. These dividers alone do not provide power-off isolation."
+    (at 20.32 246.38 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 057693df-6fcf-5f48-ac00-2f0af158225a)
+  )
+  (wire
+    (pts
+      (xy 83.82 82.55)
+      (xy 83.82 72.39)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 27200bfa-7a76-5216-b6ea-d72bfc53bace)
+  )
+  (global_label "VBAT_PROTECTED"
+    (shape bidirectional)
+    (at 83.82 72.39 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 0cde8f66-28e0-58ae-a72b-1899daa095d9)
+  )
+  (wire
+    (pts
+      (xy 83.82 128.27)
+      (xy 83.82 138.43)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 49b7bc7d-edaa-5da8-a85a-e7c501b201d8)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 83.82 138.43 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 0cbea35b-aed8-56a8-a0b9-de1e6cf63805)
+  )
+  (wire
+    (pts
+      (xy 144.78 128.27)
+      (xy 144.78 138.43)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid ab0fa1f7-14c4-57bd-bda3-e07ccd034897)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 144.78 138.43 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 9d91c6c7-8b77-5d82-b470-f12c3c4c1616)
+  )
+  (wire
+    (pts
+      (xy 284.48 82.55)
+      (xy 284.48 72.39)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid b64b370a-36e5-5556-b2fe-4416d3a664f9)
+  )
+  (global_label "VMOT"
+    (shape bidirectional)
+    (at 284.48 72.39 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 3c326b84-c90b-5ada-a3dc-fb8ce0ef1c7d)
+  )
+  (wire
+    (pts
+      (xy 284.48 128.27)
+      (xy 284.48 138.43)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 25c6abbd-5248-5126-9380-797ae9ab2306)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 284.48 138.43 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid f10d1533-8159-53e1-93d4-94cce428c899)
+  )
+  (wire
+    (pts
+      (xy 345.44 128.27)
+      (xy 345.44 138.43)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 10ea0238-1613-5716-a3a2-41a52b27e008)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 345.44 138.43 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 3ba0aafe-f34c-545e-9693-fbc0b7f69704)
+  )
+)

@@ -1,0 +1,39 @@
+{
+  "id": 1,
+  "ok": true,
+  "error": "",
+  "boot": "3c88596c5e8885db",
+  "lease": 0,
+  "protocol": 2,
+  "firmware": "wbb-control-2",
+  "profile": "top_board_v2_kiss_c6_review",
+  "kind": "rails",
+  "device": "WhiteBoardBot-789abc",
+  "uptime_ms": 1024,
+  "state": "ready",
+  "adc_error": 0,
+  "adc_cleanup_error": 0,
+  "failing_channel": -1,
+  "fresh": true,
+  "read_only": true,
+  "motion_enabled": false,
+  "hardware_qualified": false,
+  "divider_calibrated": false,
+  "divider_gain": 13,
+  "wireless_power_state": "online",
+  "wireless_start_attempted": true,
+  "previous_radio_power_reset": false,
+  "adc_raw": [
+    2000,
+    1500
+  ],
+  "adc_pin_mv": [
+    600,
+    460
+  ],
+  "battery_voltage_mv": 7800,
+  "motor_voltage_mv": 5980,
+  "seq": 11,
+  "age_ms": 14,
+  "span_ms": 0
+}

@@ -1,0 +1,14 @@
+(version 1)
+# JLC 1oz 2-layer public capability: 0.10mm spacing, >=0.2mm routed edge.
+# Keep ordinary copper clearance at the 0.2mm default; the fixed U4 land pattern
+# has 0.15mm adjacent pad gaps, matching the published SMD pad-to-pad minimum.
+(rule "U4 fixed package pad spacing"
+ (condition "A.memberOfFootprint('U4') && B.memberOfFootprint('U4')")
+ (constraint clearance (min 0.15mm)))
+(rule "Routed copper to edge"
+ (constraint edge_clearance (min 0.3mm)))
+# The module antenna extends over the original board tip. Its corner ground
+# lands retain >=0.2mm copper/edge clearance, the published routed-board limit.
+(rule "Module ground lands at antenna edge"
+ (condition "A.memberOfFootprint('U3') && A.NetName == 'GND'")
+ (constraint edge_clearance (min 0.2mm)))

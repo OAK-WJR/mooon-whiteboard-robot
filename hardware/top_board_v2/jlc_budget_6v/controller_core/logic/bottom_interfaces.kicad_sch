@@ -1,0 +1,3352 @@
+(kicad_sch
+  (version 20250114)
+  (generator whiteboardbot_kiss_logic)
+  (uuid 6296101b-7eed-52f3-b818-cb2b1ae69e62)
+  (paper "A3")
+  (title_block
+    (title "RETAINED BOTTOM CONTACTS / INPUT BIAS")
+    (date "2026-09-08")
+    (rev "LOGIC REVIEW")
+    (company "WhiteBoardBot")
+  )
+  (lib_symbols
+    (symbol "KISS_Core:M0"
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (in_pos_files yes)
+      (duplicate_pin_numbers_are_jumpers no)
+      (symbol "M0_1_0"
+        (rectangle
+          (start -2.54 7.62)
+          (end 2.54 -7.62)
+          (stroke
+            (width 0.254)
+            (type solid)
+          )
+          (fill
+            (type none)
+          )
+        )
+        (pin passive line
+          (at -5.08 5.08 0)
+          (length 2.54)
+          (name "1"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "1"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 2.54 0)
+          (length 2.54)
+          (name "2"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "2"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 0 0)
+          (length 2.54)
+          (name "3"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "3"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 -2.54 0)
+          (length 2.54)
+          (name "4"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "4"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 -5.08 0)
+          (length 2.54)
+          (name "5"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "5"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+      )
+      (embedded_fonts no)
+      (property "Reference" "M0"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Value" "PZ254V-11-05P"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Footprint" "WhiteBoardBot:M0_HDR-TH_5P-P2.54-V-M"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+          (hide yes)
+        )
+      )
+      (property "Datasheet" "https://item.szlcsc.com/datasheet/PZ254V-11-05P/502960.html"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+          (hide yes)
+        )
+      )
+    )
+    (symbol "KISS_Core:M1"
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (in_pos_files yes)
+      (duplicate_pin_numbers_are_jumpers no)
+      (symbol "M1_1_0"
+        (rectangle
+          (start -2.54 7.62)
+          (end 2.54 -7.62)
+          (stroke
+            (width 0.254)
+            (type solid)
+          )
+          (fill
+            (type none)
+          )
+        )
+        (pin passive line
+          (at -5.08 5.08 0)
+          (length 2.54)
+          (name "1"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "1"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 2.54 0)
+          (length 2.54)
+          (name "2"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "2"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 0 0)
+          (length 2.54)
+          (name "3"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "3"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 -2.54 0)
+          (length 2.54)
+          (name "4"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "4"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 -5.08 0)
+          (length 2.54)
+          (name "5"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "5"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+      )
+      (embedded_fonts no)
+      (property "Reference" "M1"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Value" "PZ254V-11-05P"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Footprint" "WhiteBoardBot:M1_HDR-TH_5P-P2.54-V-M"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+          (hide yes)
+        )
+      )
+      (property "Datasheet" "https://item.szlcsc.com/datasheet/PZ254V-11-05P/502960.html"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+          (hide yes)
+        )
+      )
+    )
+    (symbol "KISS_Core:M2"
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (in_pos_files yes)
+      (duplicate_pin_numbers_are_jumpers no)
+      (symbol "M2_1_0"
+        (rectangle
+          (start -2.54 7.62)
+          (end 2.54 -7.62)
+          (stroke
+            (width 0.254)
+            (type solid)
+          )
+          (fill
+            (type none)
+          )
+        )
+        (pin passive line
+          (at -5.08 5.08 0)
+          (length 2.54)
+          (name "1"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "1"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 2.54 0)
+          (length 2.54)
+          (name "2"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "2"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 0 0)
+          (length 2.54)
+          (name "3"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "3"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 -2.54 0)
+          (length 2.54)
+          (name "4"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "4"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 -5.08 0)
+          (length 2.54)
+          (name "5"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "5"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+      )
+      (embedded_fonts no)
+      (property "Reference" "M2"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Value" "PZ254V-11-05P"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Footprint" "WhiteBoardBot:M2_HDR-TH_5P-P2.54-V-M"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+          (hide yes)
+        )
+      )
+      (property "Datasheet" "https://item.szlcsc.com/datasheet/PZ254V-11-05P/502960.html"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+          (hide yes)
+        )
+      )
+    )
+    (symbol "KISS_Core:PWR"
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (in_pos_files yes)
+      (duplicate_pin_numbers_are_jumpers no)
+      (symbol "PWR_1_0"
+        (rectangle
+          (start -2.54 6.35)
+          (end 2.54 -6.35)
+          (stroke
+            (width 0.254)
+            (type solid)
+          )
+          (fill
+            (type none)
+          )
+        )
+        (circle
+          (center -1.27 5.08)
+          (radius 0.381)
+          (stroke
+            (width 0.254)
+            (type solid)
+          )
+          (fill
+            (type none)
+          )
+        )
+        (pin passive line
+          (at -5.08 3.81 0)
+          (length 2.54)
+          (name "1"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "1"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 1.27 0)
+          (length 2.54)
+          (name "2"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "2"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 -1.27 0)
+          (length 2.54)
+          (name "3"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "3"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at -5.08 -3.81 0)
+          (length 2.54)
+          (name "4"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+          (number "4"
+            (effects
+              (font
+                (size 1.016 1.016)
+              )
+            )
+          )
+        )
+      )
+      (embedded_fonts no)
+      (property "Reference" "PWR"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Value" "PZ254V-11-04P"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Footprint" "WhiteBoardBot:PWR_HDR-TH_4P-P2.54-V-M"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+          (hide yes)
+        )
+      )
+      (property "Datasheet" "https://item.szlcsc.com/datasheet/PZ254V-11-04P/2801085.html"
+        (at 0 0 0)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+          (hide yes)
+        )
+      )
+    )
+    (symbol "KISS_Core:R"
+      (pin_numbers
+        (hide yes)
+      )
+      (pin_names
+        (offset 0)
+      )
+      (exclude_from_sim no)
+      (in_bom yes)
+      (on_board yes)
+      (in_pos_files yes)
+      (duplicate_pin_numbers_are_jumpers no)
+      (property "Reference" "R"
+        (at 2.032 0 90)
+        (show_name no)
+        (do_not_autoplace no)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Value" "R"
+        (at 0 0 90)
+        (show_name no)
+        (do_not_autoplace no)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Footprint" ""
+        (at -1.778 0 90)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Datasheet" ""
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "Description" "Resistor"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "ki_keywords" "R res resistor"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (property "ki_fp_filters" "R_*"
+        (at 0 0 0)
+        (show_name no)
+        (do_not_autoplace no)
+        (hide yes)
+        (effects
+          (font
+            (size 1.27 1.27)
+          )
+        )
+      )
+      (symbol "R_0_1"
+        (rectangle
+          (start -1.016 -2.54)
+          (end 1.016 2.54)
+          (stroke
+            (width 0.254)
+            (type default)
+          )
+          (fill
+            (type none)
+          )
+        )
+      )
+      (symbol "R_1_1"
+        (pin passive line
+          (at 0 3.81 270)
+          (length 1.27)
+          (name ""
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+          (number "1"
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+        )
+        (pin passive line
+          (at 0 -3.81 90)
+          (length 1.27)
+          (name ""
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+          (number "2"
+            (effects
+              (font
+                (size 1.27 1.27)
+              )
+            )
+          )
+        )
+      )
+      (embedded_fonts no)
+    )
+  )
+  (text "WHITEBOARDBOT / TOP BOARD"
+    (at 15.24 15.24 0)
+    (effects
+      (font
+        (size 1.778 1.778)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid 13f9cb61-4967-5ff4-9c63-b45e4ab25bd0)
+  )
+  (text "RETAINED BOTTOM CONTACTS / INPUT BIAS"
+    (at 15.24 24.13 0)
+    (effects
+      (font
+        (size 1.778 1.778)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid 5c6dbac4-b49d-543d-b82c-25d079935cf7)
+  )
+  (text "TOP-BOARD REVIEW - USB POWER / PROTECTION / ADC FIRMWARE / PCB NOT QUALIFIED"
+    (at 15.24 31.75 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid f681fb26-e687-501a-a6de-56345ab553a3)
+  )
+  (text "MOTOR 1 / M0 TO H2"
+    (at 27.94 45.72 0)
+    (effects
+      (font
+        (size 1.524 1.524)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid 8dc2680a-1c88-5f17-b233-d2d466598642)
+  )
+  (polyline
+    (pts
+      (xy 27.94 49.53)
+      (xy 134.62 49.53)
+    )
+    (stroke
+      (width .254)
+      (type solid)
+    )
+    (uuid 50ef1ca9-0965-5e98-946a-023f33e566a4)
+  )
+  (symbol
+    (lib_id "KISS_Core:M0")
+    (at 81.28 85.09 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid ae8c5ace-38be-5a82-a171-c97aa8fbea75)
+    (property "Reference" "M0"
+      (at 81.28 69.85 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "PZ254V-11-05P"
+      (at 81.28 73.66 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "WhiteBoardBot:M0_HDR-TH_5P-P2.54-V-M"
+      (at 81.28 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://item.szlcsc.com/datasheet/PZ254V-11-05P/502960.html"
+      (at 81.28 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C492404"
+      (at 81.28 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid eb259e65-596d-5e2a-99ac-585634e95201)
+    )
+    (pin "2"
+      (uuid 4057bd41-27a2-5ba1-94be-190f73c78911)
+    )
+    (pin "3"
+      (uuid 729a11ff-b69f-51b3-ab90-e1647275ecaf)
+    )
+    (pin "4"
+      (uuid 919413a2-0c5a-5875-99c4-2cd40748a089)
+    )
+    (pin "5"
+      (uuid 8d942cd7-2da3-5fd2-ad94-183a89fc0ea1)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "M0")
+          (unit 1)
+        )
+      )
+    )
+  )
+  (text "Original physical pin numbers; no mirroring."
+    (at 27.94 104.14 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid dd89d2f2-9529-5e70-835b-1dfc1c5ce4a3)
+  )
+  (text "FI / BI bias to stop; VMOT gate remains necessary."
+    (at 27.94 119.38 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid 02f0a569-15c9-55a8-a927-34eb10c0cc18)
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 45.72 139.7 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid e64a693d-1de8-58cd-8e77-1297d52d7e7b)
+    (property "Reference" "R12"
+      (at 55.88 138.43 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "4.7k 1%"
+      (at 55.88 142.24 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 45.72 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C23162"
+      (at 45.72 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C23162"
+      (at 45.72 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 3449905f-eb9b-5d94-b7c9-4266a4265db0)
+    )
+    (pin "2"
+      (uuid e1b20dd5-113e-580e-910e-fa9c9070ba51)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R12")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF4701T5E"
+      (at 45.72 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 45.72 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 45.72 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 106.68 139.7 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid f507975f-5893-586e-991e-92c324b7136f)
+    (property "Reference" "R13"
+      (at 116.84 138.43 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "4.7k 1%"
+      (at 116.84 142.24 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 106.68 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C23162"
+      (at 106.68 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C23162"
+      (at 106.68 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 5d2fb374-3d2f-5282-a0be-0559830ee29c)
+    )
+    (pin "2"
+      (uuid 0b85dee6-b567-5f36-8f99-76c1e3047fa2)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R13")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF4701T5E"
+      (at 106.68 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 106.68 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 106.68 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 45.72 185.42 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid e0d1b546-b3fe-5f22-bb93-14fab87ee9cc)
+    (property "Reference" "R14"
+      (at 55.88 184.15 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "10k 1%"
+      (at 55.88 187.96 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 45.72 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C25804"
+      (at 45.72 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C25804"
+      (at 45.72 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 21d04c16-ea24-5857-911c-7d37a038f801)
+    )
+    (pin "2"
+      (uuid 1a613860-6401-56c4-9f41-ed71beda6cd2)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R14")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF1002T5E"
+      (at 45.72 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 45.72 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 45.72 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 106.68 185.42 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 922e1190-a23a-5387-9446-a2f7e894cc37)
+    (property "Reference" "R15"
+      (at 116.84 184.15 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "10k 1%"
+      (at 116.84 187.96 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 106.68 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C25804"
+      (at 106.68 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C25804"
+      (at 106.68 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 33ccb40e-dce4-5d11-9cd5-43ac1e0b80bc)
+    )
+    (pin "2"
+      (uuid 6fd94c1b-1409-5463-a526-b708d006e868)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R15")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF1002T5E"
+      (at 106.68 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 106.68 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 106.68 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (text "Encoder pull-ups use the same 3.3V as the bottom board."
+    (at 27.94 210.82 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid 14ae8883-882e-5bb1-9ee1-90fb14368c9c)
+  )
+  (text "MOTOR 2 / M2 TO H3"
+    (at 157.48 45.72 0)
+    (effects
+      (font
+        (size 1.524 1.524)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid e84f461d-7fbf-59e1-88a0-aae764e5f062)
+  )
+  (polyline
+    (pts
+      (xy 157.48 49.53)
+      (xy 264.16 49.53)
+    )
+    (stroke
+      (width .254)
+      (type solid)
+    )
+    (uuid d108ca30-7cab-56cc-a31c-41b56e1b4b76)
+  )
+  (symbol
+    (lib_id "KISS_Core:M2")
+    (at 210.82 85.09 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 9de80a5c-b871-5ff9-9ce3-3736e33fd8f4)
+    (property "Reference" "M2"
+      (at 210.82 69.85 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "PZ254V-11-05P"
+      (at 210.82 73.66 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "WhiteBoardBot:M2_HDR-TH_5P-P2.54-V-M"
+      (at 210.82 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://item.szlcsc.com/datasheet/PZ254V-11-05P/502960.html"
+      (at 210.82 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C492404"
+      (at 210.82 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 6d15c164-fc8e-5874-81ea-6bbccc83801e)
+    )
+    (pin "2"
+      (uuid 4b9e484b-2570-58b6-b300-d1e72ea225fb)
+    )
+    (pin "3"
+      (uuid 59b7d847-57a7-5a1e-af11-d1b23769c655)
+    )
+    (pin "4"
+      (uuid 3db8d500-b3ea-5f8e-b49d-6a389abdc139)
+    )
+    (pin "5"
+      (uuid 600152a2-18f6-5dac-9167-c53ec6bd0299)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "M2")
+          (unit 1)
+        )
+      )
+    )
+  )
+  (text "Original physical pin numbers; no mirroring."
+    (at 157.48 104.14 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid 3f2d0d8b-2c5c-53e6-80c5-b2e6d1bb1c34)
+  )
+  (text "FI / BI bias to stop; VMOT gate remains necessary."
+    (at 157.48 119.38 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid 3b5624a5-e19d-55ee-a7af-ce0b14a3a821)
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 175.26 139.7 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 129b2cbd-965b-5331-8134-3003421fc783)
+    (property "Reference" "R20"
+      (at 185.42 138.43 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "4.7k 1%"
+      (at 185.42 142.24 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 175.26 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C23162"
+      (at 175.26 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C23162"
+      (at 175.26 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 8859952c-910a-547a-899c-411c2cee2d0c)
+    )
+    (pin "2"
+      (uuid 7f40c99f-0ff7-534d-b50e-212d88e5492e)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R20")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF4701T5E"
+      (at 175.26 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 175.26 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 175.26 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 236.22 139.7 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid b7de0bf1-1ae6-51e2-94a5-bd0ea38df223)
+    (property "Reference" "R21"
+      (at 246.38 138.43 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "4.7k 1%"
+      (at 246.38 142.24 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 236.22 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C23162"
+      (at 236.22 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C23162"
+      (at 236.22 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid b7c6781b-cad7-51e1-b9e4-856b46eb0084)
+    )
+    (pin "2"
+      (uuid b607db78-3884-56e6-aabe-d892fefbe195)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R21")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF4701T5E"
+      (at 236.22 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 236.22 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 236.22 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 175.26 185.42 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 02b79546-8f31-5211-84e5-e4eed526c6e6)
+    (property "Reference" "R22"
+      (at 185.42 184.15 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "10k 1%"
+      (at 185.42 187.96 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 175.26 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C25804"
+      (at 175.26 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C25804"
+      (at 175.26 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 2b9ee19c-7156-5f8f-aafe-c0ab4d1a0a70)
+    )
+    (pin "2"
+      (uuid f59c92c6-71b7-5a59-b51b-74b33af5ef00)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R22")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF1002T5E"
+      (at 175.26 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 175.26 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 175.26 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 236.22 185.42 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid da40dcfc-526a-5950-8107-89a92e7fd231)
+    (property "Reference" "R23"
+      (at 246.38 184.15 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "10k 1%"
+      (at 246.38 187.96 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 236.22 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C25804"
+      (at 236.22 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C25804"
+      (at 236.22 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 088905cb-964c-5685-9d0f-311913203312)
+    )
+    (pin "2"
+      (uuid 3146ee19-5a34-56f6-8ad0-a9b0bf089a1d)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R23")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF1002T5E"
+      (at 236.22 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 236.22 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 236.22 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (text "Encoder pull-ups use the same 3.3V as the bottom board."
+    (at 157.48 210.82 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid 494fffa2-c2d2-5cea-9e03-464818c8cc49)
+  )
+  (text "MOTOR 3 / M1 TO H1"
+    (at 287.02 45.72 0)
+    (effects
+      (font
+        (size 1.524 1.524)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid 13fa09d7-e2bf-539c-b7d8-1266517243bc)
+  )
+  (polyline
+    (pts
+      (xy 287.02 49.53)
+      (xy 393.7 49.53)
+    )
+    (stroke
+      (width .254)
+      (type solid)
+    )
+    (uuid c358e6e8-e438-51a8-b8df-8d3dfd9f43db)
+  )
+  (symbol
+    (lib_id "KISS_Core:M1")
+    (at 340.36 85.09 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 726e9c08-3be1-5ec1-886e-fbf4d7dd549b)
+    (property "Reference" "M1"
+      (at 340.36 69.85 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "PZ254V-11-05P"
+      (at 340.36 73.66 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "WhiteBoardBot:M1_HDR-TH_5P-P2.54-V-M"
+      (at 340.36 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://item.szlcsc.com/datasheet/PZ254V-11-05P/502960.html"
+      (at 340.36 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C492404"
+      (at 340.36 85.09 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid c55e3b6c-a134-5300-8c74-5362678e35bb)
+    )
+    (pin "2"
+      (uuid 6663c38d-459d-519b-a12d-1c73dee98f04)
+    )
+    (pin "3"
+      (uuid f871c3c3-7eda-50a8-bc21-0e484fab6f06)
+    )
+    (pin "4"
+      (uuid e36b45f0-db8c-51bf-80b4-3eea8c9f83fd)
+    )
+    (pin "5"
+      (uuid 75601589-f62f-5c8a-842a-b747d3ca506a)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "M1")
+          (unit 1)
+        )
+      )
+    )
+  )
+  (text "Original physical pin numbers; no mirroring."
+    (at 287.02 104.14 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid dc845da8-1f74-5b79-bcad-8e2834a14164)
+  )
+  (text "FI / BI bias to stop; VMOT gate remains necessary."
+    (at 287.02 119.38 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid 2d923004-8bc9-5099-b4c1-8b1e0e0ff061)
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 304.8 139.7 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 8cbc80ef-3840-5d12-9fb1-246cab0d53a7)
+    (property "Reference" "R16"
+      (at 314.96 138.43 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "4.7k 1%"
+      (at 314.96 142.24 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 304.8 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C23162"
+      (at 304.8 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C23162"
+      (at 304.8 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 88247a56-f9bb-523f-8a55-50c5691323ae)
+    )
+    (pin "2"
+      (uuid 407c93c4-c46d-5ea2-92e6-d2ca15a6bf2e)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R16")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF4701T5E"
+      (at 304.8 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 304.8 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 304.8 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 365.76 139.7 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 8c93708a-5394-54f8-8a0b-528db3f26f5c)
+    (property "Reference" "R17"
+      (at 375.92 138.43 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "4.7k 1%"
+      (at 375.92 142.24 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 365.76 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C23162"
+      (at 365.76 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C23162"
+      (at 365.76 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid d0f9e316-4e82-5ba6-ae0d-3001c2c2f23b)
+    )
+    (pin "2"
+      (uuid 9ec9de5c-afaf-5f38-9cd3-03402d6f2c7d)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R17")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF4701T5E"
+      (at 365.76 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 365.76 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 365.76 139.7 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 304.8 185.42 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 37ffe38f-5f84-5360-8f0f-090b5e9a68ad)
+    (property "Reference" "R18"
+      (at 314.96 184.15 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "10k 1%"
+      (at 314.96 187.96 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 304.8 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C25804"
+      (at 304.8 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C25804"
+      (at 304.8 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid c2b7d88b-607b-5565-8b3f-08282ef433f4)
+    )
+    (pin "2"
+      (uuid 36425fa3-2202-590e-a86a-cc78cc8a40fa)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R18")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF1002T5E"
+      (at 304.8 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 304.8 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 304.8 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (symbol
+    (lib_id "KISS_Core:R")
+    (at 365.76 185.42 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 44e1af83-d40f-5dee-a564-8eef3153ab59)
+    (property "Reference" "R19"
+      (at 375.92 184.15 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "10k 1%"
+      (at 375.92 187.96 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "Resistor_SMD:R_0603_1608Metric"
+      (at 365.76 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://jlcpcb.com/partdetail/C25804"
+      (at 365.76 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C25804"
+      (at 365.76 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid 4327a32b-796a-54e8-81df-17e8005b3d67)
+    )
+    (pin "2"
+      (uuid fc4dbb12-fa31-5b67-9006-8c76580d4691)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "R19")
+          (unit 1)
+        )
+      )
+    )
+    (property "mpn" "0603WAF1002T5E"
+      (at 365.76 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "manufacturer" "UNI-ROYAL"
+      (at 365.76 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "part_class" "Basic"
+      (at 365.76 185.42 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+  )
+  (text "Encoder pull-ups use the same 3.3V as the bottom board."
+    (at 287.02 210.82 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid e7156733-4335-5fcb-9de6-41485bdf0f2e)
+  )
+  (text "MOTOR SUPPLY / H4"
+    (at 27.94 228.6 0)
+    (effects
+      (font
+        (size 1.524 1.524)
+        (bold yes)
+      )
+      (justify left)
+    )
+    (uuid ed2b3282-76fa-55c5-9b7a-33866c70150d)
+  )
+  (polyline
+    (pts
+      (xy 27.94 232.41)
+      (xy 137.16 232.41)
+    )
+    (stroke
+      (width .254)
+      (type solid)
+    )
+    (uuid 7c358bb9-de7d-5ba2-bdbb-06e1f50eb5e1)
+  )
+  (symbol
+    (lib_id "KISS_Core:PWR")
+    (at 81.28 260.35 0)
+    (unit 1)
+    (exclude_from_sim no)
+    (in_bom yes)
+    (on_board yes)
+    (dnp no)
+    (uuid 7a6a919f-0bc2-5167-b6c7-94e184129a02)
+    (property "Reference" "PWR1"
+      (at 81.28 246.38 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Value" "PZ254V-11-04P"
+      (at 81.28 250.19 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+      )
+    )
+    (property "Footprint" "WhiteBoardBot:PWR_HDR-TH_4P-P2.54-V-M"
+      (at 81.28 260.35 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "Datasheet" "https://item.szlcsc.com/datasheet/PZ254V-11-04P/2801085.html"
+      (at 81.28 260.35 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (property "LCSC" "C2691448"
+      (at 81.28 260.35 0)
+      (effects
+        (font
+          (size 1.016 1.016)
+        )
+        (hide yes)
+      )
+    )
+    (pin "1"
+      (uuid c5dadb70-4aea-5fa1-812c-a18b517987cb)
+    )
+    (pin "2"
+      (uuid ef9b6afb-3355-5000-8275-f4e46d988fc1)
+    )
+    (pin "3"
+      (uuid 84722103-48f6-5700-a1be-5dfeb8bbd003)
+    )
+    (pin "4"
+      (uuid 6fc0f66c-346f-528d-9cad-cd1210d8b784)
+    )
+    (instances
+      (project "top_board_v2_logic"
+        (path "/aecd2725-675a-56c2-8eb4-1797c7355554/6296101b-7eed-52f3-b818-cb2b1ae69e62"
+          (reference "PWR1")
+          (unit 1)
+        )
+      )
+    )
+  )
+  (text "PWR1 (legacy PWR): pin 1 = GND; pins 2/3/4 = regulated VMOT."
+    (at 157.48 240.03 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid f404c410-7ab5-53d4-b1db-a186dc78d371)
+  )
+  (text "M0.1 supplies encoder 3.3V. M1.1 and M2.1 are ground."
+    (at 157.48 250.19 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid fae6f5b5-8609-5137-a24c-f258bd72f4af)
+  )
+  (text "Bottom motor sockets: PCB pin 2 = 3.3V, pin 5 = GND."
+    (at 157.48 260.35 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 3b8f6cc8-ce6d-50bb-be66-4b2c08c6a477)
+  )
+  (text "Exact encoder voltage, signal type, cable order and current are still unverified."
+    (at 157.48 270.51 0)
+    (effects
+      (font
+        (size 0.889 0.889)
+      )
+      (justify left)
+    )
+    (uuid 2e46738e-940b-5786-bc0b-d95ecceed5c8)
+  )
+  (wire
+    (pts
+      (xy 76.2 80.01)
+      (xy 66.04 80.01)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 0b66a410-2def-5407-a103-df43146d6f9f)
+  )
+  (global_label "MAIN_3V3"
+    (shape bidirectional)
+    (at 66.04 80.01 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 35aa8a25-7750-5877-a7bc-10096a1a26df)
+  )
+  (wire
+    (pts
+      (xy 76.2 82.55)
+      (xy 66.04 82.55)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 88ac1856-5d6e-501b-a7ef-aa063ddc536c)
+  )
+  (global_label "M0_BI"
+    (shape bidirectional)
+    (at 66.04 82.55 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid e63e97eb-b046-5b4a-8e7d-bcd53b452d1e)
+  )
+  (wire
+    (pts
+      (xy 76.2 85.09)
+      (xy 66.04 85.09)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 33a70471-b75a-5ab7-9878-edcddc712fc2)
+  )
+  (global_label "M0_FI"
+    (shape bidirectional)
+    (at 66.04 85.09 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid c01210fc-56ff-5d58-a563-403befdc43ef)
+  )
+  (wire
+    (pts
+      (xy 76.2 87.63)
+      (xy 66.04 87.63)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid fb07fdd8-6c05-5631-887c-ea4e7b544bf2)
+  )
+  (global_label "ENC0_B"
+    (shape bidirectional)
+    (at 66.04 87.63 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid dfc95de0-ccc3-5791-9dfc-b71af345a5bd)
+  )
+  (wire
+    (pts
+      (xy 76.2 90.17)
+      (xy 66.04 90.17)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid dd1c9de7-b2e4-5fae-8e41-8694c258ce83)
+  )
+  (global_label "ENC0_A"
+    (shape bidirectional)
+    (at 66.04 90.17 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 335d497a-1734-5cfa-b1fd-4ef409fe4f0f)
+  )
+  (wire
+    (pts
+      (xy 45.72 135.89)
+      (xy 45.72 125.73)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 8674f419-2f1f-5e13-a602-dbd70b56bc05)
+  )
+  (global_label "M0_FI"
+    (shape bidirectional)
+    (at 45.72 125.73 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 600f71ea-bb44-5c2a-850a-3c29f0c24233)
+  )
+  (wire
+    (pts
+      (xy 45.72 143.51)
+      (xy 45.72 153.67)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 7ff596eb-ca13-5e89-afdf-6d916e0e31e2)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 45.72 153.67 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid b85249ee-fdb7-503e-8cca-67df0f83571c)
+  )
+  (wire
+    (pts
+      (xy 106.68 135.89)
+      (xy 106.68 125.73)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 5081043d-4476-5fa5-a6df-a1e6b1c2f2c5)
+  )
+  (global_label "M0_BI"
+    (shape bidirectional)
+    (at 106.68 125.73 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 946a158e-db3f-59b3-9f8b-8b46f7482cd4)
+  )
+  (wire
+    (pts
+      (xy 106.68 143.51)
+      (xy 106.68 153.67)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 8fd5a6a8-f655-5562-ae0e-b2143c6c43e9)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 106.68 153.67 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 06995d6c-287e-5d19-bc6a-5a91b6811282)
+  )
+  (wire
+    (pts
+      (xy 45.72 181.61)
+      (xy 45.72 171.45)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 85b15471-0470-576d-ba6c-726acac029f7)
+  )
+  (global_label "MAIN_3V3"
+    (shape bidirectional)
+    (at 45.72 171.45 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 860a72c8-3e8c-501a-acf0-fa07eec63176)
+  )
+  (wire
+    (pts
+      (xy 45.72 189.23)
+      (xy 45.72 199.39)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid f0946807-066d-5233-8a67-2aff6d63ed8d)
+  )
+  (global_label "ENC0_A"
+    (shape bidirectional)
+    (at 45.72 199.39 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid ec9e31d6-6309-5fb7-a96a-6c1cd4c7abd7)
+  )
+  (wire
+    (pts
+      (xy 106.68 181.61)
+      (xy 106.68 171.45)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 8ce523c3-446e-5a9b-990e-0424cb34d873)
+  )
+  (global_label "MAIN_3V3"
+    (shape bidirectional)
+    (at 106.68 171.45 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 7ddfa594-3ae3-5250-bf8f-1c0b28166503)
+  )
+  (wire
+    (pts
+      (xy 106.68 189.23)
+      (xy 106.68 199.39)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 50607f75-90bf-5c9e-b64c-6737039d4bb8)
+  )
+  (global_label "ENC0_B"
+    (shape bidirectional)
+    (at 106.68 199.39 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid b8a40d25-3a1d-5984-8449-c5f374f5a7cb)
+  )
+  (wire
+    (pts
+      (xy 205.74 80.01)
+      (xy 195.58 80.01)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 1cba7585-c02d-5027-887c-e21456fc3ca1)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 195.58 80.01 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid e736478d-8c00-5550-bcdf-e8d91d652c5b)
+  )
+  (wire
+    (pts
+      (xy 205.74 82.55)
+      (xy 195.58 82.55)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 597c2c75-7a83-540a-857a-ef1fac6997d3)
+  )
+  (global_label "M2_BI"
+    (shape bidirectional)
+    (at 195.58 82.55 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 19096913-d441-5bef-b6ad-dc2717881d4b)
+  )
+  (wire
+    (pts
+      (xy 205.74 85.09)
+      (xy 195.58 85.09)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 520acae8-183f-55dd-b66d-0faa3d105d82)
+  )
+  (global_label "M2_FI"
+    (shape bidirectional)
+    (at 195.58 85.09 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 41237fde-0267-5a6d-b853-1e6a513d5ab8)
+  )
+  (wire
+    (pts
+      (xy 205.74 87.63)
+      (xy 195.58 87.63)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 1b4e5963-3c82-531f-9584-68995e231ddd)
+  )
+  (global_label "ENC2_B"
+    (shape bidirectional)
+    (at 195.58 87.63 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 08cb9c07-1ff6-589e-8b40-6d25b9aab763)
+  )
+  (wire
+    (pts
+      (xy 205.74 90.17)
+      (xy 195.58 90.17)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid d1b43f53-341d-57da-bf38-f4c84edc839a)
+  )
+  (global_label "ENC2_A"
+    (shape bidirectional)
+    (at 195.58 90.17 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 68b3006d-82d8-5786-a8c1-3eb6b04a2a42)
+  )
+  (wire
+    (pts
+      (xy 175.26 135.89)
+      (xy 175.26 125.73)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 1b8e848c-98f7-5b39-bf51-d7f305985dae)
+  )
+  (global_label "M2_FI"
+    (shape bidirectional)
+    (at 175.26 125.73 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid dc1504d6-6837-5986-9caa-bb665bdbf371)
+  )
+  (wire
+    (pts
+      (xy 175.26 143.51)
+      (xy 175.26 153.67)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid dbe5d344-60ed-5ff6-b7cc-3723131970f1)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 175.26 153.67 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 7152ba0a-28a9-5917-ad83-66eff65e2a80)
+  )
+  (wire
+    (pts
+      (xy 236.22 135.89)
+      (xy 236.22 125.73)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 9102d3f1-34e3-5eb6-92bb-a9c2a777eb83)
+  )
+  (global_label "M2_BI"
+    (shape bidirectional)
+    (at 236.22 125.73 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 7e52ef1e-491f-5328-ace9-c3ead66023b8)
+  )
+  (wire
+    (pts
+      (xy 236.22 143.51)
+      (xy 236.22 153.67)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 4916e168-b56f-5ff5-8666-f7b7e32a5f2d)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 236.22 153.67 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid ffb93fe8-74fa-5643-811f-612b7871ba3d)
+  )
+  (wire
+    (pts
+      (xy 175.26 181.61)
+      (xy 175.26 171.45)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 766ae162-6d38-56d1-a478-f12e950897b6)
+  )
+  (global_label "MAIN_3V3"
+    (shape bidirectional)
+    (at 175.26 171.45 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 693f42cd-18ce-5781-8090-8e245494fb2b)
+  )
+  (wire
+    (pts
+      (xy 175.26 189.23)
+      (xy 175.26 199.39)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 85c40a34-e6ba-5438-a1e2-6c06f5879ecf)
+  )
+  (global_label "ENC2_A"
+    (shape bidirectional)
+    (at 175.26 199.39 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid f51b369e-de7b-5644-b723-b5512f7a90b8)
+  )
+  (wire
+    (pts
+      (xy 236.22 181.61)
+      (xy 236.22 171.45)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid f734c75d-2572-59d9-92c4-8b0e9af10ce2)
+  )
+  (global_label "MAIN_3V3"
+    (shape bidirectional)
+    (at 236.22 171.45 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid c73e709b-3409-572c-a579-ad199be7e9b4)
+  )
+  (wire
+    (pts
+      (xy 236.22 189.23)
+      (xy 236.22 199.39)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 62e7cecc-c82e-51a1-9ee1-7941f17cf914)
+  )
+  (global_label "ENC2_B"
+    (shape bidirectional)
+    (at 236.22 199.39 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid ba5f9aed-e204-5d3c-bc4d-63051f9abf31)
+  )
+  (wire
+    (pts
+      (xy 335.28 80.01)
+      (xy 325.12 80.01)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 5bb5f6e2-25d8-5528-adba-9bcf8caf9069)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 325.12 80.01 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 4a6c15dc-9bf0-5735-9c2a-76980e5c526f)
+  )
+  (wire
+    (pts
+      (xy 335.28 82.55)
+      (xy 325.12 82.55)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 3d4d8737-e8a9-5e3f-a9a6-d3d3d133cdea)
+  )
+  (global_label "M1_BI"
+    (shape bidirectional)
+    (at 325.12 82.55 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 0e50220b-e7ac-554d-bb00-2974827c2a9f)
+  )
+  (wire
+    (pts
+      (xy 335.28 85.09)
+      (xy 325.12 85.09)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid f30dd8bf-ac36-53c1-b909-d68f3d77c617)
+  )
+  (global_label "M1_FI"
+    (shape bidirectional)
+    (at 325.12 85.09 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 6584d2e6-0c40-5632-8952-6e927e761580)
+  )
+  (wire
+    (pts
+      (xy 335.28 87.63)
+      (xy 325.12 87.63)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 049aebed-c548-5993-a843-463c2816ad66)
+  )
+  (global_label "ENC1_B"
+    (shape bidirectional)
+    (at 325.12 87.63 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 305c3021-1bb9-5e80-9081-67c471fcf057)
+  )
+  (wire
+    (pts
+      (xy 335.28 90.17)
+      (xy 325.12 90.17)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid b0a3d277-163a-5b20-8ae0-a09579c288a9)
+  )
+  (global_label "ENC1_A"
+    (shape bidirectional)
+    (at 325.12 90.17 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid dad5293a-feba-5615-8c4a-7209fe39d307)
+  )
+  (wire
+    (pts
+      (xy 304.8 135.89)
+      (xy 304.8 125.73)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 5bac52cc-eede-58b5-aa75-55d765b2c5f1)
+  )
+  (global_label "M1_FI"
+    (shape bidirectional)
+    (at 304.8 125.73 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 2ba1bb3c-f8a5-5445-83a7-dd0a9bd618e8)
+  )
+  (wire
+    (pts
+      (xy 304.8 143.51)
+      (xy 304.8 153.67)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid e4bebdd4-e1cc-516c-831e-b7cab319097d)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 304.8 153.67 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid cfd84c25-22bd-539a-ad4b-92e85228bb14)
+  )
+  (wire
+    (pts
+      (xy 365.76 135.89)
+      (xy 365.76 125.73)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid ec976495-a0d4-5a3f-8fb8-aa759014c338)
+  )
+  (global_label "M1_BI"
+    (shape bidirectional)
+    (at 365.76 125.73 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid db97f3b1-0c0e-53e2-b5bb-ee8a1b73c0d3)
+  )
+  (wire
+    (pts
+      (xy 365.76 143.51)
+      (xy 365.76 153.67)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid be47fa76-bd1e-5cfa-8c33-5f332f7ba119)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 365.76 153.67 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid 6de2e525-394a-5464-9e41-a3071c317579)
+  )
+  (wire
+    (pts
+      (xy 304.8 181.61)
+      (xy 304.8 171.45)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid decab38c-28d9-5e8e-9b66-e0bbb519838c)
+  )
+  (global_label "MAIN_3V3"
+    (shape bidirectional)
+    (at 304.8 171.45 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 14b745a9-536d-51f7-9e37-d22db8dc24ba)
+  )
+  (wire
+    (pts
+      (xy 304.8 189.23)
+      (xy 304.8 199.39)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid a33cac5c-9c89-555e-832f-0850698ecda4)
+  )
+  (global_label "ENC1_A"
+    (shape bidirectional)
+    (at 304.8 199.39 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid f3105dd8-0b1e-5e86-b9ac-5bdadce057ff)
+  )
+  (wire
+    (pts
+      (xy 365.76 181.61)
+      (xy 365.76 171.45)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 383401c7-ff1e-59cb-b4cc-939f195cf384)
+  )
+  (global_label "MAIN_3V3"
+    (shape bidirectional)
+    (at 365.76 171.45 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 12efb7c0-2d01-5713-8b99-23920984cab1)
+  )
+  (wire
+    (pts
+      (xy 365.76 189.23)
+      (xy 365.76 199.39)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 5443cb72-7730-51d9-b0fa-ac01c93c2cc5)
+  )
+  (global_label "ENC1_B"
+    (shape bidirectional)
+    (at 365.76 199.39 180)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify left)
+    )
+    (uuid c794981f-2963-5989-9dc3-a8dc6429088c)
+  )
+  (wire
+    (pts
+      (xy 76.2 256.54)
+      (xy 66.04 256.54)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid de975908-c415-590b-92eb-4c1af799e950)
+  )
+  (global_label "GND"
+    (shape bidirectional)
+    (at 66.04 256.54 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 154d2e3d-16a4-59c8-beb8-657ce4d399fc)
+  )
+  (wire
+    (pts
+      (xy 76.2 259.08)
+      (xy 66.04 259.08)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 86973ad6-dfee-59b2-81dc-857bf6cb26a2)
+  )
+  (global_label "VMOT"
+    (shape bidirectional)
+    (at 66.04 259.08 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 58ceba15-4627-5ac6-b0ee-e333c2bb0e02)
+  )
+  (wire
+    (pts
+      (xy 76.2 261.62)
+      (xy 66.04 261.62)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid 6e778433-8259-5ff4-a523-1a2989a3971d)
+  )
+  (global_label "VMOT"
+    (shape bidirectional)
+    (at 66.04 261.62 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid 7e5eec9e-5b9d-5f08-8f75-9803d7304d28)
+  )
+  (wire
+    (pts
+      (xy 76.2 264.16)
+      (xy 66.04 264.16)
+    )
+    (stroke
+      (width 0)
+      (type default)
+    )
+    (uuid a720b8e1-b861-502a-9c1c-4d9c11764d8c)
+  )
+  (global_label "VMOT"
+    (shape bidirectional)
+    (at 66.04 264.16 0)
+    (effects
+      (font
+        (size 1.016 1.016)
+      )
+      (justify right)
+    )
+    (uuid d9b05828-416e-5c09-98b9-988c32386425)
+  )
+)

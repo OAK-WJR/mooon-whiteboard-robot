@@ -1,0 +1,1 @@
+(sym_lib_table (version 7) (lib (name "KISS_USB") (type "KiCad") (uri "${KIPRJMOD}/KISS_USB.kicad_sym") (options "") (descr ""))(lib (name "KISS_Core") (type "KiCad") (uri "${KIPRJMOD}/KISS_Core.kicad_sym") (options "") (descr ""))(lib (name "KISS_Power") (type "KiCad") (uri "${KIPRJMOD}/KISS_Power.kicad_sym") (options "") (descr "")))
