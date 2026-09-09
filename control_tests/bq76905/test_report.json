@@ -1,0 +1,60 @@
+{
+  "generated_at_utc": "2026-09-08T15:43:11.352475+00:00",
+  "scope": "Host software/protocol model only; no physical BQ/USB/serial/charging validation",
+  "compiler": "Apple clang version 21.0.0 (clang-2100.1.1.101)",
+  "standard": "C++11",
+  "sanitizers": [
+    "address",
+    "undefined"
+  ],
+  "sources": [
+    {
+      "file": "bq76905.pdf",
+      "sha256": "00976fdb82eef27c4c515c8bb565dd9ef332fc9224986567dab44a2506ac57b1",
+      "match": true
+    },
+    {
+      "file": "bq76905.txt",
+      "sha256": "e1c6501fc165eb6b85c6061d891c4edad760befbae3cc666d0d63cc15550e0fd",
+      "match": true
+    },
+    {
+      "file": "bq76905_trm.pdf",
+      "sha256": "24a062743e4eaecf79eb3b4b3d9b9618acbbc599cff0bfe12363df2a333e0f81",
+      "match": true
+    },
+    {
+      "file": "bq76905_trm.txt",
+      "sha256": "3ff14e23fffc5dd622afa743b3bfdf04bc13581e8d441d0ede367ad3a6816507",
+      "match": true
+    }
+  ],
+  "source_table_checks": 32,
+  "compile_command": [
+    "/usr/bin/clang++",
+    "-std=c++11",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-pedantic",
+    "-g",
+    "-O1",
+    "-fsanitize=address,undefined",
+    "-fno-omit-frame-pointer",
+    "-I<repo>/include",
+    "<repo>/src/bq76905_monitor.cpp",
+    "<repo>/control_tests/bq76905/test_monitor.cpp",
+    "-o",
+    "<repo>/control_tests/bq76905/.build/test_monitor"
+  ],
+  "exit_code": 0,
+  "stdout": "PASS TI captured CRC vectors\nPASS source command table and real mode sequence\nPASS explicit profile is never charge permission\nPASS CUV/DSG, COV/CHG and shared faults remain held OFF\nPASS every missing profile parameter rejected\nPASS ACK alone cannot prove identity or FET OFF\nPASS entry/exit/readback require actual state\nPASS indirect echo/checksum/length\nPASS NAK/short read/short write/busy/timeout\nPASS CRC faults and startup mode\nPASS POR invalidates published and partial samples\nPASS POR during config before commit\nPASS latched scan and stale data\nPASS physical 2S and TS validity\nPASS runtime config drift and safety flags\nPASS clock wrap and scheduler stall\nPASS explicit restart and latched failure\n  fault injection covered all 296 initialization bus transfers\nPASS ambiguous completion at every initialization transfer\n18 test groups passed (independent TI protocol model; no hardware).\n",
+  "stderr": "",
+  "owned_code_sha256": {
+    "include/bq76905_monitor.h": "592e47e6a6317bb906adb814880e0ebdf1ea598423027309bfba1d42bf0d2de8",
+    "src/bq76905_monitor.cpp": "167b1a9e63b9eb317ee99f4b7aec85e3e24c88951de1273995704437252ad4b2",
+    "control_tests/bq76905/test_monitor.cpp": "91b7114b77adfb67fdcf5e80ed31edc9d508b4b690b4ec4dacfda19aca91ec7b",
+    "control_tests/bq76905/device_model.h": "0290802fcdce55a18253b3e75856e5ab2004ffa64e8321d74711c824f34274f1",
+    "control_tests/bq76905/source_contract.json": "010eb9fb63f13ac45051b01e7863b8ba161a3bb0c2dd0c7365d55d9ecb9a360a"
+  }
+}

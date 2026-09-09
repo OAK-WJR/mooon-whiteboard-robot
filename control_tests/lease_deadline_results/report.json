@@ -1,0 +1,189 @@
+{
+  "time_utc": "2026-09-09T01:53:20.941433+00:00",
+  "all_passed": true,
+  "checks": [
+    {
+      "name": "commands_native_usb_compile",
+      "exit_code": 0,
+      "command": [
+        "c++",
+        "-std=c++17",
+        "-fsanitize=address,undefined",
+        "-fno-sanitize-recover=all",
+        "-Icontrol_tests/mock",
+        "-Iinclude",
+        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "control_tests/test_runtime_commands.cpp",
+        "-o",
+        "$STAGE/commands_native_usb"
+      ]
+    },
+    {
+      "name": "commands_native_usb",
+      "exit_code": 0,
+      "command": [
+        "$STAGE/commands_native_usb"
+      ]
+    },
+    {
+      "name": "commands_r3_uart_compile",
+      "exit_code": 0,
+      "command": [
+        "c++",
+        "-std=c++17",
+        "-fsanitize=address,undefined",
+        "-fno-sanitize-recover=all",
+        "-Icontrol_tests/mock",
+        "-Iinclude",
+        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-DWBB_TOP_BOARD_R3=1",
+        "-DCONFIG_IDF_TARGET_ESP32C6=1",
+        "-DARDUINO_USB_CDC_ON_BOOT=0",
+        "control_tests/test_runtime_commands.cpp",
+        "-o",
+        "$STAGE/commands_r3_uart"
+      ]
+    },
+    {
+      "name": "commands_r3_uart",
+      "exit_code": 0,
+      "command": [
+        "$STAGE/commands_r3_uart"
+      ]
+    },
+    {
+      "name": "lease_framing_compile",
+      "exit_code": 0,
+      "command": [
+        "c++",
+        "-std=c++17",
+        "-fsanitize=address,undefined",
+        "-fno-sanitize-recover=all",
+        "-Icontrol_tests/mock",
+        "-Iinclude",
+        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "control_tests/test_session.cpp",
+        "-o",
+        "$STAGE/lease_framing"
+      ]
+    },
+    {
+      "name": "lease_framing",
+      "exit_code": 0,
+      "command": [
+        "$STAGE/lease_framing"
+      ]
+    },
+    {
+      "name": "runtime_timing_compile",
+      "exit_code": 0,
+      "command": [
+        "c++",
+        "-std=c++17",
+        "-fsanitize=address,undefined",
+        "-fno-sanitize-recover=all",
+        "-Icontrol_tests/mock",
+        "-Iinclude",
+        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "control_tests/test_runtime_timing.cpp",
+        "-o",
+        "$STAGE/runtime_timing"
+      ]
+    },
+    {
+      "name": "runtime_timing",
+      "exit_code": 0,
+      "command": [
+        "$STAGE/runtime_timing"
+      ]
+    },
+    {
+      "name": "transport_reboot_compile",
+      "exit_code": 0,
+      "command": [
+        "c++",
+        "-std=c++17",
+        "-fsanitize=address,undefined",
+        "-fno-sanitize-recover=all",
+        "-Icontrol_tests/mock",
+        "-Iinclude",
+        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "control_tests/test_transport_reboot.cpp",
+        "-o",
+        "$STAGE/transport_reboot"
+      ]
+    },
+    {
+      "name": "transport_reboot_backlog",
+      "exit_code": 0,
+      "command": [
+        "$STAGE/transport_reboot",
+        "backlog"
+      ]
+    },
+    {
+      "name": "transport_reboot_full",
+      "exit_code": 0,
+      "command": [
+        "$STAGE/transport_reboot",
+        "full"
+      ]
+    },
+    {
+      "name": "transport_reboot_flood",
+      "exit_code": 0,
+      "command": [
+        "$STAGE/transport_reboot",
+        "flood"
+      ]
+    },
+    {
+      "name": "transport_reboot_tx-failure",
+      "exit_code": 0,
+      "command": [
+        "$STAGE/transport_reboot",
+        "tx-failure"
+      ]
+    },
+    {
+      "name": "transport_reboot_wrap",
+      "exit_code": 0,
+      "command": [
+        "$STAGE/transport_reboot",
+        "wrap"
+      ]
+    },
+    {
+      "name": "transport_reboot_owner-failure",
+      "exit_code": 0,
+      "command": [
+        "$STAGE/transport_reboot",
+        "owner-failure"
+      ]
+    },
+    {
+      "name": "c6_r3_cross_build",
+      "exit_code": 0,
+      "command": [
+        "<repo>/.venv/bin/pio",
+        "run",
+        "-e",
+        "top_board_v2_r3"
+      ]
+    }
+  ],
+  "source_hashes": {
+    "src/top_v2_main.cpp": "935588589c3b35869f47d7e9339bd7986670cc7e2db4ac62def74d8883204b3e",
+    "include/control_session.h": "44156b097c6c2a31ac8caad371df1a4fe58aa25f5b57bdf311a67331a50d6913",
+    "control_tests/test_runtime_commands.cpp": "580b16ef5d2a955ce4c993590ef870adc36a9a99144f697d81b9e29245dbbbaa",
+    "control_tests/runtime_stubs.h": "48951a47e96ee77d5947ccf9b7faa0993e3f78eef34a89c51aa92243e667ee57",
+    "control_tests/verify_lease_deadline.py": "aec90f0b7d33bf52d3d2842d861579058878b3295c49d2690202b0c9c08aa990"
+  },
+  "watched_sources_unchanged_during_tests": true,
+  "pre_fix_reproduction": "New assertion failed: controller still moving after LEASE_EXPIRED; exit -6",
+  "native_scope": "Production command, lease and loop; mock controller, clocks, SDK and transport boundaries. Transport reboot regressions use production transport with SDK doubles.",
+  "hardware_tested": false,
+  "firmware_uploaded": false,
+  "pcb_qualified": false,
+  "private_configuration_read": false
+}
