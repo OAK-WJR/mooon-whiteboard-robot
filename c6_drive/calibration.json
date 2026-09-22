@@ -1,0 +1,71 @@
+{
+  "gains": [
+    [
+      [
+        0.008,
+        0.06,
+        0.013050451223780218,
+        55.8667737093589
+      ],
+      [
+        0.008,
+        0.06,
+        0.012225842861356343,
+        55.79152438347221
+      ]
+    ],
+    [
+      [
+        0.008,
+        0.06,
+        0.005499076720923285,
+        53.421486316766064
+      ],
+      [
+        0.008,
+        0.06,
+        0.006421247982252018,
+        52.03999137204678
+      ]
+    ],
+    [
+      [
+        0.008,
+        0.06,
+        0.012988404769642574,
+        48.71399027001482
+      ],
+      [
+        0.008,
+        0.06,
+        0.012419203945241831,
+        49.73590423007016
+      ]
+    ]
+  ],
+  "units": "encoder counts/s",
+  "wheel_order": "physical 1,2,3",
+  "status": "SUSPENDED_BENCH_VALIDATED",
+  "gain_order": [
+    "kp",
+    "ki",
+    "kv",
+    "ks"
+  ],
+  "direction_order": [
+    "positive",
+    "negative"
+  ],
+  "kd": 0,
+  "recorded_utc": "2026-09-22T03:52:55.428471+00:00",
+  "validation": "reports/validation-v3b.json",
+  "max_mean_error": 0.09582754901960788,
+  "max_std_fraction": 0.040122915463933526,
+  "loaded_driving_validated": false,
+  "reboot_persistence_verified": true,
+  "combined_motion_validation": "reports/wasd-bench.json",
+  "control_integral_limit_pwm": 100,
+  "expanded_range_validation": "reports/speed-range-final.json",
+  "expanded_range_max_mean_error": 0.04292506666666668,
+  "expanded_combined_motion_validation": "reports/speed-combined-final.json"
+}

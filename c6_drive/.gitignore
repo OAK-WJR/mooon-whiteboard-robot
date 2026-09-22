@@ -1,0 +1,3 @@
+.pio/
+reports/*.bin
+reports/*.jsonl

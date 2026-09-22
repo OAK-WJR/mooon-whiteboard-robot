@@ -1,0 +1,181 @@
+<mujoco model="WhiteBoardBot roller contact study">
+      <compiler angle="radian"/>
+      <option timestep="0.001" gravity="0 -0.000000000 -9.810000000"
+              integrator="implicitfast" cone="elliptic" solver="Newton" iterations="80" tolerance="1e-10"/>
+      <visual><global offwidth="1440" offheight="1080"/><headlight ambient=".4 .4 .4" diffuse=".7 .7 .7"/></visual>
+      <default><joint type="hinge" limited="false"/><geom friction="0.65 .00001 .000001" condim="3"
+                 solref=".004 1" solimp=".95 .99 .001"/></default>
+      <asset><texture name="grid" type="2d" builtin="checker" width="512" height="512" rgb1=".16 .20 .24" rgb2=".20 .25 .29"/>
+        <material name="surface" texture="grid" texrepeat="20 20" reflectance=".05"/>
+        <mesh name="deck" vertex=".049 0 .002 -.0245 .0424 .002 -.0245 -.0424 .002 .049 0 .008 -.0245 .0424 .008 -.0245 -.0424 .008"/>
+      </asset>
+      <worldbody>
+        <light pos="0 -.4 1" dir="0 .3 -1"/>
+        <geom name="board" type="plane" size="1 1 .01" material="surface" contype="1" conaffinity="2"/>
+        <body name="chassis" pos="0 0 0.0191" quat=".70710678 0 0 .70710678">
+          <freejoint name="base"/>
+          <inertial pos="0 0 .006" mass="0.2688" diaginertia="0.00017999999999999998 0.00017999999999999998 0.0003"/>
+          <geom type="mesh" mesh="deck" rgba=".18 .43 .37 1" contype="0" conaffinity="0"/>
+          <geom type="box" pos="-.005 0 .013" size=".013 .009 .005" rgba=".22 .28 .34 1" contype="0" conaffinity="0"/>
+          <geom type="box" pos=".025 0 .013" size=".008 .007 .003" rgba=".70 .78 .83 1" contype="0" conaffinity="0"/>
+          <body name="hub0" pos="0.016869000 0.029217965 0" euler="0 0 1.047197551">
+          <joint name="wheel0" axis="-1 0 0" armature="0.0007347374"/>
+          <geom type="cylinder" size=".012 .004" zaxis="1 0 0" mass=".008" rgba="0.95 0.61 0.36 1" contype="0" conaffinity="0"/>
+          <body name="r0_0" pos="0 0.000000000 0.015200000">
+              <joint name="roller0_0" axis="0 1.000000000 -0.000000000" damping="0.0000002"/>
+              <geom name="tire0_0" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 1.000000000 -0.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r0_1" pos="0 0.007600000 0.013163586">
+              <joint name="roller0_1" axis="0 0.866025404 -0.500000000" damping="0.0000002"/>
+              <geom name="tire0_1" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.866025404 -0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r0_2" pos="0 0.013163586 0.007600000">
+              <joint name="roller0_2" axis="0 0.500000000 -0.866025404" damping="0.0000002"/>
+              <geom name="tire0_2" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.500000000 -0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r0_3" pos="0 0.015200000 0.000000000">
+              <joint name="roller0_3" axis="0 0.000000000 -1.000000000" damping="0.0000002"/>
+              <geom name="tire0_3" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.000000000 -1.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r0_4" pos="0 0.013163586 -0.007600000">
+              <joint name="roller0_4" axis="0 -0.500000000 -0.866025404" damping="0.0000002"/>
+              <geom name="tire0_4" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.500000000 -0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r0_5" pos="0 0.007600000 -0.013163586">
+              <joint name="roller0_5" axis="0 -0.866025404 -0.500000000" damping="0.0000002"/>
+              <geom name="tire0_5" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.866025404 -0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r0_6" pos="0 0.000000000 -0.015200000">
+              <joint name="roller0_6" axis="0 -1.000000000 -0.000000000" damping="0.0000002"/>
+              <geom name="tire0_6" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -1.000000000 -0.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r0_7" pos="0 -0.007600000 -0.013163586">
+              <joint name="roller0_7" axis="0 -0.866025404 0.500000000" damping="0.0000002"/>
+              <geom name="tire0_7" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.866025404 0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r0_8" pos="0 -0.013163586 -0.007600000">
+              <joint name="roller0_8" axis="0 -0.500000000 0.866025404" damping="0.0000002"/>
+              <geom name="tire0_8" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.500000000 0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r0_9" pos="0 -0.015200000 -0.000000000">
+              <joint name="roller0_9" axis="0 -0.000000000 1.000000000" damping="0.0000002"/>
+              <geom name="tire0_9" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.000000000 1.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r0_10" pos="0 -0.013163586 0.007600000">
+              <joint name="roller0_10" axis="0 0.500000000 0.866025404" damping="0.0000002"/>
+              <geom name="tire0_10" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.500000000 0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r0_11" pos="0 -0.007600000 0.013163586">
+              <joint name="roller0_11" axis="0 0.866025404 0.500000000" damping="0.0000002"/>
+              <geom name="tire0_11" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.866025404 0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body>
+        </body><body name="hub1" pos="-0.033738000 0.000000000 0" euler="0 0 3.141592654">
+          <joint name="wheel1" axis="-1 0 0" armature="0.0009180316"/>
+          <geom type="cylinder" size=".012 .004" zaxis="1 0 0" mass=".008" rgba="0.39 0.65 0.97 1" contype="0" conaffinity="0"/>
+          <body name="r1_0" pos="0 0.000000000 0.015200000">
+              <joint name="roller1_0" axis="0 1.000000000 -0.000000000" damping="0.0000002"/>
+              <geom name="tire1_0" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 1.000000000 -0.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r1_1" pos="0 0.007600000 0.013163586">
+              <joint name="roller1_1" axis="0 0.866025404 -0.500000000" damping="0.0000002"/>
+              <geom name="tire1_1" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.866025404 -0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r1_2" pos="0 0.013163586 0.007600000">
+              <joint name="roller1_2" axis="0 0.500000000 -0.866025404" damping="0.0000002"/>
+              <geom name="tire1_2" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.500000000 -0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r1_3" pos="0 0.015200000 0.000000000">
+              <joint name="roller1_3" axis="0 0.000000000 -1.000000000" damping="0.0000002"/>
+              <geom name="tire1_3" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.000000000 -1.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r1_4" pos="0 0.013163586 -0.007600000">
+              <joint name="roller1_4" axis="0 -0.500000000 -0.866025404" damping="0.0000002"/>
+              <geom name="tire1_4" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.500000000 -0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r1_5" pos="0 0.007600000 -0.013163586">
+              <joint name="roller1_5" axis="0 -0.866025404 -0.500000000" damping="0.0000002"/>
+              <geom name="tire1_5" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.866025404 -0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r1_6" pos="0 0.000000000 -0.015200000">
+              <joint name="roller1_6" axis="0 -1.000000000 -0.000000000" damping="0.0000002"/>
+              <geom name="tire1_6" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -1.000000000 -0.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r1_7" pos="0 -0.007600000 -0.013163586">
+              <joint name="roller1_7" axis="0 -0.866025404 0.500000000" damping="0.0000002"/>
+              <geom name="tire1_7" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.866025404 0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r1_8" pos="0 -0.013163586 -0.007600000">
+              <joint name="roller1_8" axis="0 -0.500000000 0.866025404" damping="0.0000002"/>
+              <geom name="tire1_8" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.500000000 0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r1_9" pos="0 -0.015200000 -0.000000000">
+              <joint name="roller1_9" axis="0 -0.000000000 1.000000000" damping="0.0000002"/>
+              <geom name="tire1_9" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.000000000 1.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r1_10" pos="0 -0.013163586 0.007600000">
+              <joint name="roller1_10" axis="0 0.500000000 0.866025404" damping="0.0000002"/>
+              <geom name="tire1_10" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.500000000 0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r1_11" pos="0 -0.007600000 0.013163586">
+              <joint name="roller1_11" axis="0 0.866025404 0.500000000" damping="0.0000002"/>
+              <geom name="tire1_11" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.866025404 0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body>
+        </body><body name="hub2" pos="0.016869000 -0.029217965 0" euler="0 0 -1.047197551">
+          <joint name="wheel2" axis="-1 0 0" armature="0.0007659884"/>
+          <geom type="cylinder" size=".012 .004" zaxis="1 0 0" mass=".008" rgba="0.36 0.84 0.70 1" contype="0" conaffinity="0"/>
+          <body name="r2_0" pos="0 0.000000000 0.015200000">
+              <joint name="roller2_0" axis="0 1.000000000 -0.000000000" damping="0.0000002"/>
+              <geom name="tire2_0" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 1.000000000 -0.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r2_1" pos="0 0.007600000 0.013163586">
+              <joint name="roller2_1" axis="0 0.866025404 -0.500000000" damping="0.0000002"/>
+              <geom name="tire2_1" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.866025404 -0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r2_2" pos="0 0.013163586 0.007600000">
+              <joint name="roller2_2" axis="0 0.500000000 -0.866025404" damping="0.0000002"/>
+              <geom name="tire2_2" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.500000000 -0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r2_3" pos="0 0.015200000 0.000000000">
+              <joint name="roller2_3" axis="0 0.000000000 -1.000000000" damping="0.0000002"/>
+              <geom name="tire2_3" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.000000000 -1.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r2_4" pos="0 0.013163586 -0.007600000">
+              <joint name="roller2_4" axis="0 -0.500000000 -0.866025404" damping="0.0000002"/>
+              <geom name="tire2_4" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.500000000 -0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r2_5" pos="0 0.007600000 -0.013163586">
+              <joint name="roller2_5" axis="0 -0.866025404 -0.500000000" damping="0.0000002"/>
+              <geom name="tire2_5" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.866025404 -0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r2_6" pos="0 0.000000000 -0.015200000">
+              <joint name="roller2_6" axis="0 -1.000000000 -0.000000000" damping="0.0000002"/>
+              <geom name="tire2_6" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -1.000000000 -0.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r2_7" pos="0 -0.007600000 -0.013163586">
+              <joint name="roller2_7" axis="0 -0.866025404 0.500000000" damping="0.0000002"/>
+              <geom name="tire2_7" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.866025404 0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r2_8" pos="0 -0.013163586 -0.007600000">
+              <joint name="roller2_8" axis="0 -0.500000000 0.866025404" damping="0.0000002"/>
+              <geom name="tire2_8" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.500000000 0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r2_9" pos="0 -0.015200000 -0.000000000">
+              <joint name="roller2_9" axis="0 -0.000000000 1.000000000" damping="0.0000002"/>
+              <geom name="tire2_9" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 -0.000000000 1.000000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r2_10" pos="0 -0.013163586 0.007600000">
+              <joint name="roller2_10" axis="0 0.500000000 0.866025404" damping="0.0000002"/>
+              <geom name="tire2_10" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.500000000 0.866025404"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body><body name="r2_11" pos="0 -0.007600000 0.013163586">
+              <joint name="roller2_11" axis="0 0.866025404 0.500000000" damping="0.0000002"/>
+              <geom name="tire2_11" type="ellipsoid" size=".0038 .0038 .0056" zaxis="0 0.866025404 0.500000000"
+                    mass=".0002" rgba=".13 .17 .20 1" contype="2" conaffinity="1"/>
+            </body>
+        </body>
+        </body>
+      </worldbody>
+      <actuator><motor name="drive0" joint="wheel0" gear="1" ctrllimited="true" ctrlrange="-.2 .2"/><motor name="drive1" joint="wheel1" gear="1" ctrllimited="true" ctrlrange="-.2 .2"/><motor name="drive2" joint="wheel2" gear="1" ctrllimited="true" ctrlrange="-.2 .2"/></actuator>
+    </mujoco>

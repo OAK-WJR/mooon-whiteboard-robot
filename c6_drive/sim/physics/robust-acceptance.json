@@ -1,0 +1,32 @@
+{
+  "purpose": "Prospective simulation acceptance checks, declared before running seeds 8100-8159. No hardware qualification or global stability proof.",
+  "controller": "wbb_robust::Controller",
+  "development_seeds": [1100,1111],
+  "holdout_seeds": [8100,8159],
+  "stress_seeds": [9100,9129],
+  "operating_envelope": {
+    "mass_kg": [0.22,0.30], "friction": [0.60,0.85],
+    "incline_deg": [0,45,90], "magnetic_force_N_when_inclined": [12,15],
+    "supply_scale": [0.90,1.05], "per_wheel_torque_scale": [0.90,1.15],
+    "per_wheel_drag_scale": [0.90,1.10], "reflected_inertia_scale": [0.80,1.30],
+    "body_latency_s": [0.04,0.12], "body_position_noise_bound_m": [0.0002,0.0008],
+    "encoder_noise_bound_counts_per_s": [10,50], "pose_drop_probability": [0,0.08],
+    "actuation_delay_steps": [0,1], "translation_speed_m_per_s": [0.08,0.12],
+    "external_force_per_axis_N": [-0.2,0.2]
+  },
+  "per_run_limits": {
+    "mean_task_error_m": 0.035,
+    "mean_heading_error_deg": 8,
+    "peak_heading_error_deg": 30,
+    "peak_pwm": 255,
+    "max_integral": 120.001,
+    "max_compensation": 65.001,
+    "max_command_slew_per_s": 1300,
+    "post_fault_nonzero_requests": 0,
+    "solver_warnings": 0,
+    "unexpected_faults": 0,
+    "falls": 0
+  },
+  "aggregate_target": {"mean_position_error_reduction_vs_previous_eso_at_least": 0.25},
+  "stress_interpretation": "All wider-envelope and impossible-condition failures must be retained. They are not counted as qualified motion and are not excluded to improve the holdout score."
+}
