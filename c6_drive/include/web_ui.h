@@ -1,0 +1,240 @@
+#pragma once
+static const char WEB_UI[] PROGMEM = R"WBBPAGE(<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>WhiteBoardBot · 小车控制</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,-apple-system,sans-serif;background:#101419;color:#edf3f7}*{box-sizing:border-box}body{max-width:960px;margin:28px auto;padding:0 22px 40px}h1{font-size:30px;margin:8px 0}h2{font-size:18px;margin:0}p{color:#a7b7c4;line-height:1.6;margin:10px 0}small{color:#a7b7c4;line-height:1.6}a{color:#7de1c8;overflow-wrap:anywhere}.top,.row,.section-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.brand{font-size:12px;letter-spacing:2px}.badge{font-size:13px;color:#83e5c9;background:#18342e;padding:7px 12px;border-radius:20px}.panel{background:#19222b;border:1px solid #30404c;border-radius:18px;padding:22px;margin:18px 0}button{background:#263640;border:1px solid #49606f;border-radius:12px;color:#edf3f7;padding:13px 18px;font:inherit;cursor:pointer;touch-action:manipulation}button:disabled{opacity:.45;cursor:default}button.on{background:#237565}#arm{background:#287a66;border-color:#41987f;font-weight:650}#stop{background:#7b3441;border-color:#a25361;font-weight:650}.drive-grid{display:grid;grid-template-columns:1fr 330px;gap:24px;align-items:center}.actions{display:flex;gap:10px;margin:18px 0}.actions button{flex:1;min-height:54px}.keys{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.keys button{font-size:22px;min-height:76px;touch-action:none}.keys small{display:block;font-size:12px;color:inherit;margin-top:5px}.speed-line{display:flex;align-items:baseline;gap:8px;justify-content:space-between}.speed-line output{font-size:30px;font-weight:650;font-variant-numeric:tabular-nums}.speed-line span{font-size:14px;color:#b4c3cf}#speed{width:100%;margin:16px 0;accent-color:#7de1c8}#message{min-height:26px;color:#edcb86;margin:12px 0 0}#modeLimitNote{font-size:13px;margin-bottom:0}.compact{padding:18px 22px}details>summary{cursor:pointer;font-weight:600;padding:6px 0;color:#cad9e3}details>summary:hover{color:#fff}details[open]>summary{margin-bottom:16px}.settings{margin-top:18px;border-top:1px solid #30404c;padding-top:12px}.settings .row{justify-content:flex-start}.settings label{display:flex;align-items:center;gap:10px;flex-wrap:wrap}input,select,textarea{font:inherit;max-width:100%;background:#101820;color:#edf3f7;border:1px solid #415867;border-radius:9px;padding:11px}input[type=number]{width:88px}input[type=range]{padding:0}#pose{font-size:14px}.network-form{display:grid;gap:16px}.network-form label{display:grid;gap:7px}.network-form input,.network-form select,.network-form textarea{width:100%;min-width:0}.network-form textarea{resize:vertical;font:13px/1.5 monospace}#enterpriseFields:not([hidden]){display:grid;gap:14px}.network-links{display:grid;gap:8px;margin:14px 0}.hint{font-size:13px}#networkMessage{color:#edcb86}.secondary{font-size:13px;background:transparent;padding:9px 12px}.connection-title{font-size:14px;color:#a7b7c4}#networkState{color:#dce9f0;margin:8px 0 3px}#networkHint{margin:0;font-size:13px}.table-scroll{overflow-x:auto}table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:right;padding:12px 8px;border-bottom:1px solid #30404c;white-space:nowrap}th:first-child,td:first-child{text-align:left}#faultPanel{border-color:#956f45}#faultData{white-space:pre-wrap;overflow-wrap:anywhere;font:14px/1.6 system-ui}button:focus-visible,summary:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid #7de1c8;outline-offset:3px}[hidden]{display:none!important}@media(max-width:700px){body{margin:18px auto;padding:0 14px 30px}.panel{padding:18px}.drive-grid{grid-template-columns:1fr;gap:20px}h1{font-size:26px}.keys button{min-height:66px}.actions{margin:14px 0}.badge{max-width:100%;overflow-wrap:anywhere}.row>*{max-width:100%}.settings label{width:100%}.settings select{width:100%}}
+</style>
+<header><div class="top"><span class="brand">WHITEBOARD BOT</span><span id="link" class="badge">正在连接</span></div><h1>小车控制</h1><p>按住方向键移动，松开停车。空格或 Esc 立即停止。</p></header>
+<main>
+<section class="panel" id="drivePanel"><div class="drive-grid"><div>
+<h2 id="driveModeName">地面试驾</h2><p class="hint">在平整地面短距离试驾，周围留出移动空间。</p>
+<div class="actions"><button id="arm" disabled>启用控制</button><button id="stop">停止并锁定</button></div>
+<label class="speed-line" for="speed"><span>移动速度</span><div><output id="speedValue">0.08</output> <span>m/s</span></div></label><input aria-label="移动速度" id="speed" type="range" min="0.04" max="0.08" step="0.01" value="0.08">
+<small id="speedLimitHint">等待小车确认速度上限</small><div id="message" role="status" aria-live="polite">正在读取小车状态…</div>
+</div><div class="keys" aria-label="方向控制"><button data-key="q">Q ↶<small>左转</small></button><button data-key="w">W ↑<small>前进</small></button><button data-key="e">E ↷<small>右转</small></button><button data-key="a">A ←<small>左移</small></button><button data-key="s">S ↓<small>后退</small></button><button data-key="d">D →<small>右移</small></button></div></div>
+<p id="modeLimitNote"></p>
+<details class="settings" id="controlSettings"><summary>更多控制设置</summary>
+<div class="row"><label>模式 <select id="mode"><option value="floor_trial" id="floorOption">地面限速试驾 · 起停纠偏</option><option value="legacy">原速度控制</option><option value="robust_wheels" id="robustOption">改进速度控制</option><option value="encoder_hold" id="holdOption">编码器纠偏（实验）</option></select></label></div>
+<div class="row" style="margin-top:16px"><label>速度上限 <input aria-label="速度上限" id="maxSpeed" type="number" inputmode="decimal" min="0.04" max="0.40" step="0.01" value="0.08"> m/s</label><button id="useMax" class="secondary">用最高速度</button><button id="zeroPose" class="secondary">位置归零</button></div>
+<p id="pose">编码器位置：等待状态</p><small>位置由轮子转动估算，打滑时不代表真实车身位置；此模式不能保证墙面不下滑。</small></details></section>
+<section class="panel compact" id="networkPanel"><span class="connection-title">Wi-Fi 连接</span><p id="networkState" role="status">等待连接状态</p><p id="networkHint">连接后即可驾驶，不用重复配网。</p>
+<details class="settings" id="networkSettings"><summary>更换 Wi-Fi</summary>
+<p class="hint">停止并锁定后，可在这里更换网络。保存后小车会连接新网络，屏幕会显示新地址。</p>
+<form id="networkForm" class="network-form"><label>网络名称（2.4 GHz）<input id="wifiSsid" type="text" maxlength="32" autocomplete="off" required></label>
+<label>连接方式<select id="wifiAuth"><option value="personal">普通 Wi-Fi</option><option value="peap">学校账号 · PEAP</option><option value="ttls_mschapv2">学校账号 · TTLS / MSCHAPv2</option><option value="ttls_pap">学校账号 · TTLS / PAP</option></select></label>
+<label id="wifiPasswordLabel">网络密码<input id="wifiPassword" type="password" maxlength="64" autocomplete="new-password" placeholder="新网络请填写密码；开放网络可留空"></label><small id="passwordHint"></small>
+<div id="enterpriseFields" hidden><label>学校账号<input id="wifiUsername" type="text" maxlength="64" autocomplete="off"></label><details><summary>学校认证设置</summary><div class="network-form"><label>外层身份（可选）<input id="wifiIdentity" type="text" maxlength="64" autocomplete="off"></label><label>认证服务器<input id="wifiServer" type="text" maxlength="253" autocomplete="off" placeholder="学校公布的认证服务器域名"></label><label>CA 证书<textarea id="wifiCA" maxlength="4096" rows="5" spellcheck="false" placeholder="-----BEGIN CERTIFICATE-----"></textarea></label><label>或选择证书文件<input id="wifiCAFile" type="file" accept=".pem,.crt,.cer"></label></div></details><small>学校账号认证需要服务器和证书信息；不支持连接后的网页登录。</small></div>
+<div class="row"><button id="wifiSave" type="submit">保存并连接</button></div></form>
+<p id="networkMessage" role="status"></p>
+<details class="settings"><summary>连接地址与已保存网络</summary><div class="network-links"><a id="homeUrl" hidden>局域网地址</a><a id="hostUrl" hidden>固定名称</a><a id="apUrl" hidden>备用热点入口</a></div><p class="hint">连接新网络失败时，可使用小车热点恢复设置。密码保存在小车，不显示在网页中。</p><button id="wifiForget" class="secondary" type="button">忘记已保存网络</button></details>
+</details></section>
+<section id="faultPanel" class="panel" hidden role="status"><b>停机记录</b><p id="faultSummary"></p><details><summary>查看故障数据</summary><pre id="faultData"></pre><small>PWM 为输出占空比，不是实测电压或力矩。</small></details></section>
+<details class="panel" id="telemetryDetails"><summary>轮速与诊断</summary><small id="state">—</small><div class="table-scroll"><table><thead><tr><th>电机</th><th>目标 m/s</th><th>实际 m/s</th><th>PWM</th></tr></thead><tbody id="motors"></tbody></table></div><p><small>按 38 mm 轮径、2800 计数/圈换算。当前硬件无法读取电池电压。</small></p></details>
+</main>
+<script>
+const token='__TOKEN__', keys=new Set(), motionKeys='wasdqe';
+let lease=0,seq=0,busy=false,session=null,stopping=false,lastStatus=0,stopGeneration=0;
+let maxSpeed=.30,driveSpeed=.18,maxWheelCps=8000,controlMode='legacy';
+let modeSpeedLimit=.4,modeYawLimit=1.2;
+let pendingMode=null,modeEditing=false,modeChanging=false,modeAwaitingStatus=false;
+let armPending=false,canDriveNow=false;
+let networkSaving=false,networkArmed=true,networkBusy=false,networkSupported=false,networkPrefilled=false;
+let currentNetwork=null;
+const $=id=>document.getElementById(id);
+function enterpriseFields(){
+ const enterprise=$('wifiAuth').value!=='personal'&&!!$('wifiAuth').value;
+ $('enterpriseFields').hidden=!enterprise;
+ for(const id of ['wifiUsername','wifiServer','wifiCA'])$(id).required=enterprise;
+ $('wifiPassword').required=enterprise;
+ passwordHint();
+}
+$('wifiAuth').onchange=enterpriseFields;
+function passwordHint(){
+ const same=currentNetwork?.auth==='personal'&&$('wifiAuth').value==='personal'&&$('wifiSsid').value===currentNetwork.ssid&&currentNetwork.password_saved;
+ $('wifiPassword').placeholder=same?'已保存在小车；不改密码请留空':'新网络请填写密码；开放网络可留空';
+ $('passwordHint').textContent=same?'此网络密码已保存，无需再输入。':$('wifiAuth').value==='personal'?'只在更换网络或密码时填写。':'使用学校提供的账号和密码。';
+}
+$('wifiSsid').oninput=passwordHint;
+
+$('wifiCAFile').onchange=async()=>{
+ const file=$('wifiCAFile').files?.[0];if(!file)return;
+ if(file.size>4096){$('networkMessage').textContent='证书文件不能超过 4096 字节';return;}
+ const text=await file.text();
+ if(!text.includes('-----BEGIN CERTIFICATE-----')){$('networkMessage').textContent='请选择 PEM 文本证书；不是二进制 DER 格式';return;}
+ $('wifiCA').value=text;
+};
+enterpriseFields();
+function networkLink(id,url,label){
+ const a=$(id),valid=typeof url==='string'&&/^http:\/\/[a-z0-9.-]+\/$/i.test(url);
+ a.hidden=!valid;a.href=valid?url:'';a.textContent=valid?label+' '+url:'';
+}
+function showNetwork(s){
+ const n=s.network;currentNetwork=n||null;networkArmed=!!s.armed;networkSupported=!!n;networkBusy=!!n?.busy;
+ const locked=networkSaving||networkArmed||!!lease||networkBusy||!n;
+ for(const id of ['wifiSave','wifiForget','wifiSsid','wifiPassword','wifiAuth','wifiUsername','wifiIdentity','wifiServer','wifiCA','wifiCAFile'])$(id).disabled=locked;
+ if(!n){$('networkState').textContent='当前固件尚未支持Wi-Fi 网络 配网';return;}
+ if(!networkPrefilled){if(!$('wifiSsid').value)$('wifiSsid').value=n.ssid||'';$('wifiAuth').value=n.auth||'personal';$('wifiServer').value=n.server_name||'';enterpriseFields();networkPrefilled=true;}
+ const labels={connected:'已连接',applying:'正在应用设置',connecting:'正在连接',retry_wait:'暂未连上，将在停止控制时重试',check_settings:'多次认证连接未成功，请检查学校设置后重新保存',ap_only:'仅小车热点'};
+ const reasons={201:'未找到该网络的可用 2.4 GHz 接入点',210:'未找到安全协议兼容的接入点',211:'接入点未满足安全认证要求',212:'信号未满足连接要求',23:'802.1X 认证未通过：需要核对账号、证书或学校接入策略',202:'认证失败：原因尚未确定',204:'认证握手超时',15:'四次握手超时',200:'接入点信号超时',203:'接入点关联失败'};
+ let detail='';
+ if(!n.connected&&n.associated)detail=' · 已完成 Wi-Fi 关联，等待 IP 地址';
+ else if(!n.connected&&n.configured&&n.disconnect_reason)detail=` · 上次断开 ${n.disconnect_reason}：${reasons[n.disconnect_reason]||n.disconnect_name||'原因待诊断'}`;
+ if(n.scan_state==='scanning')detail+=' · 正在扫描 2.4 GHz';
+ else if(!n.connected&&n.scan_state==='complete')detail+=` · 2.4 GHz 扫描：${n.scan_ap_count} 个接入点，当前网络匹配 ${n.scan_matches} 个`;
+ $('networkState').textContent=`${labels[n.state]||n.state}${n.ssid?' · '+n.ssid:''}${Number.isFinite(n.rssi_dbm)?' · '+n.rssi_dbm+' dBm':''}${n.error?' · '+n.error:''}${detail}`;
+ $('networkHint').textContent=n.connected?'网络已就绪，无需重新保存或输入密码。上方即可启用驾驶。':networkBusy?'正在连接网络，连接成功后即可驾驶。':'当前可通过小车热点访问。展开「更换 Wi-Fi」设置常用网络。';
+ passwordHint();
+ networkLink('homeUrl',n.station_url,'局域网');networkLink('hostUrl',n.mdns_url,'固定名称');networkLink('apUrl',n.ap_url,'备用热点');
+}
+async function saveNetwork(forget=false){
+ if(networkSaving||networkArmed||lease||networkBusy||!networkSupported||Date.now()-lastStatus>1000){$('networkMessage').textContent='请先停止并锁定，等待最新状态，再修改网络';return;}
+ networkSaving=true;keys.clear();paintKeys();$('arm').disabled=true;
+ $('wifiSave').disabled=$('wifiForget').disabled=true;
+ try{
+  const auth=$('wifiAuth').value||'personal';
+  const body=forget?{forget:true}:{ssid:$('wifiSsid').value,password:$('wifiPassword').value,auth};
+  const samePersonal=!forget&&auth==='personal'&&currentNetwork?.auth==='personal'&&body.ssid===currentNetwork.ssid&&currentNetwork.password_saved;
+  if(samePersonal&&!body.password&&currentNetwork.connected){
+   $('networkMessage').textContent='已经连接这个网络，无需重复保存。';$('networkSettings').open=false;return;
+  }
+  if(samePersonal&&!body.password)body.reuse_saved_password=true;
+  if(!forget&&auth!=='personal'){
+   Object.assign(body,{username:$('wifiUsername').value,identity:$('wifiIdentity').value,server_name:$('wifiServer').value,ca_pem:$('wifiCA').value});
+   if(!body.username||!body.password||!body.server_name||!body.ca_pem.includes('-----BEGIN CERTIFICATE-----'))throw Error('请填写学校账号、密码、认证服务器及官方 CA 证书');
+  }
+  const r=await fetch('/network',{method:'POST',headers:{'Content-Type':'application/json','X-Control-Token':token},body:JSON.stringify(body),signal:AbortSignal.timeout(3000)});
+  const d=await r.json();if(!r.ok||!d.ok)throw Error(({INVALID_WIFI:'检查网络名称、账号、密码及服务器设置',INVALID_AUTH:'请选择学校支持的认证方式',INVALID_CA:'CA 证书无效，需要学校官方 PEM 格式的 CA 证书',SAVED_NETWORK_MISMATCH:'这是另一个网络，请填写它的密码',STOP_BEFORE_WIFI_CHANGE:'请先停止并锁定，等轮子停止',SAVE_FAILED:'保存失败，请重试',BAD_TOKEN:'页面已过期，请刷新'})[d.error]||d.error||'配网失败');
+  $('wifiPassword').value='';
+  if(d.unchanged){$('networkMessage').textContent='网络设置未改变，保持当前连接。';$('networkSettings').open=false;return;}
+  networkBusy=true;
+  if(forget){$('wifiSsid').value='';$('networkMessage').textContent='已保存网络已删除，请使用小车热点入口';}
+  else $('networkMessage').textContent='已保存，正在连接。热点可能短暂断开；稍后查看屏幕 IP 或此处链接。';
+ }catch(e){$('networkMessage').textContent=e.message;}
+ finally{networkSaving=false;}
+}
+$('networkForm').onsubmit=e=>{e.preventDefault();return saveNetwork(false);};
+$('wifiForget').onclick=()=>saveNetwork(true);
+for(const id of ['wifiSsid','wifiPassword','wifiUsername','wifiIdentity','wifiServer','wifiCA','wifiAuth'])$(id).onfocus=()=>{keys.clear();paintKeys();};
+const faultNames={START_NO_MOTION:'启动补偿结束，仍未检测到预期方向的轮子运动',ROBUST_BAD_DT:'控制采样间隔超出范围',ROBUST_BAD_TARGET:'轮速目标无效',ROBUST_BAD_SPEED:'编码器速度数值无效',ROBUST_BAD_DUTY:'电机输出读回值无效',NO_ENCODER:'持续输出后仍没有有效轮速',ENCODER_DIRECTION:'轮速持续与已施加的驱动方向相反',ENCODER_FEEDBACK:'编码器双通道反馈异常',ODOMETRY_INVALID:'编码器位移或采样间隔无效',ODOMETRY_HOLD_FAULT:'编码器纠偏数据过期或误差过大',NETWORK_LOST:'Wi-Fi 连接丢失，已停止',WIFI_CONNECTING:'正在连接 Wi-Fi，请稍后启用',LINK_TIMEOUT:'控制指令超时',CONTROL_LATE:'控制循环延迟异常',ROBUST_INPUT_FAULT:'旧固件的通用故障：无法区分采样异常和启动后无运动'};
+const faultName=code=>faultNames[code]||code;
+function showFault(s){
+ const f=s.last_fault;
+ $('faultPanel').hidden=!f;
+ if(!f)return;
+ const historical=s.armed||f.run!==s.control_run;
+ $('faultSummary').textContent=`${historical?'历史记录':'已停止'} · ${f.motor?'电机 '+f.motor:'控制器'}：${faultName(f.code)}（${f.code}）`;
+ const number=(v,d=0)=>Number.isFinite(v)?v.toFixed(d):'无效';
+ const rows=[`开机后 ${number(f.ms/1000,3)} s · 模式 ${f.mode} · 采样间隔 ${number(f.dt_s*1000,1)} ms`];
+ for(let i=0;i<3;i++)rows.push(`电机 ${i+1}：目标 ${number(f.target_cps?.[i])} · 实测 ${number(f.speed_cps?.[i])} counts/s · PWM ${number(f.applied_pwm?.[i])}/255`);
+ if(f.code==='START_NO_MOTION'||f.code==='NO_ENCODER')rows.push('这不能单独区分负载过大、卡住、供电/驱动异常或编码器反馈故障。');
+ if(f.code==='ENCODER_DIRECTION')rows.push('持续反向轮速触发了保护；需结合换向、外力和逐轮极性测试判断，不能单凭此提示认定编码器接反。');
+ $('faultData').textContent=rows.join('\n');
+}
+function speedNumber(value,fallback,maximum){
+ const n=Number(value);return value===null||value===''||!Number.isFinite(n)?fallback:Math.round(Math.min(maximum,Math.max(.04,n))*100)/100;
+}
+function setSpeeds(maximum,current,persist=true){
+ maxSpeed=speedNumber(maximum,maxSpeed,.40);
+ driveSpeed=Math.min(maxSpeed,speedNumber(current,driveSpeed,maxSpeed));
+ if(persist||document.activeElement!==$('maxSpeed'))$('maxSpeed').value=Math.min(maxSpeed,modeSpeedLimit).toFixed(2);
+ $('speed').max=Math.min(maxSpeed,modeSpeedLimit).toFixed(2);
+ $('speed').value=Math.min(driveSpeed,modeSpeedLimit).toFixed(2);$('speedValue').textContent=Math.min(driveSpeed,modeSpeedLimit).toFixed(2);
+ if(persist)try{localStorage.setItem('wbb-drive-speeds-v1',JSON.stringify({maximum:maxSpeed,current:driveSpeed}));}catch{}
+}
+try{const saved=JSON.parse(localStorage.getItem('wbb-drive-speeds-v1'));if(saved)setSpeeds(saved.maximum,saved.current,false);}catch{}
+setSpeeds(maxSpeed,driveSpeed,false);
+async function send(op,extra={}){
+ const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),700);
+ try{const r=await fetch('/cmd',{method:'POST',headers:{'Content-Type':'application/json','X-Control-Token':token},body:JSON.stringify({op,...extra}),signal:controller.signal});if(!r.ok)throw Error('HTTP '+r.status);const d=await r.json();if(!d.ok)throw Error(d.error||'命令被拒绝');return d;}finally{clearTimeout(timer);}
+}
+function paintKeys(){document.querySelectorAll('[data-key]').forEach(b=>b.classList.toggle('on',keys.has(b.dataset.key)));}
+async function stop(){stopGeneration++;armPending=false;pendingMode=null;modeEditing=false;modeAwaitingStatus=true;lease=0;keys.clear();paintKeys();stopping=true;$('message').textContent='已锁定';try{await send('stop');}catch(e){$('message').textContent='连接中断；小车将在指令超时后停止';}finally{stopping=false;}}
+$('stop').onclick=stop;
+// Serialize changes after an in-flight poll; never discard a selection because
+// polling owns the transport, or overwrite the native picker while it is open.
+async function applyPendingMode(){
+ if(busy||stopping||lease||networkArmed||document.hidden)return;
+ while(pendingMode!==null&&!stopping&&!lease&&!networkArmed){
+  const wanted=pendingMode,generation=stopGeneration;pendingMode=null;
+  busy=true;modeChanging=true;modeAwaitingStatus=true;$('arm').disabled=true;
+  try{
+   const reply=await send('controller',{mode:wanted});
+   if(generation===stopGeneration){
+    controlMode=reply.controller||wanted;
+    if(pendingMode===null){if(!modeEditing)$('mode').value=controlMode;$('message').textContent='模式已切换，请启用控制';}
+   }
+  }catch(e){
+   pendingMode=null;
+   if(generation===stopGeneration){$('message').textContent='切换失败：'+e.message;$('mode').value=controlMode;}
+  }finally{modeChanging=false;busy=false;}
+ }
+}
+$('mode').onfocus=()=>{modeEditing=true;keys.clear();paintKeys();};
+$('mode').onblur=()=>{modeEditing=false;if(pendingMode===null&&!modeChanging)$('mode').value=controlMode;};
+$('mode').onchange=async()=>{
+ if(stopping||lease||networkArmed){$('mode').value=controlMode;$('message').textContent='请先停止并锁定，再切换模式';return;}
+ pendingMode=$('mode').value;modeAwaitingStatus=true;keys.clear();paintKeys();$('arm').disabled=true;
+ $('message').textContent='正在切换模式…';await applyPendingMode();
+};
+$('zeroPose').onclick=async()=>{if(busy||stopping||lease)return;busy=true;try{await send('zero_odometry');}catch(e){$('message').textContent=e.message;}finally{busy=false;}};
+async function applyPendingArm(){
+ if(!armPending||busy||stopping||pendingMode!==null||modeChanging||modeAwaitingStatus)return;
+ armPending=false;
+ if(lease||networkArmed||!canDriveNow||networkSaving||networkBusy||!document.hasFocus()||document.hidden||Date.now()-lastStatus>800){$('message').textContent='暂不能启用，请等待小车就绪后再试';return;}
+ keys.clear();paintKeys();busy=true;const generation=stopGeneration;
+ try{let d=await send('arm');if(generation!==stopGeneration||!document.hasFocus()||document.hidden){await stop();return;}lease=d.lease;seq=0;$('message').textContent='控制已启用：按住方向键移动';}
+ catch(e){$('message').textContent=e.message;}finally{busy=false;}
+}
+$('arm').onclick=async()=>{
+ if(stopping||lease||armPending||networkArmed||networkSaving||networkBusy||!document.hasFocus())return;
+ armPending=true;$('arm').disabled=true;keys.clear();paintKeys();$('message').textContent='正在启用控制…';await applyPendingArm();
+};
+$('speed').oninput=()=>setSpeeds(maxSpeed,$('speed').value);
+$('maxSpeed').onchange=()=>setSpeeds($('maxSpeed').value,driveSpeed);
+$('useMax').onclick=()=>{setSpeeds($('maxSpeed').value,driveSpeed);setSpeeds(maxSpeed,maxSpeed);};
+for(const id of ['speed','maxSpeed'])$(id).onfocus=()=>{keys.clear();paintKeys();};
+function key(k,down){if(!lease)return;if(down)keys.add(k);else keys.delete(k);paintKeys();}
+window.addEventListener('keydown',e=>{let k=e.key.toLowerCase();const editing=(['INPUT','TEXTAREA','SELECT'].includes(e.target?.tagName)&&e.target?.type!=='range')||e.target?.isContentEditable;if(k==='escape'||(k===' '&&!editing)){e.preventDefault();stop();return;}if(editing)return;if(motionKeys.includes(k)&&k.length===1&&!e.ctrlKey&&!e.metaKey&&!e.altKey){e.preventDefault();key(k,true);}});
+window.addEventListener('keyup',e=>{key(e.key.toLowerCase(),false);});
+window.addEventListener('blur',stop);document.addEventListener('visibilitychange',()=>{if(document.hidden)stop();});window.addEventListener('pagehide',()=>{lease=0;keys.clear();fetch('/cmd',{method:'POST',headers:{'Content-Type':'application/json','X-Control-Token':token},body:'{"op":"stop"}',keepalive:true}).catch(()=>{});});
+document.querySelectorAll('[data-key]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);key(b.dataset.key,true);};b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>key(b.dataset.key,false);});
+function bodyCommand(){let speed=Math.min(driveSpeed,modeSpeedLimit,controlMode==='encoder_hold'?.08:.4),x=(keys.has('w')-keys.has('s'))*speed,y=(keys.has('a')-keys.has('d'))*speed;let n=Math.hypot(x,y);if(n>speed){x*=speed/n;y*=speed/n;}return [x,y,(keys.has('q')-keys.has('e'))*Math.min(modeYawLimit,controlMode==='encoder_hold'?.6:1.2)];}
+function wheels(){let [x,y,w]=bodyCommand(),rot=w*.033738;const values=[-.8660254*x+.5*y+rot,-y+rot,.8660254*x+.5*y+rot].map(v=>v/(.11938052/2800));const scale=Math.min(1,maxWheelCps/Math.max(1,...values.map(Math.abs)));return values.map(v=>v*scale);}
+async function tick(){
+ if(!busy&&!stopping){busy=true;try{
+  if(lease){if(!document.hasFocus()||document.hidden||Date.now()-lastStatus>800){await stop();}else{await send(controlMode==='encoder_hold'?'drive':'wheels',{lease,seq:++seq,values:controlMode==='encoder_hold'?bodyCommand():wheels()});}}
+  const r=await fetch('/status',{cache:'no-store',signal:AbortSignal.timeout(700)});if(!r.ok)throw Error('状态读取失败');const s=await r.json();lastStatus=Date.now();
+  maxWheelCps=Number.isFinite(s.max_wheel_cps)&&s.max_wheel_cps>0?Math.min(10000,s.max_wheel_cps):8000;
+  if(session!==null&&session!==s.session){armPending=false;pendingMode=null;modeEditing=false;lease=0;keys.clear();$('message').textContent='小车已重启，请刷新页面';}session=s.session;
+  if(lease&&(!s.armed||s.lease!==lease)){lease=0;keys.clear();paintKeys();$('message').textContent='已停止：'+faultName(s.reason);}
+  showFault(s);showNetwork(s);
+  if(!s.armed&&s.reason==='ROBUST_INPUT_FAULT')$('message').textContent='已停止：'+faultName(s.reason)+'。这份状态无法确定出错电机。';
+  controlMode=s.controller||'legacy';modeAwaitingStatus=false;
+  if(s.armed){armPending=false;pendingMode=null;modeEditing=false;}
+  if(!modeEditing&&pendingMode===null&&!modeChanging)$('mode').value=controlMode;
+  $('mode').disabled=s.armed||!!lease||armPending;
+  $('driveModeName').textContent=controlMode==='floor_trial'?'地面试驾':controlMode==='encoder_hold'?'编码器纠偏':controlMode==='robust_wheels'?'改进速度控制':'原速度控制';
+  modeSpeedLimit=controlMode==='encoder_hold'?.08:.4;modeYawLimit=controlMode==='encoder_hold'?.6:1.2;
+  if(Number.isFinite(s.max_body_speed_mps)&&s.max_body_speed_mps>0)modeSpeedLimit=Math.min(modeSpeedLimit,s.max_body_speed_mps);
+  if(Number.isFinite(s.max_yaw_rps)&&s.max_yaw_rps>0)modeYawLimit=Math.min(modeYawLimit,s.max_yaw_rps);
+  setSpeeds(maxSpeed,driveSpeed,false);
+  $('modeLimitNote').textContent=s.floor_trial?'试驾版 · 松键协调减速，转向限 0.4 rad/s。仍在改善抖动，不用于墙面保持。':controlMode==='encoder_hold'?'编码器纠偏仍处于实验阶段，仅完成架空测试，不用于墙面保持。':'速度模式：松键停止输出，不保持位置。';
+  $('floorOption').disabled=typeof s.floor_trial!=='boolean';
+  $('maxSpeed').max=modeSpeedLimit.toFixed(2);
+  if(document.activeElement!==$('maxSpeed'))$('maxSpeed').value=Math.min(maxSpeed,modeSpeedLimit).toFixed(2);
+  $('speedLimitHint').textContent=`当前模式速度上限 ${modeSpeedLimit.toFixed(2)} m/s。按住方向键移动，松开减速停止。`;
+  $('robustOption').disabled=!s.robust_validated;$('holdOption').disabled=!s.hold_validated;$('zeroPose').disabled=s.armed||!!lease;
+  const od=s.odometry;
+  $('pose').textContent=od?.valid?`编码器估计：X ${(od.x_m*1000).toFixed(1)} mm · Y ${(od.y_m*1000).toFixed(1)} mm · 方向 ${(od.yaw_rad*180/Math.PI).toFixed(1)}°${od.holding?(od.within_hold_band?' · 误差在范围内，输出归零':' · 正在纠正编码器位移'):''}`:'编码器位置：无有效数据';
+  const canDrive=s.manual_control_available??s.calibrated;
+  canDriveNow=!!s.ready&&!!canDrive;
+  $('link').textContent=s.network?.connected?`${s.network.ssid} · 在线`:'小车热点 · 在线';$('state').textContent=s.reason;$('arm').disabled=!canDriveNow||s.armed||!!lease||armPending||pendingMode!==null||modeChanging||networkSaving||networkBusy;
+  $('arm').textContent=lease?'控制已启用':armPending?'正在启用…':'启用控制';
+  if(!s.ready)$('message').textContent='输出故障，已锁定：'+s.reason+'。断开电机电源，检查TF卡槽和接线。';
+  else if(!canDrive&&pendingMode===null&&!modeChanging)$('message').textContent='当前模式未完成验证。地面手动测试请选择「地面限速试驾」。';
+  else if(s.floor_trial&&!lease&&['正在读取小车状态…','当前模式未完成验证。地面手动测试请选择「地面限速试驾」。'].includes($('message').textContent))$('message').textContent='已就绪，点击「启用控制」后按 W/A/S/D。';
+  $('motors').innerHTML=s.motors.map(m=>`<tr><td>电机 ${m.physical}</td><td>${(m.target*.11938052/2800).toFixed(3)}</td><td>${(m.speed*.11938052/2800).toFixed(3)}</td><td>${m.pwm.toFixed(0)}</td></tr>`).join('');
+ }catch(e){armPending=false;pendingMode=null;modeEditing=false;canDriveNow=false;lease=0;keys.clear();paintKeys();$('link').textContent='连接中断';$('message').textContent=e.message;try{await send('stop');}catch{}}finally{busy=false;await applyPendingMode();await applyPendingArm();}}
+ setTimeout(tick,60);
+}tick();
+</script></html>
+)WBBPAGE";
