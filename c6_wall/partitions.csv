@@ -1,0 +1,10 @@
+# 8 MB Waveshare C6. Keep the prior default.csv NVS, SPIFFS and coredump
+# offsets/sizes; enlarge app0 into the old inactive OTA slot and put app1
+# in previously unused upper flash. No filesystem or NVS erase is required.
+# Name,   Type, SubType, Offset,   Size,     Flags
+nvs,      data, nvs,     0x9000,   0x5000,
+otadata,  data, ota,     0xe000,   0x2000,
+app0,     app,  ota_0,   0x10000,  0x280000,
+spiffs,   data, spiffs,  0x290000, 0x160000,
+coredump, data, coredump,0x3F0000, 0x10000,
+app1,     app,  ota_1,   0x400000, 0x280000,
