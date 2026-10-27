@@ -1,0 +1,7 @@
+.pio/
+.ota_token
+.robot_host
+include/web_page.h
+include/build_info.h
+tools/vision_cache.json
+logs/

@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>WhiteBoardBot</title>
+<style>
+:root{--bg:#0f1418;--panel:#182129;--line:#2c3a45;--text:#e9f0f4;--dim:#93a5b3;--ok:#3fbf8f;--warn:#e9b44c;--bad:#e5606a;--accent:#59a8ff}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,"PingFang SC",sans-serif;-webkit-user-select:none;user-select:none}
+main{max-width:1080px;margin:0 auto;padding:12px 16px 40px}
+header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+h1{font-size:19px;margin:0 auto 0 0}
+.chip{padding:4px 10px;border-radius:999px;background:#24313b;color:var(--dim);font-size:13px;white-space:nowrap}
+.chip.ok{background:#173a2e;color:#7fe0b9}.chip.warn{background:#3d3218;color:#f3cf7a}.chip.bad{background:#46202a;color:#ff9aa2}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media(max-width:820px){.grid{grid-template-columns:minmax(0,1fr)}}
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
+h2{font-size:15px;margin:0 0 10px;color:var(--dim);font-weight:600}
+button{font:inherit;color:var(--text);background:#263540;border:1px solid #3b4d5a;border-radius:10px;padding:10px 12px;cursor:pointer;touch-action:manipulation}
+button:active{filter:brightness(1.3)}button:disabled{opacity:.4}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row>button{flex:1 1 0;min-height:48px}
+.go{background:#1f6b52;border-color:#2f8c6c;font-weight:650}.halt{background:#7a5a17;border-color:#9b7522;font-weight:650}.off{background:#5a2730;border-color:#7a3a45}
+.pad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:12px 0;max-width:330px}
+.pad button{min-height:64px;font-size:20px;font-weight:650}.pad button.on{background:var(--accent);border-color:var(--accent);color:#08131d}
+.pad small{display:block;font-size:11px;font-weight:400;color:var(--dim)}.pad button.on small{color:#08131d}
+label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--dim)}
+input,select{font:inherit;color:var(--text);background:#0f1418;border:1px solid var(--line);border-radius:8px;padding:7px 8px;width:100%;min-width:0;-webkit-user-select:text;user-select:text}
+input[type=range]{padding:0}
+.fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-bottom:10px}
+@media(max-width:520px){.fields{grid-template-columns:repeat(2,minmax(0,1fr))}}
+canvas{width:100%;height:auto;aspect-ratio:4/3;background:#f4f6f2;border-radius:10px;display:block;margin-bottom:10px}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-variant-numeric:tabular-nums;font-size:14px}
+.kv span:nth-child(odd){color:var(--dim)}
+table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:13px;margin-top:8px}
+td,th{padding:4px 6px;text-align:right;border-bottom:1px solid var(--line)}th{color:var(--dim);font-weight:500}td:first-child,th:first-child{text-align:left}
+#msg{min-height:22px;margin:6px 0 0;color:var(--warn);font-size:14px}
+details{margin-top:12px}summary{cursor:pointer;color:var(--dim)}
+.bar{height:6px;background:#0f1418;border-radius:3px;overflow:hidden;margin-top:6px}.bar>i{display:block;height:100%;background:var(--ok);width:0}
+.hint{font-size:12px;color:var(--dim);margin:6px 0 0}
+</style>
+</head>
+<body>
+<main>
+<header>
+ <h1>WhiteBoardBot</h1>
+ <span id="link" class="chip bad">未连接</span>
+ <span id="mode" class="chip">—</span>
+ <span id="fw" class="chip">—</span>
+</header>
+<div class="grid">
+<section>
+ <h2>手动控制</h2>
+ <div class="row">
+  <button id="enable" class="go">启用 · 保持位置</button>
+  <button id="stop" class="halt">停 (空格)</button>
+  <button id="release" class="off">释放 · 刹车</button>
+ </div>
+ <div class="pad" aria-label="方向">
+  <button data-k="q">Q<small>逆时针</small></button><button data-k="w">W<small>上</small></button><button data-k="e">E<small>顺时针</small></button>
+  <button data-k="a">A<small>左</small></button><button data-k="s">S<small>下</small></button><button data-k="d">D<small>右</small></button>
+ </div>
+ <div class="fields" style="grid-template-columns:2fr 1fr">
+  <label>速度 <b id="speedv">8 cm/s</b><input id="speed" type="range" min="2" max="30" step="1" value="8"></label>
+  <label>方向参考<select id="frame"><option value="board">板面 (W=上)</option><option value="body">车身 (W=车头)</option></select></label>
+ </div>
+ <div class="row" style="margin-top:4px">
+  <label style="flex:0 0 120px">车头校正 °<input id="front" type="number" step="5" min="0" max="359"></label>
+  <button data-f="-30">−30°</button><button data-f="30">+30°</button><button id="testW">试 W（走 5 cm）</button>
+ </div>
+ <p class="hint">按 W 应该朝车头走。走歪了就调“车头校正”（逆时针为正），再点“试 W”看。松开按键就平滑停下并锁住位置；断网也一样。“释放”才会撤掉保持力（刹车状态）。</p>
+ <div id="msg"></div>
+</section>
+<section>
+ <h2>状态</h2>
+ <div class="kv">
+  <span>位置</span><b id="pose">—</b>
+  <span>跟随误差</span><b id="lag">—</b>
+  <span>网络</span><b id="net">—</b>
+  <span>故障</span><b id="fault">无</b>
+ </div>
+ <table><thead><tr><th>轮</th><th>误差</th><th>输出</th><th>速度</th><th>保持力</th></tr></thead><tbody id="wheels"></tbody></table>
+</section>
+<section style="grid-column:1/-1">
+ <h2>擦板</h2>
+ <canvas id="map" width="960" height="720"></canvas>
+ <div class="fields">
+  <label>可走宽度 cm<input id="cw" type="number" min="0" max="300" step="1"></label>
+  <label>可走高度 cm<input id="ch" type="number" min="0" max="300" step="1"></label>
+  <label>擦子宽 cm<input id="ce" type="number" min="1" max="50" step="0.5"></label>
+  <label>重叠 %<input id="co" type="number" min="0" max="80" step="5"></label>
+  <label>擦板速度 cm/s<input id="cs" type="number" min="2" max="30" step="1"></label>
+  <label>行走方向<select id="cv"><option value="0">横向来回</option><option value="1">竖向来回</option></select></label>
+  <label>起点在<select id="corner"><option value="1,1">左下角</option><option value="-1,1">右下角</option><option value="1,-1">左上角</option><option value="-1,-1">右上角</option></select></label>
+  <label>设原点时车头朝<select id="mount"><option value="90">上</option><option value="0">右</option><option value="270">下</option><option value="180">左</option></select></label>
+ </div>
+ <div class="row">
+  <button id="origin">设为原点</button>
+  <button id="saveCover">保存设置</button>
+  <button id="start" class="go">开始擦板</button>
+  <button id="pause" class="halt">暂停</button>
+  <button id="resume">继续</button>
+  <button id="home">回原点</button>
+ </div>
+ <div class="bar"><i id="prog"></i></div>
+ <p class="hint" id="planInfo">把车放在起点角（车身中心到板边留出余量），车头朝上，点“启用”，再点“设为原点”。“可走宽度/高度”是车身中心能走的范围。</p>
+</section>
+<section style="grid-column:1/-1">
+ <h2>打滑补偿（墙上用） <span id="slipState" class="chip">关闭</span></h2>
+ <p class="hint" style="margin:0 0 10px">编码器看不见打滑。量一次实际走了多少，小车之后会自动多走或少走来补偿。在地上测试时请点“恢复默认”。</p>
+ <div class="fields" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+  <label>向上实际 %<input id="su" type="number" step="0.5" min="50" max="150"></label>
+  <label>向下实际 %<input id="sd" type="number" step="0.5" min="50" max="150"></label>
+  <label>横向实际 %<input id="ss" type="number" step="0.5" min="50" max="150"></label>
+  <label>横移每米下沉 cm<input id="sg" type="number" step="0.1" min="-30" max="30"></label>
+  <label>右移每米转角 °（左移反向）<input id="sy" type="number" step="0.5" min="-34" max="34"></label>
+  <label>上移每米右漂 cm<input id="sur" type="number" step="0.1" min="-20" max="20"></label>
+  <label>下移每米右漂 cm<input id="sdr" type="number" step="0.1" min="-20" max="20"></label>
+ </div>
+ <div class="row"><button id="slipApply">应用并保存</button><button id="slipReset">恢复默认（关闭）</button></div>
+ <h2 style="margin-top:14px">测量助手</h2>
+ <p class="hint" style="margin:0 0 8px">① 在车身中心贴胶带做记号 ② 点一个测试方向 ③ 停稳后量实际移动距离（横向测试再量下沉和车头转角）④ 点“按测量更新”。</p>
+ <div class="row">
+  <label style="flex:0 0 110px">测试距离 cm<select id="mdist"><option>20</option><option selected>30</option><option>50</option></select></label>
+  <button data-m="up">测上移</button><button data-m="down">测下移</button><button data-m="right">测右移</button><button data-m="left">测左移</button>
+ </div>
+ <div class="fields" style="margin-top:8px;grid-template-columns:repeat(3,minmax(0,1fr))">
+  <label>实际移动 cm<input id="mact" type="number" step="0.1"></label>
+  <label>下沉 cm（横向测试，往下为正）<input id="mdrop" type="number" step="0.1" value="0"></label>
+  <label>车头转角 °（横向测试，逆时针为正）<input id="mrot" type="number" step="0.5" value="0"></label>
+ </div>
+ <div class="row"><button id="mupdate" class="go">按测量更新</button></div>
+ <p class="hint" id="mInfo"></p>
+</section>
+</div>
+<details>
+ <summary>高级：参数 / 标定 / Wi-Fi</summary>
+ <section style="margin-top:10px">
+  <h2>伺服参数（改完立即生效）</h2>
+  <div class="fields">
+   <label>kp ×1000<input id="gkp" type="number" step="0.1"></label>
+   <label>ki ×1000<input id="gki" type="number" step="0.1"></label>
+   <label>kd ×10⁴<input id="gkd" type="number" step="0.1"></label>
+   <label>保持力上限<input id="gim" type="number" step="0.05"></label>
+   <label>手动最高 cm/s<input id="gsp" type="number" step="1"></label>
+   <label>加速度 cm/s²<input id="gac" type="number" step="5"></label>
+  </div>
+  <div class="row"><button id="applyGains">应用</button><button id="saveGains">应用并保存</button></div>
+  <p class="hint" id="ffInfo"></p>
+  <h2 style="margin-top:14px">前馈标定（轮子必须架空，约 17 秒）</h2>
+  <div class="row"><label style="flex-direction:row;align-items:center;gap:8px"><input id="susp" type="checkbox" style="width:auto">轮子已架空</label><button id="calib">开始标定</button></div>
+  <h2 style="margin-top:14px">Wi-Fi</h2>
+  <div class="fields" style="grid-template-columns:1fr 1fr"><label>名称<input id="ssid"></label><label>密码<input id="pass" type="password"></label></div>
+  <div class="row"><button id="wifi">保存并连接</button><button id="reboot">重启</button></div>
+ </section>
+</details>
+</main>
+<script>
+const $=id=>document.getElementById(id);
+let ws=null,last=null,seq=0,connected=false;
+// Fields the user has typed into are never overwritten by telemetry until the robot confirms the save.
+const dirty={cover:false,slip:false,gains:false};
+const okText={front:'车头校正已保存 ✓',move:'',slip:'打滑补偿已保存 ✓',cover:'擦板设置已保存 ✓',gains:'参数已应用 ✓',origin:'原点已设好 ✓',start:'开始擦板',home:'正在回原点',enable:'已启用，保持位置',release:'已释放（刹车）'};
+const keys=new Set(),trail=[];
+function msg(t,ok){$('msg').textContent=t||'';$('msg').style.color=ok?'var(--ok)':'var(--warn)';}
+const names={NOT_ENABLED:'先点“启用”',PATH_RUNNING:'正在擦板，先暂停',MOVING:'先停下',OTA_BUSY:'正在更新固件',PIN_CONFLICT:'电机引脚冲突：拔出TF卡后重启',RUNAWAY:'轮子被带走（打滑/掉落/编码器）',CONFIRM_SUSPENDED:'请勾选“轮子已架空”',RELEASE_FIRST:'先点“释放”',BAD_COVER:'擦板参数不合理',PLAN_TOO_LARGE:'路径太长：加大擦子宽或减小区域',BAD_GAINS:'参数超出范围',BAD_FRONT:'角度不对',BAD_SLIP:'补偿超出范围（50–150%）',TOO_FAR:'距离太远',NO_PATH:'没有暂停中的路径',POLARITY:'编码器方向反了',NO_MOTION:'轮子没转（电机电源？）'};
+function send(op,p={}){if(!ws||ws.readyState!==1){if(op!=='drive')msg('未连接到小车');return false;}ws.send(JSON.stringify(Object.assign({op,id:++seq},p)));return true;}
+function connect(){
+ ws=new WebSocket(`ws://${location.host}/ws`);
+ ws.onopen=()=>{connected=true;chip('link','已连接','ok');send('hello');};
+ ws.onclose=()=>{connected=false;chip('link','未连接','bad');setTimeout(connect,800);};
+ ws.onerror=()=>ws.close();
+ ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.t==='s')render(m);else if(m.t==='ack'&&!m.ok)msg('操作失败：'+(names[m.error]||m.error));else if(m.t==='ack'){if(m.op in dirty)dirty[m.op]=false;msg(okText[m.op]||'',true);}};
+}
+function chip(id,text,cls){const c=$(id);c.textContent=text;c.className='chip '+(cls||'');}
+// ---------------- driving
+const speed=()=>Number($('speed').value)/100;
+$('speed').oninput=()=>{$('speedv').textContent=$('speed').value+' cm/s';try{localStorage.wbbSpeed=$('speed').value}catch(e){}};
+try{if(localStorage.wbbSpeed){$('speed').value=localStorage.wbbSpeed;$('speed').oninput();}}catch(e){}
+try{if(localStorage.wbbFrame)$('frame').value=localStorage.wbbFrame}catch(e){}
+$('frame').onchange=()=>{try{localStorage.wbbFrame=$('frame').value}catch(e){}};
+function command(){let x=keys.has('d')-keys.has('a'),y=keys.has('w')-keys.has('s');const n=Math.hypot(x,y)||1,v=speed();return {x:x/n*v,y:y/n*v,w:(keys.has('q')-keys.has('e'))*Math.min(1.2,v*8)};}
+let zeros=0;
+setInterval(()=>{if(keys.size){zeros=3;send('drive',Object.assign(command(),{frame:$('frame').value}));}else if(zeros>0){zeros--;send('drive',{x:0,y:0,w:0});}},50);
+function setKey(k,down){if(down)keys.add(k);else keys.delete(k);document.querySelectorAll('[data-k]').forEach(b=>b.classList.toggle('on',keys.has(b.dataset.k)));}
+const isField=t=>['INPUT','SELECT','TEXTAREA'].includes(t.tagName)&&t.type!=='range'&&t.type!=='checkbox';
+addEventListener('keydown',e=>{if(isField(e.target))return;const k=e.key.toLowerCase();if(k===' '||k==='escape'){e.preventDefault();keys.clear();setKey('',false);send('stop');return;}if('wasdqe'.includes(k)&&k.length===1&&!e.metaKey&&!e.ctrlKey){e.preventDefault();setKey(k,true);}});
+addEventListener('keyup',e=>setKey(e.key.toLowerCase(),false));
+addEventListener('blur',()=>{keys.clear();setKey('',false);});
+document.addEventListener('visibilitychange',()=>{if(document.hidden){keys.clear();setKey('',false);}});
+document.querySelectorAll('[data-k]').forEach(b=>{b.onpointerdown=e=>{e.preventDefault();b.setPointerCapture(e.pointerId);setKey(b.dataset.k,true);};b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>setKey(b.dataset.k,false);});
+$('enable').onclick=()=>send('enable');
+const setFront=v=>{v=((Math.round(v)%360)+360)%360;$('front').value=v;send('front',{deg:v});};
+document.querySelectorAll('[data-f]').forEach(b=>b.onclick=()=>setFront(Number($('front').value||0)+Number(b.dataset.f)));
+$('front').onchange=()=>setFront(Number($('front').value));
+$('testW').onclick=()=>send('move',{x:0,y:0.05,speed:0.05});$('stop').onclick=()=>{keys.clear();setKey('',false);send('stop');};$('release').onclick=()=>send('release');
+// ---------------- coverage
+const coverFields=['cw','ch','ce','co','cs','cv','corner','mount'];
+coverFields.forEach(id=>$(id).addEventListener('input',()=>{dirty.cover=true;draw();}));
+function coverForm(){const [sx,sy]=$('corner').value.split(',').map(Number);return {width:$('cw').value/100,height:$('ch').value/100,eraser:$('ce').value/100,overlap:$('co').value/100,speed:$('cs').value/100,vertical:Number($('cv').value),sx,sy,mount:Number($('mount').value)};}
+function fillCover(c,mount){if(dirty.cover)return;$('cw').value=+(c.width*100).toFixed(1);$('ch').value=+(c.height*100).toFixed(1);$('ce').value=+(c.eraser*100).toFixed(1);$('co').value=Math.round(c.overlap*100);$('cs').value=+(c.speed*100).toFixed(1);$('cv').value=c.vertical;$('corner').value=c.sx+','+c.sy;$('mount').value=mount;}
+function plan(c){const along=c.vertical?c.height:c.width,across=c.vertical?c.width:c.height,pitch=c.eraser*(1-c.overlap);const lanes=across<1e-4?1:Math.ceil(across/pitch-1e-4)+1,sp=lanes>1?across/(lanes-1):0,pts=[[0,0]];let at=0;const put=(a,b)=>{const x=c.vertical?b:a,y=c.vertical?a:b;pts.push([c.sx*x,c.sy*y]);};for(let k=0;k<lanes;k++){const b=k*sp;if(k>0)put(at,b);at=k%2===0?along:0;if(along>1e-4)put(at,b);}if(at>1e-4)put(0,(lanes-1)*sp);put(0,0);return {pts,lanes};}
+function planText(c){if(!(c.eraser>0))return '';const {pts,lanes}=plan(c);let L=0;for(let i=1;i<pts.length;i++)L+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);const t=L/Math.max(.01,c.speed)+pts.length*0.8;return `${lanes} 条，路程 ${L.toFixed(2)} m，约 ${Math.ceil(t/60)} 分钟`;}
+$('saveCover').onclick=()=>send('cover',coverForm());
+$('origin').onclick=()=>{trail.length=0;send('origin');};
+$('start').onclick=()=>{send('cover',coverForm());setTimeout(()=>send('start'),150);};
+$('pause').onclick=()=>send('pause');$('resume').onclick=()=>send('resume');$('home').onclick=()=>send('home');
+// ---------------- map
+// Pose -> board frame. Position rotates by (facing - front); the drawn heading is the robot's front.
+function toBoard(p,mount,front=0){const a=(mount-front)*Math.PI/180,c=Math.cos(a),s=Math.sin(a);return [c*p[0]-s*p[1],s*p[0]+c*p[1],p[2]+a+front*Math.PI/180];}
+function draw(){
+ const cv=$('map'),g=cv.getContext('2d'),W=cv.width,H=cv.height;g.clearRect(0,0,W,H);
+ const c=Object.assign({},coverForm());if(!(c.eraser>0))return;const mount=c.mount;
+ const {pts}=plan(c);const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]);
+ let pose=last?toBoard(last.pose,last.mount,last.front):null;if(pose){xs.push(pose[0]);ys.push(pose[1]);}
+ trail.forEach(p=>{xs.push(p[0]);ys.push(p[1]);});
+ const pad=c.eraser/2+0.04,minx=Math.min(...xs)-pad,maxx=Math.max(...xs)+pad,miny=Math.min(...ys)-pad,maxy=Math.max(...ys)+pad;
+ const k=Math.min(W/(maxx-minx),H/(maxy-miny)),ox=(W-(maxx-minx)*k)/2,oy=(H-(maxy-miny)*k)/2;
+ const X=x=>ox+(x-minx)*k,Y=y=>H-oy-(y-miny)*k;
+ // erased area
+ g.fillStyle='rgba(89,168,255,.13)';const bx=[0,c.sx*c.width],by=[0,c.sy*c.height];
+ g.fillRect(X(Math.min(...bx)-c.eraser/2),Y(Math.max(...by)+c.eraser/2),(c.width+c.eraser)*k,(c.height+c.eraser)*k);
+ g.strokeStyle='#9aa7b0';g.setLineDash([6,6]);g.lineWidth=2;g.strokeRect(X(Math.min(...bx)),Y(Math.max(...by)),c.width*k,c.height*k);g.setLineDash([]);
+ g.strokeStyle='#59a8ff';g.lineWidth=2.5;g.beginPath();pts.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1])));g.stroke();
+ if(trail.length>1){g.strokeStyle='#1f6b52';g.lineWidth=3;g.beginPath();trail.forEach((p,i)=>i?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1])));g.stroke();}
+ g.fillStyle='#1d2a33';g.beginPath();g.arc(X(0),Y(0),6,0,7);g.fill();g.font='22px system-ui';g.fillText('原点',X(0)+10,Y(0)-10);
+ if(pose){const r=0.035*k,a=pose[2];g.save();g.translate(X(pose[0]),Y(pose[1]));g.rotate(-a);g.fillStyle=last.mode==='fault'?'#e5606a':'#e9b44c';g.strokeStyle='#1d2a33';g.lineWidth=2;g.beginPath();g.moveTo(r*1.4,0);g.lineTo(-r*.8,r*.9);g.lineTo(-r*.8,-r*.9);g.closePath();g.fill();g.stroke();g.restore();}
+ $('planInfo').textContent=planText(c)+(last&&last.path.run?`，进度 ${(last.path.done*100/Math.max(.001,last.path.total)).toFixed(0)}%`:'');
+}
+// ---------------- slip compensation
+const slipFields=['su','sd','ss','sg','sy','sur','sdr'];
+slipFields.forEach(id=>$(id).addEventListener('input',()=>dirty.slip=true));
+let slip=null,lastTest=null;
+function fillSlip(c){slip=c;chip('slipState',c.on?'已开启':'关闭',c.on?'ok':'');if(dirty.slip)return;$('su').value=+(c.up*100).toFixed(1);$('sd').value=+(c.down*100).toFixed(1);$('ss').value=+(c.side*100).toFixed(1);$('sg').value=+(c.sag*100).toFixed(2);$('sy').value=+(c.yaw*57.2958).toFixed(1);$('sur').value=+((c.up_side||0)*100).toFixed(2);$('sdr').value=+((c.down_side||0)*100).toFixed(2);}
+function slipForm(){return {up:$('su').value/100,down:$('sd').value/100,side:$('ss').value/100,sag:$('sg').value/100,yaw:$('sy').value/57.2958,up_side:$('sur').value/100,down_side:$('sdr').value/100};}
+$('slipApply').onclick=()=>send('slip',slipForm());
+$('slipReset').onclick=()=>{dirty.slip=false;send('slip',{reset:true});};
+document.querySelectorAll('[data-m]').forEach(b=>b.onclick=()=>{const d=$('mdist').value/100,v={up:[0,d],down:[0,-d],right:[d,0],left:[-d,0]}[b.dataset.m];
+ if(send('move',{x:v[0],y:v[1]})){lastTest={dir:b.dataset.m,dist:d};$('mact').value='';$('mdrop').value=0;$('mrot').value=0;$('mInfo').textContent=`正在${b.textContent.slice(1)} ${d*100} cm…停稳后测量`;}});
+$('mupdate').onclick=()=>{if(!lastTest||!slip){$('mInfo').textContent='先点一个测试方向';return;}
+ const act=Number($('mact').value)/100;if(!(act>0)){$('mInfo').textContent='请填实际移动距离';return;}
+ const r=act/lastTest.dist,c=Object.assign({},slip);
+ if(lastTest.dir==='up')c.up*=r;else if(lastTest.dir==='down')c.down*=r;
+ else{c.side*=r;c.sag+=Number($('mdrop').value)/100/lastTest.dist;c.yaw+=Number($('mrot').value)/57.2958/lastTest.dist;}
+ dirty.slip=false;send('slip',{up:c.up,down:c.down,side:c.side,sag:c.sag,yaw:c.yaw});
+ $('mInfo').textContent=`已更新：${lastTest.dir} 实际/指令 ${(r*100).toFixed(1)}%。可以再测一次确认。`;};
+// ---------------- telemetry
+function render(s){
+ last=s;
+ const live=s.mode==='active';
+ chip('mode',s.mode==='fault'?'故障':s.mode==='calibrate'?'标定中':!live?'已释放（刹车）':s.src==='path'?(s.path.paused?'擦板暂停':'擦板中'):s.src==='manual'?'手动行驶':'保持位置',s.mode==='fault'?'bad':live?'ok':'warn');
+ chip('fw',(s.ota_pending?'新固件 ':'')+s.fw,s.ota_pending?'warn':'');
+ const b=toBoard(s.pose,s.mount,s.front);
+ $('pose').textContent=`X ${(b[0]*100).toFixed(1)} cm  Y ${(b[1]*100).toFixed(1)} cm  ${(s.pose[2]*57.3).toFixed(1)}°`;
+ $('lag').textContent=`${(s.lag).toFixed(1)} (1=1mm)  同步 ${(s.sync*100).toFixed(0)}%${s.stuck?'  ⚠ 卡住了，已暂停':''}`;
+ $('net').textContent=s.net.sta?`${s.net.ssid} ${s.net.ip} (${s.net.rssi} dBm)`:`热点 ${s.net.ap}`;
+ $('fault').textContent=s.mode==='fault'?(names[s.fault]||s.fault)+(s.fm?` · 电机${s.fm}`:'')+' → 检查后点“启用”':s.pin_conflict?'引脚冲突：拔TF卡':'无';
+ $('wheels').innerHTML=s.w.map((w,i)=>`<tr><td>M${i+1}</td><td>${w[0]}</td><td>${(w[1]*100).toFixed(0)}%</td><td>${w[2]}</td><td>${(w[3]*100).toFixed(0)}%</td></tr>`).join('');
+ $('prog').style.width=s.path.run?(s.path.done*100/Math.max(.001,s.path.total)).toFixed(1)+'%':'0';
+ $('enable').disabled=live;$('start').disabled=!live||s.src==='path';$('pause').disabled=s.src!=='path'||s.path.paused;$('resume').disabled=!(s.src==='path'&&s.path.paused);
+ fillCover(s.cover,s.mount);
+ if(document.activeElement!==$('front'))$('front').value=s.front;
+ if(s.slip)fillSlip(s.slip);
+ if(!dirty.gains){
+  $('gkp').value=+(s.gains.kp*1000).toFixed(2);$('gki').value=+(s.gains.ki*1000).toFixed(2);$('gkd').value=+(s.gains.kd*1e4).toFixed(2);
+  $('gim').value=+s.gains.imax.toFixed(2);$('gsp').value=+(s.gains.speed*100).toFixed(0);$('gac').value=+(s.gains.accel*100).toFixed(0);
+ }
+ $('ffInfo').textContent='前馈 kv(×1e-5)/ks 正/反: '+s.gains.ff.map((f,i)=>`M${i+1} ${f[0].toFixed(1)}/${f[1].toFixed(1)} ${f[2].toFixed(2)}/${f[3].toFixed(2)}`).join('  ')+(s.cal.result?`  · 标定: ${s.cal.result==='OK'?'成功（记得保存）':s.cal.result==='RUNNING'?'进行中 M'+s.cal.wheel:(names[s.cal.result]||s.cal.result)+(s.cal.motor?' M'+s.cal.motor:'')}`:'');
+ const p=toBoard(s.pose,s.mount,s.front),t=trail[trail.length-1];if(!t||Math.hypot(p[0]-t[0],p[1]-t[1])>0.003){trail.push(p);if(trail.length>4000)trail.shift();}
+ draw();
+}
+function gains(save){send('gains',{kp:$('gkp').value/1000,ki:$('gki').value/1000,kd:$('gkd').value/1e4,imax:Number($('gim').value),speed:$('gsp').value/100,accel:$('gac').value/100,save});}
+['gkp','gki','gkd','gim','gsp','gac'].forEach(id=>$(id).addEventListener('input',()=>dirty.gains=true));
+$('applyGains').onclick=()=>gains(false);$('saveGains').onclick=()=>gains(true);
+$('calib').onclick=()=>send('calibrate',{suspended:$('susp').checked});
+$('wifi').onclick=()=>{if($('ssid').value)send('wifi',{ssid:$('ssid').value,password:$('pass').value});};
+$('reboot').onclick=()=>send('reboot');
+draw();connect();
+</script>
+</body>
+</html>
