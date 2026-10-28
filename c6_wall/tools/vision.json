@@ -1,0 +1,45 @@
+{
+ "camera": 0,
+ "width": 1920,
+ "height": 1080,
+ "board_cm": [
+  58.42,
+  88.9
+ ],
+ "tapes_cm": [
+  [
+   2.77,
+   4.18
+  ],
+  [
+   55.33,
+   3.04
+  ],
+  [
+   55.33,
+   86.33
+  ],
+  [
+   2.87,
+   86.11
+  ]
+ ],
+ "note": "tape centres in cm from the outer frame bottom-left corner (35x23 in board), from the 1920x1080 frame of 2026-10-26",
+ "beacon_to_centre_cm": [
+  1.164,
+  0.039
+ ],
+ "beacon_note": "CAD (Assembly 1.step): screen centre (-6.53,-9.65) mm, robot centre = wheel centroid (0,0); offset along cyan->magenta 11.64 mm, left 0.39 mm",
+ "surface_cm": [
+  54.61,
+  85.09
+ ],
+ "surface_note": "writable surface 33.5 x 21.5 in (user, U Brands 35x23 board); tape outer corners sit on its corners",
+ "front_from_beacon_deg": 66.0,
+ "front_note": "CAD: screen long axis 54 deg, front wheel (motor M3) at 120 deg in the kinematic frame; user: 24 deg CCW of horizontal when facing up",
+ "beacon_height_cm": 5.9,
+ "height_note": "CAD: screen top z=45.06 mm, wheel contact plane z=-13.91 mm",
+ "wheel_radius_cad_mm": 47.85,
+ "camera_distance_cm": 124.5,
+ "camera_note": "user 2026-10-27: phone 49 in from the board; LCD parallax magnification 124.5/(124.5-5.9)=1.050"
+}
