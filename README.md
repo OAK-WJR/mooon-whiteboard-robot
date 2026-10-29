@@ -62,11 +62,17 @@ start within 0.2 mm, with a heading change of −0.18°.*
 
 ## Design iterations
 
+![Every PCB generation, March to October 2026](docs/design-history/board-generations.jpg)
+
+*Every board generation, from EasyEDA's own saved previews. The
+[design history](docs/design-history/) page shows the step-by-step PCB and
+schematic changes, with the evidence for each date.*
+
 Most of what I learned came from things that did not work. In order:
 
 | When (2026) | What changed | Why / what we measured |
 |---|---|---|
-| Apr | **v1 base PCB**: ESP32 DevKit socket, 3× RZ7899, XT30 battery ([netlist](hardware/v1_base_board/)) | First robot. Lessons: a GPIO12 strap pin touched by a jumper broke flashing; a shorted driver module can kill the regulator. |
+| Mar–Apr | **v1 base PCB**: ESP32 DevKit socket, 3× RZ7899, XT30 battery ([schematic](docs/design-history/v1-schematic.jpg), [netlist](hardware/v1_base_board/)) | First robot. Lessons: a GPIO12 strap pin touched by a jumper broke flashing; a shorted driver module can kill the regulator. |
 | Jun 16 | ESP32 firmware plus a ROS2 workspace on the host → **ROS2 dropped** | The ESP32 plans and follows paths by itself; a serial console tunes gains live ([report](docs/v1-esp32-report.md)). |
 | Jun 16–17 | Per-motor PID, stiction feed-forward, terminal deceleration | Measured breakaway at 100/140/140 PWM. Motor 1's encoder (GPIO36/39) read a phantom 0.58 m/s from PWM crosstalk. Software filters only helped partly; the commit log concludes "hardware fix required". |
 | Jul | **ESP32-C6 + LCD module on a custom adapter PCB** | One encoder still never worked. The fabricated panel data showed that the adapter's M1 header footprint was **mirrored**, so PWM drove an encoder output. |
