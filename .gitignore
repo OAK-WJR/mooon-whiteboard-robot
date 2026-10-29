@@ -1,50 +1,82 @@
-# 虚拟环境
+# ---------------------------------------------------------------------------
+# Local environments, toolchains and build output
+# ---------------------------------------------------------------------------
 .venv/
 venv/
 env/
-
-# Python
 __pycache__/
 *.py[cod]
 *.egg-info/
 .eggs/
 dist/
 build/
+node_modules/
 
-# 环境变量与本地配置
-.env
-.env.local
-*.local
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*.log
-
-# PlatformIO
+# PlatformIO (core_dir = .platformio keeps the toolchain inside the repo folder)
 .pio/
 .pioenvs/
 .piolibdeps/
 .piobuild/
-platformio.ini.bak
-# 项目内隔离的工具链/框架缓存 (core_dir = .platformio)
 .platformio/
+platformio.ini.bak
 
-# clangd 自动生成
+# clangd
 compile_commands.json
 .cache/
 
-# 本地配置（含 WiFi 凭证等敏感信息）— 复制 config.example.h 生成
-include/config.h
+# Compiled artifacts
+*.bin
+*.elf
+*.o
 
-# 系统
+# ---------------------------------------------------------------------------
+# Local configuration and secrets (never commit)
+# ---------------------------------------------------------------------------
+.env
+.env.local
+*.local
+include/config.h
+.ota_token
+.robot_host
+*.pem
+*.key
+
+# ---------------------------------------------------------------------------
+# Editors and OS
+# ---------------------------------------------------------------------------
+.idea/
+.vscode/
+*.swp
+*.swo
 .DS_Store
 Thumbs.db
-pcb-analysis/
-c6_selftest/.venv/
-c6_selftest/.pio/
-c6-test/.venv/
-c6-test/.pio/
-c6-test/*.log
+
+# ---------------------------------------------------------------------------
+# Raw experiment data and scratch space (kept locally, not published)
+# ---------------------------------------------------------------------------
+*.log
+*.jsonl
+*.dat
+*.raw
+/tmp/
+/pcb-analysis/
+c6_drive/reports/
+c6_drive/portfolio/*.zip
+
+# ---------------------------------------------------------------------------
+# Third-party reference material: datasheets, saved vendor web pages and
+# 3D models. These belong to their publishers and are not redistributed here.
+# ---------------------------------------------------------------------------
+**/sources/
+*.step
+*.stp
+*.STEP
+*.wrl
+*.zip
+
+# Simulation renders (the summary video whiteboardbot-control-study.mp4 is kept)
+c6_drive/portfolio/mujoco-*.mp4
+c6_drive/portfolio/robust/*.mp4
+
+# KiCad local history
+.history/

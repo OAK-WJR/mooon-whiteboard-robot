@@ -1,122 +1,125 @@
 # WhiteBoardBot
 
-基于 **ESP32** 的三轮全向轮（120° 布置）白板/桌面机器人。
+A small three-omni-wheel robot that drives on a **vertical magnetic whiteboard**,
+holds its position against gravity, and sweeps the whole board in lanes. It runs
+on custom PCBs and ESP32-C6 firmware, and a phone camera facing the board
+measures its real position.
 
-**ESP32 自己完成全部控制** —— 路径规划、循线跟踪、前馈 + PID，**无 ROS**。
-上位机（Mac/PC）只通过 WiFi UDP 下发「目标区域 / 位置校正」并接收状态回传。
-PID、速度、前瞻等参数可在运行时经串口实时调，无需重新烧录。
+<p align="center">
+  <img src="docs/media/coverage-run.gif" width="320"
+       alt="The robot sweeping a vertical whiteboard in horizontal lanes">
+</p>
 
-```
-┌─────────────────────────┐   WiFi UDP (JSON)   ┌──────────────────────────────┐
-│ 上位机 whiteboard_app.py │  ───── area ──────► │ ESP32 (env:esp32)            │
-│  发目标区域 / 位置校正   │  ◄──── status ───── │  规划→循线→逆运动学→FF/PID   │
-│  画实时轨迹              │                     │  →RZ7899 ×3 → N20 电机       │
-└─────────────────────────┘                     │  编码器→里程计               │
-                                                 └──────────────────────────────┘
-```
+*Full-board coverage run on a 33.5 × 21.5 in whiteboard (2026-10-26, shown at 4×
+speed, [real-time video](docs/media/coverage-run.mp4)). Red: path measured by
+the camera. Blue: planned area. It drove 13 lanes in 96.6 s and returned to its
+start within 0.2 mm, with a heading change of −0.18°.*
 
 ---
 
-## 快速开始
+## Status (October 2026)
+
+| Works on the real robot | Designed, not built or tested yet |
+|---|---|
+| Holding still on a vertical board: each wheel is a position servo with a gravity-holding integral term | `top_board_v2_logic`, the single integrated controller PCB (schematic done, routing in progress) |
+| Full-board coverage with live camera correction (above) | On-board 2S USB-C charging (IP2326 just added to the schematic) |
+| Wi-Fi firmware updates with automatic rollback | Separate sensor-head board with a gyro, for heading without the camera |
+| Measured slip model: open-loop round trips land within 2 mm / 1° in 6 of 8 horizontal trials | Erasing while spinning on the wall (paused: two power resets made the robot fall) |
+
+## How it works
+
+```
+ Phone camera (OpenCV) ── live position fixes ──┐
+                                                ▼
+ ┌──────────────────────── robot ────────────────────────────┐
+ │ Waveshare ESP32-C6-LCD-1.47   ← c6_wall firmware          │
+ │   └─ custom adapter PCB (v2)                              │
+ │        └─ custom base PCB: 3× RZ7889 H-bridge, 2S LiPo    │
+ │             └─ 3× N20 gearmotor + encoder, 38 mm omni     │
+ │                wheels at 120°, magnets to hold the board  │
+ └───────────────────────────────────────────────────────────┘
+```
+
+- **Control** ([`c6_wall/include/wbb_core.h`](c6_wall/include/wbb_core.h)).
+  - All three wheels track position references derived from one body pose, so
+    the chassis drives straight and stopping means holding, not coasting.
+  - The integral term is never reset. It keeps the torque that holds the robot
+    against gravity, and that load estimate is stored in the world frame.
+  - The H-bridges brake (both inputs high) in every idle, fault or reboot state.
+- **Slip model.**
+  - Encoders only measure the wheels, and the wheels slip on the glossy board.
+  - Camera measurements gave the slip per direction: 0.94 going up, 1.13 going
+    down, 1.01 sideways.
+  - The robot also sags 10.9 cm for every metre it moves sideways.
+  - The firmware corrects its odometry with these numbers, which are refit from
+    round-trip campaigns.
+- **Camera referee** ([`c6_wall/tools/vision.py`](c6_wall/tools/vision.py)).
+  - Four red tapes mark the board corners and give a homography.
+  - The robot's LCD shows a cyan/magenta beacon, which gives its position and
+    heading.
+  - Fixes are compensated for latency against a 1.28 s odometry history before
+    they are sent to the robot.
+
+## Design iterations
+
+Most of what I learned came from things that did not work. In order:
+
+| When (2026) | What changed | Why / what we measured |
+|---|---|---|
+| Apr | **v1 base PCB**: ESP32 DevKit socket, 3× RZ7899, XT30 battery ([netlist](hardware/v1_base_board/)) | First robot. Lessons: a GPIO12 strap pin touched by a jumper broke flashing; a shorted driver module can kill the regulator. |
+| Jun 16 | ESP32 firmware plus a ROS2 workspace on the host → **ROS2 dropped** | The ESP32 plans and follows paths by itself; a serial console tunes gains live ([report](docs/v1-esp32-report.md)). |
+| Jun 16–17 | Per-motor PID, stiction feed-forward, terminal deceleration | Measured breakaway at 100/140/140 PWM. Motor 1's encoder (GPIO36/39) read a phantom 0.58 m/s from PWM crosstalk. Software filters only helped partly; the commit log concludes "hardware fix required". |
+| Jul | **ESP32-C6 + LCD module on a custom adapter PCB** | One encoder still never worked. The fabricated panel data showed that the adapter's M1 header footprint was **mirrored**, so PWM drove an encoder output. |
+| Aug 12 | Firmware ported to the C6 ([`src/`](src/)) + stall protection | Encoder noise on the new MCU: 0 ghost counts. |
+| Sep 5–9 | **Integrated top-board exploration**: R2 (4-layer, 49 parts) → R3 (147 parts) → "KISS" 6V → budget board ([`hardware/top_board_v2`](hardware/top_board_v2)) | Each version got too complex or too expensive. The KISS rules (one motor voltage, reuse the base board, fewer parts) came from that. None of these boards were fabricated. |
+| Sep 17 | **Adapter v2** fabricated and brought up ([`c6_selftest`](c6_selftest)) | All three motor slots pass in both directions with 0–1 invalid quadrature transitions. |
+| Sep 21 – Oct 4 | [`c6_drive`](c6_drive): Wi-Fi driving, system ID, MuJoCo simulation, 19 controller revisions | Simulation halved position error on the holdout set (9.4 → 4.4 mm), but on the real wall **the robot slid down**: encoders cannot see the chassis slip. Motion also still felt jerky. A TF card in the LCD board turned out to share GPIO4/5 with motor 2 and made it run away at PWM 0. |
+| Oct 24–27 | Rewrite as [`c6_wall`](c6_wall): position servos, braking, OTA, camera referee | The camera showed the inherited wheel radius was wrong in both size and sign (+33.7 mm → −50.4 mm). Fixed gearbox chatter (kd too high) and one stiff gearbox (breakaway ramp: settling 3.8 s → 0.09 s). Coverage run above. |
+| Oct 27–28 | **`top_board_v2_logic`** in EasyEDA: one A3 schematic, sensor head split off, GPIO remap, curved routing, on-board charger | In progress. Each step is a commit of [`motor_controller.epro2`](hardware/top_board_v2/motor_controller.epro2); see `git log -- hardware/top_board_v2/motor_controller.epro2`. |
+
+## Repository map
+
+| Path | What it is | State |
+|---|---|---|
+| [`c6_wall/`](c6_wall) | Current robot firmware, desktop simulation test, camera and calibration tools | **current** |
+| [`hardware/top_board_v2/`](hardware/top_board_v2) | Top-board designs (KiCad + EasyEDA), reviews, simulations; `motor_controller.epro2` is the current EasyEDA project | current design + history |
+| [`c6_drive/`](c6_drive) | Previous firmware: Wi-Fi driving, system ID, MuJoCo sim, controller study | archived |
+| [`c6_selftest/`](c6_selftest), [`testboard_selftest/`](testboard_selftest), [`c6-test/`](c6-test), [`usb_diagnostics/`](usb_diagnostics) | Bring-up and diagnostic firmware | archived |
+| [`src/`](src/), [`include/`](include/), [`test/`](test/), [`platformio.ini`](platformio.ini) | v1 ESP32 firmware, the August C6 port, and firmware variants for the unbuilt top boards | archived |
+| [`control_tests/`](control_tests), [`docs/`](docs) | Host tests and notes for the top-board firmware variants | archived |
+| [`scripts/`](scripts) | Host tools: PID tuner, sysid and campaign analysis | mixed |
+
+Many notes from September are in Chinese. Raw experiment logs (about 1 GB of
+JSON and video) are kept offline.
+
+## Build and run (current firmware)
 
 ```bash
-# 1. Python 环境（上位机 + PlatformIO）
-python3 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-
-# 2. 硬件配置：复制模板并填入 WiFi（config.h 已被 .gitignore 忽略）
-cp include/config.example.h include/config.h
-#   编辑 include/config.h，填 WIFI_SSID / WIFI_PASS；引脚和 PID 默认值按需调
-
-# 3. 编译并烧录主固件
-pio run -e esp32 -t upload && pio device monitor
-
-# 4. 启动上位机控制面板
-python scripts/whiteboard_app.py
+python3 -m venv .venv && .venv/bin/pip install platformio
+cd c6_wall
+../.venv/bin/pio run -t upload        # first install over USB
+python3 tools/ota.py                  # later updates over Wi-Fi
+c++ -std=c++17 -Iinclude tests/sim_test.cpp -o /tmp/sim && /tmp/sim   # desktop test
 ```
 
----
+See [`c6_wall/README.md`](c6_wall/README.md) for the web interface, Wi-Fi
+setup and the camera tools.
 
-## 构建环境（`platformio.ini`）
+## How this was built
 
-| 环境 | 用途 |
-|------|------|
-| `esp32`（默认） | **主固件**：自主控制 + WiFi UDP + 串口实时调参 |
-| `motor_test` | 单/三电机测试台：开环 / PID 闭环 / 运动学，配合 `pid_tuner.py` 标定 |
-| `native` | 桌面模拟测试 `pio test -e native`（运动学 / PID / 里程计），无需硬件 |
+I designed the PCBs, assembled and debugged the robot, ran the experiments and
+set the goals and constraints. Much of the firmware, analysis scripts and
+PCB-automation code was written with AI coding assistants (Claude Code and
+OpenAI Codex) working under my direction. Commits made with Claude carry a
+`Co-Authored-By` line.
 
-```bash
-pio run -e esp32 -t upload      # 主固件
-pio run -e motor_test -t upload # 电机测试台
-pio test -e native              # 桌面单元/集成测试
-```
+The Aug 28 – Oct 28 history was committed when the project was published, so
+those commits were rebuilt from file timestamps and EasyEDA backups. Each of
+them says so in its message.
 
----
+## License
 
-## 串口实时调参（主固件）
-
-烧录 `esp32` 固件后，打开串口（115200），发送以下命令（回车结束）。改完满意的值再写回 `config.h` 固化。
-
-| 命令 | 说明 |
-|------|------|
-| `s` | 打印状态 JSON |
-| `p` | 打印所有可调参数 |
-| `t` | 切换遥测流（每轮 目标/实际/PWM，10Hz） |
-| `m <0\|1\|2\|a>` | 选择调参电机（`a`=全部，默认全部） |
-| `kp/ki/kd/kf/il <v>` | 设 P / I / D / 前馈 / 积分限幅（作用于选中电机） |
-| `v <v>` | 最大线速度 (m/s) |
-| `la <v>` | 前瞻距离 (m) |
-| `gt <v>` | 到达容差 (m) |
-| `kl <v>` | 循线比例增益 |
-| `area <x y w h sp>` | 本地规划一条 zigzag 路径（台架测试，无需上位机） |
-| `pos <x y th>` | 校正里程计位姿 |
-| `go` / `x` | 开始执行当前路径 / 停止 |
-| `h` 或 `?` | 帮助 |
-
-> 单电机 PID 标定走 `motor_test` 固件 + `python scripts/pid_tuner.py`（PyQt5 实时曲线 + 增益滑块）。
-
----
-
-## 上位机脚本（`scripts/`）
-
-| 脚本 | 说明 |
-|------|------|
-| `whiteboard_app.py` | 控制面板：发目标区域、接收状态、画实时轨迹（WiFi UDP） |
-| `pid_tuner.py` | 单电机 PID 实时调参面板（串口，配合 `motor_test` 固件） |
-
----
-
-## 硬件
-
-- 3× N20 编码电机（1:100 减速）+ 3× RZ7899-MS 单 H 桥驱动 + ESP32
-- 38mm 全向轮，120° 布置，`ENCODER_CPR = 700`
-- 引脚分配、接线要点、排障记录见 [`PROJECT_REPORT.md`](PROJECT_REPORT.md) 与 `include/config.example.h`
-
-**烧录前注意**（详见报告）：
-
-- GPIO12 是 Flash 电压选择脚，邻近杜邦线误碰会导致烧录失败（`Failed to communicate with the flash chip`）。
-- 新 RZ7899/TB6612 上电前用万用表蜂鸣档测 VCC–GND，短路会烧 ESP32 稳压器。
-
----
-
-## 目录结构
-
-```
-WhiteBoardBot/
-├── platformio.ini          # 三个构建环境：esp32 / motor_test / native
-├── include/config.example.h# 硬件 + PID + WiFi 配置模板（复制为 config.h）
-├── src/
-│   ├── main.cpp            # 主固件：自主控制 + 串口调参控制台
-│   ├── robot_controller.*  # 状态机 + 命令分发 + 控制环
-│   ├── path_planner.*      # zigzag 覆盖路径
-│   ├── trajectory_follower.*# 前瞻循线（参数可运行时调）
-│   ├── kinematics.*        # 三轮全向轮正/逆运动学
-│   ├── odometry.*          # 编码器里程计
-│   ├── pid_controller.*    # FF + PID（带 anti-windup / slew）
-│   ├── motor_driver.*      # RZ7899 双引脚驱动
-│   ├── wifi_comm.*         # WiFi UDP + JSON 收发
-│   └── motor_test_main.cpp # 电机测试台固件（MOTOR_TEST_MODE）
-├── scripts/                # 上位机：控制面板 + PID 调参
-├── test/test_all.cpp       # native 单元/集成测试
-└── PROJECT_REPORT.md       # 架构 / 硬件 / 排障 参考
-```
+- Software: [MIT](LICENSE).
+- Hardware design files in [`hardware/`](hardware): [CERN-OHL-P-2.0](hardware/LICENSE).
+- [`third_party/esp_idf_i2c_no_clear`](third_party/esp_idf_i2c_no_clear) is a
+  patched copy of Espressif's ESP-IDF I2C driver, under Apache-2.0.

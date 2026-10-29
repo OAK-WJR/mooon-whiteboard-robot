@@ -1,3 +1,10 @@
+> **Archived (2026-09-21 → 2026-10-04).** This firmware was replaced by
+> [`c6_wall`](../c6_wall) after the robot slid down the whiteboard: encoder-only
+> control could not detect chassis slip. The raw evidence logs under `reports/`
+> (about 1 GB of JSON) are not published, so links into `reports/` do not resolve.
+> Plots and simulation captures are in [`portfolio/`](portfolio). Most notes below
+> were written during the work and are kept as they were.
+
 # C6 adapter: Wi-Fi WASD, wheel PI/FF, LCD
 
 ## Driving page and network flow (rev19)

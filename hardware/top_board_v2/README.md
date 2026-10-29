@@ -1,3 +1,6 @@
+> English overview and current status: [../README.md](../README.md). The notes
+> below are the original (Chinese) working notes from September 2026.
+
 # top_board_v2 — 五片顶部成品板
 
 **只负责五片顶部 PCB、板上元件和焊接；合计目标 ¥30、上限 ¥50。** 底板、电机、电池及充电器不计入，不继续选购。顶部保留 ESP32、USB 自动恢复、供电和原底板接口，板上不加入充电或均衡。
