@@ -70,7 +70,7 @@ schematic changes, with the evidence for each date.*
 
 ![Onshape CAD versions, February to October 2026](docs/design-history/cad-versions.jpg)
 
-*The robot's Onshape assembly at six of its server-timestamped versions.*
+*The robot's Onshape assembly at five of its server-timestamped versions, with every part shown.*
 
 Most of what I learned came from things that did not work. In order:
 

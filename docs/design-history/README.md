@@ -38,19 +38,20 @@ The robot is modelled in an Onshape document named "WhiteBoardBot", created on
 2026-02-08. Onshape timestamps every named version on its own servers, so
 these dates cannot be edited afterwards. Each render above is Onshape's shaded
 view of the assembly "Assembly 1" at that version, fetched through the Onshape
-API on 2026-10-28. Full-size renders are in [`cad/`](cad/).
+API on 2026-10-28 with every part shown, including parts that were hidden
+when the version was saved. Full-size renders are in [`cad/`](cad/).
 
 | Version | Created (Onshape server time, UTC) | What changed |
 |---|---|---|
 | Start | 2026-02-08 19:05 | Empty document |
 | V1 | 2026-02-13 21:26 | Off-the-shelf modules: three TB6612 driver boards and an ESP32 DevKit on a printed chassis, with 38 mm omni wheels and N20 motors |
-| V2 | 2026-02-16 02:41 | Deeper printed body with side walls |
+| V2 | 2026-02-16 02:41 | Redesigned lower printed body |
 | V3 | 2026-03-12 19:40 | The first custom PCB, imported as `3D_PCB1_2026-03-10.step` from EasyEDA, replaces the modules |
 | V4 | 2026-04-13 19:39 | New printed chassis under the v1 board |
 | V5 | 2026-07-03 21:44 | (same appearance as V4) |
-| V6 "metal bottom" | 2026-09-22 03:08 | ESP32-C6 LCD module on the custom adapter board |
+| V6 "metal bottom" | 2026-09-22 03:08 | ESP32-C6 LCD module on the custom adapter board, on the triangular base board |
 | V7 "fix the issue of gear stuck because of too tight top" | 2026-09-22 03:13 | Fixed the gears sticking because the top part was too tight |
-| Workspace | last edit 2026-10-27 | Triangular base board added under the adapter |
+| Workspace | last edit 2026-10-27 | Looks the same as V6 when every part is shown |
 
 The CAD and the circuit-board dates agree:
 - The first custom PCB was created in EasyEDA on 2026-03-09 (title block), and
@@ -63,8 +64,8 @@ The CAD and the circuit-board dates agree:
 
 | Board | Dates (from the title block) | Notes |
 |---|---|---|
-| v1 board | created 2026-03-09 | Socket for a 38-pin ESP32 DevKit and three RZ7899 drivers. Motor 1's encoder pins (GPIO36/39) picked up PWM noise, which led to the next generation. [Schematic](v1-schematic.jpg), [netlist](../../hardware/v1_base_board/). |
-| base board (`bottom_board`) | created 2026-07-01 | Triangular base with three RZ7889 H-bridges and the battery input. Still in use. |
+| v1 board | created 2026-03-09 | Socket for a 38-pin ESP32 DevKit and three RZ7899 drivers. Its saved preview had inactive layers greyed out, so its contrast is stretched in the figure. Motor 1's encoder pins (GPIO36/39) picked up PWM noise, which led to the next generation. [Schematic](v1-schematic.jpg), [netlist](../../hardware/v1_base_board/). |
+| base board (`bottom_board`) | created 2026-07-01 | Triangular base with three RZ7889 H-bridges and the battery input. Still in use. Its own preview is a bottom view, so the figure shows its top view from the fabrication panel (`combine`). |
 | ESP32-C6 adapter (`top_board`) | created 2026-07-02, updated 2026-07-03 | Carries the Waveshare ESP32-C6-LCD module. The first fabricated adapter had the M1 header footprint mirrored. The respin was brought up on 2026-09-17 and is in use now. |
 | `top_board_v2`, R2 | September 2026 | First attempts at one integrated controller board. Never fabricated. |
 | `top_board_v2_logic` | 2026-10-27 → | Current design: ESP32-C6-MINI-1, CH343G USB, 3.3 V and 6 V supplies, and on-board 2S charging. |

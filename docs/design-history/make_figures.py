@@ -13,7 +13,7 @@ import os
 import subprocess
 import zipfile
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFont, ImageOps
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(os.path.dirname(HERE))
@@ -22,13 +22,16 @@ FONT = "/System/Library/Fonts/Helvetica.ttc"
 
 # EasyEDA document ids in project "motor_controller"
 LOGIC_PCB, LOGIC_SCH = "d66fa5125fd977da", "047e235f224c2688"
-FAMILY = [  # (document id, caption, sub-caption)
-    ("713d18881d67b0a9", "Mar 2026 - v1 board", "socket for an ESP32 DevKit, 3x RZ7899"),
-    ("a7681f7930a373e5", "Jul 2026 - base board", "3x RZ7889 H-bridge, battery (bottom side)"),
-    ("29868d186e4fc126", "Jul 2026 - ESP32-C6 adapter", "plugs the C6 LCD module onto the base"),
-    ("c2976160f80574ea", "Sep 2026 - top_board_v2", "first single-board controller (not built)"),
-    ("1451795a9a99c5a7", "Sep 2026 - top_board_v2 R2", "after a KiCad round trip (not built)"),
-    (LOGIC_PCB, "Oct 2026 - top_board_v2_logic", "current design, routing in progress"),
+FAMILY = [  # (document id, caption, sub-caption, crop box in preview pixels, auto-contrast)
+    # The v1 preview was saved with inactive layers greyed out, so its contrast is stretched.
+    ("713d18881d67b0a9", "Mar 2026 - v1 board", "socket for an ESP32 DevKit, 3x RZ7899", None, True),
+    # The base board's own preview is a bottom view; its top view comes from the fab panel ("combine").
+    ("3e97c5cee5cd5d26", "Jul 2026 - base board", "3x RZ7889 H-bridge, battery input (top view)",
+     (752, 40, 1830, 1300), False),
+    ("29868d186e4fc126", "Jul 2026 - ESP32-C6 adapter", "plugs the C6 LCD module onto the base", None, False),
+    ("c2976160f80574ea", "Sep 2026 - top_board_v2", "first single-board controller (not built)", None, False),
+    ("1451795a9a99c5a7", "Sep 2026 - top_board_v2 R2", "after a KiCad round trip (not built)", None, False),
+    (LOGIC_PCB, "Oct 2026 - top_board_v2_logic", "current design, routing in progress", None, False),
 ]
 EVOLUTION = [  # (commit, short caption)
     ("170676d", "imported; schematic redrawn on one A3 sheet"),
@@ -100,7 +103,14 @@ def main():
     latest = previews(head)
     load = lambda data: Image.open(io.BytesIO(data)).convert("RGB")
 
-    cells = [(crop_dark(load(latest[i])), t, s) for i, t, s in FAMILY]
+    cells = []
+    for i, title, sub, box, stretch in FAMILY:
+        im = load(latest[i])
+        if box:
+            im = im.crop(box)
+        if stretch:
+            im = ImageOps.autocontrast(im, cutoff=0.5)
+        cells.append((crop_dark(im), title, sub))
     grid(cells, 3, 640, 480, 84, "black", os.path.join(HERE, "board-generations.jpg"))
 
     cells = []
