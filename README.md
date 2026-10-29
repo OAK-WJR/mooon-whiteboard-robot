@@ -68,10 +68,15 @@ start within 0.2 mm, with a heading change of −0.18°.*
 [design history](docs/design-history/) page shows the step-by-step PCB and
 schematic changes, with the evidence for each date.*
 
+![Onshape CAD versions, February to October 2026](docs/design-history/cad-versions.jpg)
+
+*The robot's Onshape assembly at six of its server-timestamped versions.*
+
 Most of what I learned came from things that did not work. In order:
 
 | When (2026) | What changed | Why / what we measured |
 |---|---|---|
+| Feb | **First CAD in Onshape**: three TB6612 driver modules and an ESP32 DevKit on a 3D-printed chassis, 38 mm omni wheels ([CAD versions](docs/design-history/#mechanical-cad-onshape)) | The Onshape document was created on 2026-02-08. A month later (V3, 2026-03-12) the first custom PCB replaced the modules. |
 | Mar–Apr | **v1 base PCB**: ESP32 DevKit socket, 3× RZ7899, XT30 battery ([schematic](docs/design-history/v1-schematic.jpg), [netlist](hardware/v1_base_board/)) | First robot. Lessons: a GPIO12 strap pin touched by a jumper broke flashing; a shorted driver module can kill the regulator. |
 | Jun 16 | ESP32 firmware plus a ROS2 workspace on the host → **ROS2 dropped** | The ESP32 plans and follows paths by itself; a serial console tunes gains live ([report](docs/v1-esp32-report.md)). |
 | Jun 16–17 | Per-motor PID, stiction feed-forward, terminal deceleration | Measured breakaway at 100/140/140 PWM. Motor 1's encoder (GPIO36/39) read a phantom 0.58 m/s from PWM crosstalk. Software filters only helped partly; the commit log concludes "hardware fix required". |

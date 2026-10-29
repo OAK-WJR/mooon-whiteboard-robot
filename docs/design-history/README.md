@@ -1,7 +1,7 @@
 # Design history
 
-This page shows how the robot's circuit boards changed over time, with
-evidence for each date.
+This page shows how the robot's mechanical design and circuit boards changed
+over time, with evidence for each date.
 
 ## Where the images come from
 
@@ -29,6 +29,33 @@ Dates come from three sources. Each caption says which one it uses:
 
 The October commits were added to git on 2026-10-28 from those timestamped
 backups (see the [main README](../../README.md#how-this-was-built)).
+
+## Mechanical CAD (Onshape)
+
+![Onshape versions of the robot assembly](cad-versions.jpg)
+
+The robot is modelled in an Onshape document named "WhiteBoardBot", created on
+2026-02-08. Onshape timestamps every named version on its own servers, so
+these dates cannot be edited afterwards. Each render above is Onshape's shaded
+view of the assembly "Assembly 1" at that version, fetched through the Onshape
+API on 2026-10-28. Full-size renders are in [`cad/`](cad/).
+
+| Version | Created (Onshape server time, UTC) | What changed |
+|---|---|---|
+| Start | 2026-02-08 19:05 | Empty document |
+| V1 | 2026-02-13 21:26 | Off-the-shelf modules: three TB6612 driver boards and an ESP32 DevKit on a printed chassis, with 38 mm omni wheels and N20 motors |
+| V2 | 2026-02-16 02:41 | Deeper printed body with side walls |
+| V3 | 2026-03-12 19:40 | The first custom PCB, imported as `3D_PCB1_2026-03-10.step` from EasyEDA, replaces the modules |
+| V4 | 2026-04-13 19:39 | New printed chassis under the v1 board |
+| V5 | 2026-07-03 21:44 | (same appearance as V4) |
+| V6 "metal bottom" | 2026-09-22 03:08 | ESP32-C6 LCD module on the custom adapter board |
+| V7 "fix the issue of gear stuck because of too tight top" | 2026-09-22 03:13 | Fixed the gears sticking because the top part was too tight |
+| Workspace | last edit 2026-10-27 | Triangular base board added under the adapter |
+
+The CAD and the circuit-board dates agree:
+- The first custom PCB was created in EasyEDA on 2026-03-09 (title block), and
+  its 3D model is dated 2026-03-10.
+- It appears in the CAD at V3, on 2026-03-12.
 
 ## Board generations
 
