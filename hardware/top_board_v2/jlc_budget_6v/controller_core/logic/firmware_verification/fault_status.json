@@ -1,0 +1,71 @@
+{
+  "id": 1,
+  "ok": true,
+  "error": "",
+  "boot": "3c88596c5e8885db",
+  "lease": 0,
+  "protocol": 2,
+  "firmware": "wbb-control-2",
+  "profile": "top_board_v2_kiss_c6_review",
+  "device": "WhiteBoardBot-789abc",
+  "uptime_ms": 1613,
+  "reset_reason": 1,
+  "state": "gpio_fault",
+  "reason": "GPIO0_SAFE_LOW_FAILED",
+  "gpio_fault_latched": true,
+  "gpio_error": -42,
+  "gpio_release_error": 0,
+  "read_only": true,
+  "motion_enabled": false,
+  "charge_enabled": false,
+  "power_disconnect": false,
+  "pwm_ready": false,
+  "watchdog_ready": true,
+  "wireless_control_enabled": false,
+  "telemetry_available": false,
+  "x": null,
+  "y": null,
+  "theta": null,
+  "motor_voltage_mv": null,
+  "motor_current_ma": null,
+  "rail_3v3_mv": null,
+  "encoder_counts": [
+    null,
+    null,
+    null
+  ],
+  "wheel_speed_mps": [
+    null,
+    null,
+    null
+  ],
+  "pwm_command": [
+    0,
+    0,
+    0
+  ],
+  "physical_motors": [
+    1,
+    2,
+    3
+  ],
+  "header_order": [
+    "M0",
+    "M2",
+    "M1"
+  ],
+  "owner": 0,
+  "lease_ms": 750,
+  "usb_reboot": true,
+  "reboot_pending": false,
+  "tx_dropped": 1,
+  "odometry_qualified": false,
+  "wireless_status": true,
+  "wireless_power_state": "online",
+  "wifi_connected": true,
+  "wifi_ip": "192.0.2.1",
+  "wifi_rssi_dbm": -50,
+  "ble_ready": true,
+  "ble_connected": true,
+  "authenticated_wireless": true
+}

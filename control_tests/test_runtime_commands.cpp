@@ -14,7 +14,11 @@ static void fresh(){
     transport.overflow=false;transport.beginResult=true;transport.dropped=0;
     rebootPending=false;keySet=false;controlTimingFault=false;controlOverruns=0;hmacDelayMs=0;
     maxControlGapMs=controlGapMs=0;nvsOpen=nvsWrite=true;storedConfig="{}";
-    robot.pwmReady=true;setup();transport.sent.clear();
+    robot.pwmReady=true;
+#ifdef WBB_TOP_BOARD_KISS_C6
+    gpio_mock::requestPin=kiss_c6::motorArmRequest; // gpio_config must leave the ARM (MOT_EN) pin without pulls
+#endif
+    setup();transport.sent.clear();
 }
 static std::string json(const JsonDocument& d){std::string s;serializeJson(d,s);return s;}
 static JsonDocument request(const char* cmd,uint32_t id=1){
@@ -43,7 +47,8 @@ int main(){
     assert(d["motor_voltage_mv"].isNull()&&!d["power_disconnect"]);
     assert(transport.sent.back().text.size()<1472);passed("discovery and status frame budget");
 #if defined(WBB_TOP_BOARD_KISS_C6)
-    assert(Serial.uartMode&&Serial.rxPin==17&&Serial.txPin==16);
+    // No USB-UART bridge: Serial is the C6's native USB Serial/JTAG CDC (HWCDC), begun without pins.
+    assert(Serial.cdcMode&&!Serial.uartMode&&Serial.baud==115200&&Serial.rxPin==-1&&Serial.txPin==-1&&Serial.txTimeoutMs==2);
     assert(d["profile"]=="top_board_v2_kiss_c6_review"&&d["charge_enabled"]==false);
 #elif defined(WBB_TOP_BOARD_R3)
     assert(Serial.uartMode&&Serial.baud==115200&&Serial.rxPin==17&&Serial.txPin==16);
@@ -93,15 +98,15 @@ int main(){
         for(int voltage:{6000,12000})for(Link link:{Link::USB,Link::WiFi,Link::BLE}){
             fresh();auth();send(link,1,request("claim"));
             auto motion=request(op,2);motion["motor_voltage_mv"]=voltage;
+#ifdef WBB_TOP_BOARD_KISS_C6
+            // The rejection itself must drive ARM (GPIO0, MOT_EN) LOW; start from a HIGH latch to observe it.
+            constexpr int armPin=kiss_c6::motorArmRequest;levels[armPin]=HIGH;
+#else
+            constexpr int armPin=21;
+#endif
             send(link,1,motion);
             assert(!response()["ok"]&&!strcmp(response()["error"],"BOARD_POWER_UNREVIEWED"));
-            assert(!robot.moving&&owner.link==Link::None&&levels[
-#ifdef WBB_TOP_BOARD_KISS_C6
-            10
-#else
-            21
-#endif
-            ]==LOW);
+            assert(!robot.moving&&owner.link==Link::None&&levels[armPin]==LOW);
         }
     }passed("all five motion operations stay locked");
 
@@ -120,11 +125,12 @@ int main(){
     assert(!rebootPending);passed("BLE peers cannot combine fragments");
 
     fresh();send(Link::USB,0,request("claim"));robot.moving=true;Serial.connected=false;loop();
-#if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_KISS_C6)
+#if defined(WBB_TOP_BOARD_R3)
     assert(robot.moving&&owner.link==Link::USB); // No CP2102N cable-present feedback.
     fakeNow+=control::Session::timeoutMs;loop();
     assert(!robot.moving&&owner.link==Link::None);passed("UART cable loss expires through heartbeat");
 #else
+    // HWCDC (native profile and KISS C6): bool(Serial) is host presence, so losing the host stops the owner now.
     assert(!robot.moving&&owner.link==Link::None);passed("USB disconnect stops owner");
 #endif
     fresh();auth();send(Link::BLE,4,request("claim"));robot.moving=true;transport.bleUp=false;loop();

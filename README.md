@@ -1,136 +1,213 @@
-# WhiteBoardBot
+# MOOON: a robot that drives on a vertical whiteboard
 
-A small three-omni-wheel robot that drives on a **vertical magnetic whiteboard**,
-holds its position against gravity, and sweeps the whole board in lanes. It runs
-on custom PCBs and ESP32-C6 firmware, and a phone camera facing the board
-measures its real position.
+MOOON (the project folder is called WhiteBoardBot) is a small robot with three
+omni wheels that holds itself to a **vertical magnetic whiteboard** with
+magnets. It can hold still against gravity, sweep the whole board in lanes,
+find ink with a camera and erase it, and draw with a pen. It runs on circuit
+boards I designed and on ESP32-C6 firmware. A phone camera facing the board
+measures where the robot really is and sends corrections over Wi-Fi.
 
 <p align="center">
-  <img src="docs/media/coverage-run.gif" width="320"
+  <img src="docs/media/robot-top.jpg" width="360"
+       alt="The robot from above: purple triangular MOOON base board with three omni wheels">
+</p>
+
+*2026-10-27: the robot from above, on the purple base board (v2.6) that I
+designed.*
+
+> This repository is a curated snapshot made on 2026-11-01 for review. It has
+> the current firmware, host tools, tests, board design files, design notes
+> and a few key run logs. The full history (Mar–Oct 2026, with about 1 GB of
+> raw logs and videos) is in my private repository `OAK-WJR/WhiteBoardBot`.
+
+## Demo
+
+<p align="center">
+  <img src="docs/media/coverage-run.gif" width="300"
        alt="The robot sweeping a vertical whiteboard in horizontal lanes">
 </p>
 
-*Full-board coverage run on a 33.5 × 21.5 in whiteboard (2026-10-26, shown at 4×
-speed, [real-time video](docs/media/coverage-run.mp4)). Red: path measured by
-the camera. Blue: planned area. It drove 13 lanes in 96.6 s and returned to its
-start within 0.2 mm, with a heading change of −0.18°.*
+*2026-10-26: full-board coverage run on a 35 × 23 in whiteboard (writable
+area 33.5 × 21.5 in), 4× speed. Red: path measured by the camera. Blue:
+planned area. 13 lanes in 96.6 s; it came back to its start within 0.2 mm.*
 
----
+| Before erasing | After erasing | Drawing "67" |
+|---|---|---|
+| <img src="docs/media/erase-before.jpg" width="220" alt="Whiteboard with a hatched box drawing and the robot below it"> | <img src="docs/media/erase-after.jpg" width="220" alt="The same whiteboard, clean, robot near the top"> | <img src="docs/media/draw-67.jpg" width="200" alt="A green 67 drawn on the board, robot with pen at the end of the 7"> |
+| 2026-10-28 22:35: 130 cm² of ink | 2026-10-28 ≈22:40: board clean | 2026-10-31: one continuous pen line |
 
-## Status (October 2026)
-
-| Works on the real robot | Designed, not built or tested yet |
-|---|---|
-| Holding still on a vertical board: each wheel is a position servo with a gravity-holding integral term | `top_board_v2_logic`, the single integrated controller PCB (schematic done, routing in progress) |
-| Full-board coverage with live camera correction (above) | On-board 2S USB-C charging (IP2326 just added to the schematic) |
-| Wi-Fi firmware updates with automatic rollback | Separate sensor-head board with a gyro, for heading without the camera |
-| Measured slip model: open-loop round trips land within 2 mm / 1° in 6 of 8 horizontal trials | Erasing while spinning on the wall (paused: two power resets made the robot fall) |
+Video: the MOOON part of the video in my MIT Maker Portfolio shows the erase
+run and the "67" drawing. Raw videos are not stored in this repository.
 
 ## How it works
 
 ```
- Phone camera (OpenCV) ── live position fixes ──┐
-                                                ▼
- ┌──────────────────────── robot ────────────────────────────┐
- │ Waveshare ESP32-C6-LCD-1.47   ← c6_wall firmware          │
- │   └─ custom adapter PCB (v2)                              │
- │        └─ custom base PCB: 3× RZ7889 H-bridge, 2S LiPo    │
- │             └─ 3× N20 gearmotor + encoder, 38 mm omni     │
- │                wheels at 120°, magnets to hold the board  │
- └───────────────────────────────────────────────────────────┘
+ iPhone camera (Continuity Camera) ─> Mac: OpenCV finds 4 red corner tapes
+                                     and the robot's LCD beacon
+                                          │ position fixes over Wi-Fi
+                                          ▼
+ ┌────────────────────────── robot ──────────────────────────┐
+ │ ESP32-C6-LCD-1.47 module      <- c6_wall firmware          │
+ │   └─ adapter PCB (v2, my design)                           │
+ │        └─ base PCB (v2.6, my design): 3 H-bridges, 2S LiPo │
+ │             └─ 3 N20 gearmotors with encoders,             │
+ │                38 mm omni wheels at 120°, magnets          │
+ └────────────────────────────────────────────────────────────┘
 ```
 
-- **Control** ([`c6_wall/include/wbb_core.h`](c6_wall/include/wbb_core.h)).
-  - All three wheels track position references derived from one body pose, so
-    the chassis drives straight and stopping means holding, not coasting.
-  - The integral term is never reset. It keeps the torque that holds the robot
-    against gravity, and that load estimate is stored in the world frame.
-  - The H-bridges brake (both inputs high) in every idle, fault or reboot state.
-- **Slip model.**
-  - Encoders only measure the wheels, and the wheels slip on the glossy board.
-  - Camera measurements gave the slip per direction: 0.94 going up, 1.13 going
-    down, 1.01 sideways.
-  - The robot also sags 10.9 cm for every metre it moves sideways.
-  - The firmware corrects its odometry with these numbers, which are refit from
-    round-trip campaigns.
-- **Camera referee** ([`c6_wall/tools/vision.py`](c6_wall/tools/vision.py)).
-  - Four red tapes mark the board corners and give a homography.
-  - The robot's LCD shows a cyan/magenta beacon, which gives its position and
-    heading.
-  - Fixes are compensated for latency against a 1.28 s odometry history before
-    they are sent to the robot.
+- **Holding on the wall.** Each wheel is a position servo. The integral term
+  is never reset, because it holds the torque that keeps the robot up against
+  gravity. When idle or after a fault, the motor drivers brake.
+  ([`c6_wall/include/wbb_core.h`](c6_wall/include/wbb_core.h))
+- **Slip.** The wheels slip on the glossy board, and the encoders cannot see
+  that. Camera measurements gave a slip factor for each direction, and the
+  firmware corrects its odometry with them.
+- **Camera referee.** Four red tapes give the board's corners; the robot's LCD
+  shows a cyan/magenta beacon that gives its position and heading. Each fix is
+  matched to the robot's odometry history to cancel the camera delay.
+  ([`c6_wall/tools/vision.py`](c6_wall/tools/vision.py))
+- **Erasing.** The eraser is the felt under the middle magnet. The camera
+  finds the ink, the planner covers it with left-right lanes 1.6 cm apart, and
+  the robot repeats until nothing is left, then does a fine wipe.
+  ([`c6_wall/tools/clean_dirty.py`](c6_wall/tools/clean_dirty.py))
+- **Drawing.** The pen cannot lift, so "67" is one continuous path of 30
+  points, driven with live camera corrections.
+  ([`c6_wall/tools/draw_digits.py`](c6_wall/tools/draw_digits.py))
 
-## Design iterations
+More detail and the full timeline of what failed and what changed:
+[`docs/design-history/`](docs/design-history/),
+[`hardware/README.md`](hardware/README.md),
+[`c6_wall/README.md`](c6_wall/README.md).
 
-![Every PCB generation, March to October 2026](docs/design-history/board-generations.jpg)
+## Build and run
 
-*Every board generation, from EasyEDA's own saved previews. The
-[design history](docs/design-history/) page shows the step-by-step PCB and
-schematic changes, with the evidence for each date.*
+**Hardware needed:** the robot (Waveshare ESP32-C6-LCD-1.47, my adapter v2 and
+base v2.6 boards, 3 N20 encoder gearmotors, 38 mm omni wheels, magnets, 2S
+LiPo), a magnetic whiteboard with red tape on its four corners, a Mac with an
+iPhone as Continuity Camera for the camera tools, and a USB-C cable for the
+first flash.
 
-![Onshape CAD versions, February to October 2026](docs/design-history/cad-versions.jpg)
+```bash
+# PlatformIO needs Python 3.10 or newer (macOS's built-in python3 is 3.9).
+# The first build downloads the ESP32 toolchain into ./.platformio
+python3.13 -m venv .venv && .venv/bin/pip install platformio
+cd c6_wall
+../.venv/bin/pio run                  # build the firmware
+../.venv/bin/pio run -t upload        # first install over USB
+python3 tools/ota.py                  # later updates over Wi-Fi
 
-*The robot's Onshape assembly at five of its server-timestamped versions, with every part shown.*
+# desktop simulation test of the control core (no hardware needed)
+c++ -std=c++17 -Iinclude tests/sim_test.cpp -o /tmp/sim && /tmp/sim
 
-Most of what I learned came from things that did not work. In order:
+# camera tools (system python3 with OpenCV)
+python3 -m pip install opencv-python numpy
+python3 tools/clean_dirty.py scan     # find ink and draw the plan, robot does not move
+```
 
-| When (2026) | What changed | Why / what we measured |
-|---|---|---|
-| Feb | **First CAD in Onshape**: three TB6612 driver modules and an ESP32 DevKit on a 3D-printed chassis, 38 mm omni wheels ([CAD versions](docs/design-history/#mechanical-cad-onshape)) | The Onshape document was created on 2026-02-08. A month later (V3, 2026-03-12) the first custom PCB replaced the modules. |
-| Mar–Apr | **v1 base PCB**: ESP32 DevKit socket, 3× RZ7899, XT30 battery ([schematic](docs/design-history/v1-schematic.jpg), [netlist](hardware/v1_base_board/)) | First robot. Lessons: a GPIO12 strap pin touched by a jumper broke flashing; a shorted driver module can kill the regulator. |
-| Jun 16 | ESP32 firmware plus a ROS2 workspace on the host → **ROS2 dropped** | The ESP32 plans and follows paths by itself; a serial console tunes gains live ([report](docs/v1-esp32-report.md)). |
-| Jun 16–17 | Per-motor PID, stiction feed-forward, terminal deceleration | Measured breakaway at 100/140/140 PWM. Motor 1's encoder (GPIO36/39) read a phantom 0.58 m/s from PWM crosstalk. Software filters only helped partly; the commit log concludes "hardware fix required". |
-| Jul | **ESP32-C6 + LCD module on a custom adapter PCB** | One encoder still never worked. The fabricated panel data showed that the adapter's M1 header footprint was **mirrored**, so PWM drove an encoder output. |
-| Aug 12 | Firmware ported to the C6 ([`src/`](src/)) + stall protection | Encoder noise on the new MCU: 0 ghost counts. |
-| Sep 5–9 | **Integrated top-board exploration**: R2 (4-layer, 49 parts) → R3 (147 parts) → "KISS" 6V → budget board ([`hardware/top_board_v2`](hardware/top_board_v2)) | Each version got too complex or too expensive. The KISS rules (one motor voltage, reuse the base board, fewer parts) came from that. None of these boards were fabricated. |
-| Sep 17 | **Adapter v2** fabricated and brought up ([`c6_selftest`](c6_selftest)) | All three motor slots pass in both directions with 0–1 invalid quadrature transitions. |
-| Sep 21 – Oct 4 | [`c6_drive`](c6_drive): Wi-Fi driving, system ID, MuJoCo simulation, 19 controller revisions | Simulation halved position error on the holdout set (9.4 → 4.4 mm), but on the real wall **the robot slid down**: encoders cannot see the chassis slip. Motion also still felt jerky. A TF card in the LCD board turned out to share GPIO4/5 with motor 2 and made it run away at PWM 0. |
-| Oct 24–27 | Rewrite as [`c6_wall`](c6_wall): position servos, braking, OTA, camera referee | The camera showed the inherited wheel radius was wrong in both size and sign (+33.7 mm → −50.4 mm). Fixed gearbox chatter (kd too high) and one stiff gearbox (breakaway ramp: settling 3.8 s → 0.09 s). Coverage run above. |
-| Oct 27–28 | **`top_board_v2_logic`** in EasyEDA: one A3 schematic, sensor head split off, GPIO remap, curved routing, on-board charger | In progress. Each step is a commit of [`motor_controller.epro2`](hardware/top_board_v2/motor_controller.epro2); see `git log -- hardware/top_board_v2/motor_controller.epro2`. |
+Checked on 2026-11-01 on macOS from this snapshot: `pio run` builds
+(`[SUCCESS]`, RAM 22.0 %, flash 45.5 %), and the simulation test prints
+`ALL PASSED`. The robot joins Wi-Fi from its own web page; its hotspot
+password is random and shown on the LCD (see
+[`c6_wall/README.md`](c6_wall/README.md)). No Wi-Fi password is stored in the
+source.
 
-## Repository map
+The firmware for the next, not-yet-built controller board can also be built
+and checked against the board's netlist:
+
+```bash
+.venv/bin/pip install -r scripts/requirements-control.txt
+.venv/bin/pio run -e top_board_v2_kiss_c6
+python3 control_tests/verify_kiss_c6.py   # pins vs EasyEDA netlist, host-side tests
+```
+
+## Repository layout
 
 | Path | What it is | State |
 |---|---|---|
-| [`c6_wall/`](c6_wall) | Current robot firmware, desktop simulation test, camera and calibration tools | **current** |
-| [`hardware/top_board_v2/`](hardware/top_board_v2) | Top-board designs (KiCad + EasyEDA), reviews, simulations; `motor_controller.epro2` is the current EasyEDA project | current design + history |
-| [`c6_drive/`](c6_drive) | Previous firmware: Wi-Fi driving, system ID, MuJoCo sim, controller study | archived |
+| [`c6_wall/`](c6_wall) | Current robot firmware, desktop simulation test, camera, erase and drawing tools, [key run logs](c6_wall/results) | **current** |
+| [`hardware/`](hardware) | Board designs: `top_board_v2/motor_controller.epro2` (EasyEDA Pro project with the adapter, the base board and the next controller board), netlist exports, the v1 base board netlist, September KiCad sources | current + history |
+| [`docs/`](docs) | Design history with dated pictures, demo media, older reports | |
+| [`c6_drive/`](c6_drive) | September firmware: Wi-Fi driving, system ID, MuJoCo simulation | archived |
+| [`src/`](src), [`include/`](include), [`platformio.ini`](platformio.ini), [`control_tests/`](control_tests), [`scripts/`](scripts) | Spring ESP32 firmware, the August C6 port, firmware and host tests for unbuilt top-board versions, host tools | mostly archived |
 | [`c6_selftest/`](c6_selftest), [`testboard_selftest/`](testboard_selftest), [`c6-test/`](c6-test), [`usb_diagnostics/`](usb_diagnostics) | Bring-up and diagnostic firmware | archived |
-| [`src/`](src/), [`include/`](include/), [`test/`](test/), [`platformio.ini`](platformio.ini) | v1 ESP32 firmware, the August C6 port, and firmware variants for the unbuilt top boards | archived |
-| [`control_tests/`](control_tests), [`docs/`](docs) | Host tests and notes for the top-board firmware variants | archived |
-| [`scripts/`](scripts) | Host tools: PID tuner, sysid and campaign analysis | mixed |
+| [`third_party/`](third_party) | Patched copy of Espressif's ESP-IDF I2C driver (Apache-2.0) | |
 
-Many notes from September are in Chinese. Raw experiment logs (about 1 GB of
-JSON and video) are kept offline.
+Many September notes are in Chinese. Some notes in archived folders link to raw
+reports, previews or review files that are only in the full-history
+repository.
 
-## Build and run (current firmware)
+## Results and limits
 
-```bash
-python3 -m venv .venv && .venv/bin/pip install platformio
-cd c6_wall
-../.venv/bin/pio run -t upload        # first install over USB
-python3 tools/ota.py                  # later updates over Wi-Fi
-c++ -std=c++17 -Iinclude tests/sim_test.cpp -o /tmp/sim && /tmp/sim   # desktop test
-```
+What worked on the real robot:
+- Holding still on the vertical board, and full-board coverage with camera
+  correction (13 lanes in 96.6 s, back to start within 0.2 mm).
+- Live camera corrections matter: for 8 cm out-and-back moves at erase speed,
+  the average end error was 0.48 cm without corrections and 0.03 cm with them
+  (2026-10-28, [`sysid-motion-run.log`](c6_wall/results/sysid-motion-run.log)).
+- Autonomous erase (2026-10-28): ink area 130 → 2.31 cm² after pass 1 and
+  1.69 cm² after pass 2; after pass 3 and a fine wipe, the final camera check
+  found 0 cm² of ink.
+  ([`c6_wall/results/`](c6_wall/results))
+- Drawing "67" (2026-10-31): 15 cm tall, 30 points; the camera-measured miss
+  at each point was 0.17 mm on average and 0.43 mm at most.
+- Wi-Fi firmware updates that roll back by themselves if the new image fails.
 
-See [`c6_wall/README.md`](c6_wall/README.md) for the web interface, Wi-Fi
-setup and the camera tools.
+Honest limits:
+- The accuracy depends on the camera. Encoders alone cannot see the wheels
+  slip, and without corrections the robot drifts.
+- Spinning on the wall caused two power resets and the robot fell both times,
+  so erasing while spinning is paused.
+- The pen is fixed to the chassis and cannot lift.
+- The single integrated controller board (`top_board_v2_logic`: native USB,
+  on-board 2S charging, current sensing) is designed but **not built or
+  tested**. Its firmware runs only host-side checks, with motion disabled.
+- Several earlier top-board designs (September 2026) were dropped for
+  complexity or cost and were never ordered.
+- All tests were on one 35 × 23 in whiteboard at home.
 
-## How this was built
+## Credits
 
-I designed the PCBs, assembled and debugged the robot, ran the experiments and
-set the goals and constraints. Much of the firmware, analysis scripts and
-PCB-automation code was written with AI coding assistants (Claude Code and
-OpenAI Codex) working under my direction. Commits made with Claude carry a
-`Co-Authored-By` line.
+**My work (Jiarui "Jerry" Wu).** The idea and the requirements; the
+mechanical design in Onshape; the v1 base board schematic and layout; the
+v2.6 base board and the layout of the v2.6 adapter board, and the September
+fix of the adapter's M1 header, which had been placed rotated 180°;
+assembling, soldering and debugging the robot; running the tests on the real
+robot. I proposed using my phone camera as a referee to
+measure wheel slip, measured slip by hand, chose the erase approach (find the
+dirty spots, plan a path, erase with the felt under the magnet), asked for the
+fine wipe, and chose the stroke order for "67". I set the "keep it simple"
+rules for the boards and checked the pin assignments before each order.
 
-The Aug 28 – Oct 28 history was committed when the project was published, so
-those commits were rebuilt from file timestamps and EasyEDA backups. Each of
-them says so in its message.
+**Code written by AI tools, from my designs and under my direction; I tested
+and tuned it:**
+- **Claude Code (Anthropic):** firmware changes in June 2026 (feed-forward,
+  stiction); the first draft of the v2.6 adapter board schematic through the
+  EasyEDA API in July (I revised it and laid out the board); pre-order design reviews;
+  the September self-test firmware; the October wall firmware and tools in
+  `c6_wall/` (Wi-Fi updates, coverage planner, camera referee, slip
+  identification, erasing, drawing, demo cutting); most of the schematic clean-up,
+  routing and checks of the unbuilt `top_board_v2_logic` board in EasyEDA
+  from my requirements (Oct 27–30), starting from the Codex KiCad draft
+  below; its review firmware and tests (Oct 2026).
+- **OpenAI Codex:** the September top-board explorations (KiCad, never built)
+  and the September firmware in `c6_drive/` (Wi-Fi driving, web page,
+  calibration, system ID, MuJoCo simulation).
+- **Cursor:** much of the spring 2026 firmware and test tools.
+- **ChatGPT:** help reading error screens and wiring motor drivers in
+  February 2026.
+
+**Existing open-source work and parts.** Espressif ESP-IDF I2C driver
+(Apache-2.0, patched copy in `third_party/` with its licence); Arduino-ESP32
+through the pioarduino PlatformIO platform; ArduinoJson (MIT); Adafruit
+ST7735/ST7789 library (MIT); OpenCV; MuJoCo (Apache-2.0) for the September
+simulation; EasyEDA Pro and KiCad, with some symbols and footprints from the
+EasyEDA/LCSC part library and the `ESP32-C6-MINI-1` footprint copied from the
+KiCad footprint library (CC-BY-SA 4.0 with the KiCad library exception); the Waveshare ESP32-C6-LCD-1.47 module (bought).
+This is a personal project; no teammates' code is included.
 
 ## License
 
 - Software: [MIT](LICENSE).
 - Hardware design files in [`hardware/`](hardware): [CERN-OHL-P-2.0](hardware/LICENSE).
-- [`third_party/esp_idf_i2c_no_clear`](third_party/esp_idf_i2c_no_clear) is a
-  patched copy of Espressif's ESP-IDF I2C driver, under Apache-2.0.
+- [`third_party/esp_idf_i2c_no_clear`](third_party/esp_idf_i2c_no_clear):
+  Apache-2.0 (Espressif).

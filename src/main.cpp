@@ -24,13 +24,18 @@
  *   h / ?          帮助
  */
 
-#if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO) || defined(WBB_TOP_BOARD_KISS_C6)
+#if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO)
 #include <Arduino.h>
 #include <type_traits>
 // Check the installed core's actual alias for factory UART bridge profiles.
 static_assert(std::is_same<decltype(Serial), HardwareSerial>::value,
               "Factory bridge Serial must be HardwareSerial, not native USB CDC");
 static_assert(&Serial == &Serial0, "Factory bridge console must use hardware UART0");
+#elif defined(WBB_TOP_BOARD_KISS_C6)
+#include <Arduino.h>
+#include <type_traits>
+// KISS C6 has no USB-UART bridge since 2026-10-29: the console is the C6's native USB Serial/JTAG CDC.
+static_assert(std::is_same<decltype(Serial), HWCDC>::value, "KISS C6 Serial must be the native USB CDC");
 #endif
 
 #if defined(WBB_R3_DIAGNOSTIC)

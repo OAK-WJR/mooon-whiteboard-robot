@@ -1,5 +1,8 @@
 > English overview and current status: [../README.md](../README.md). The notes
 > below are the original (Chinese) working notes from September 2026.
+> In this curated snapshot many linked review files (`kiss_6v/`, `kicad/`,
+> `validation/`, previews, PDFs) are left out to keep the repository small;
+> they are in the full-history repository.
 
 # top_board_v2 — 五片顶部成品板
 

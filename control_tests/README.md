@@ -92,7 +92,7 @@ BLE SDK 通知发送失败时，固件记录错误、清除应用发送队列并
 | ble_tx_failures | SDK 通知错误回调累计数；不是实际丢包率 |
 | control_gap_ms / max_control_gap_ms | 最近一次及本次启动以来最长控制更新间隔 |
 | control_overruns / control_timing_fault | 超过 100ms 的次数及持续保留的故障标记 |
-| motor_voltage_mv / motor_current_ma / rail_3v3_mv | 当前为 null；没有对应板载传感器 |
+| motor_voltage_mv / motor_current_ma / rail_3v3_mv | `status` 中为 null。KISS C6 的电机电流（INA180）和电池电压只经 `rails` 报告，电机电压没有传感器；其他板型没有对应板载传感器 |
 | power_disconnect | 当前 false；软件停止不代表物理断电 |
 
 所有 CLI 命令返回 JSON，失败返回非零退出码；AI 应保存报告，遇到错误不得自动重试启动。无线 watch 只采集状态，不持有运动租约。BLE 扫描需要系统允许蓝牙访问；本轮未实际扫描/连接无线板子。
@@ -111,6 +111,15 @@ BLE SDK 通知发送失败时，固件记录错误、清除应用发送队列并
 原生 C++ 使用 ASAN/UBSAN。命令处理器的 HMAC 适配到 macOS CommonCrypto，不是在模拟 C6 的 mbedTLS。签名 UDP 回环发生在本机；本项目回调源码虽已被执行，但 SDK 回调调度、FreeRTOS 并发、底层无线缓冲和 RF 共存仍没有实测。驱动测试故意保留“解除失败时模拟 PWM 仍为非零”的情形，确认软件报告失败，不能把 GPIO-low 调用当成真实断电。
 
 证据写到 `hardware/top_board_v2/validation/reverification/`；报告记录固件、测试、主机及已查阅 SDK/JSON 关键依赖的散列，并检查测试期间没有变化。实际 USB ROM 复位、功率、电气波形和射频验收仍须实板完成。
-# 外置充电 C6/CH343G 更新
 
-当前简化顶板使用独立环境 `top_board_v2_kiss_c6`，USB 指定 `--usb-kind ch343g`；Wi-Fi/BLE 指定 `--profile top_board_v2_kiss_c6_review`。引脚按最新三页原理图分配，GPIO10 请求保持 LOW，运动仍禁用。原始计数可用，速度/位置待标定；旧 R3/Pico 引脚不能直接套用。见[新固件入口和离线验证](../hardware/top_board_v2/jlc_budget_6v/controller_core/logic/FIRMWARE.md)。下方保留各历史板型的独立说明。
+# KISS C6 当前板（top_board_v2_logic，板上 IP2326 充电）
+
+当前板使用独立环境 `top_board_v2_kiss_c6`。USB 是 C6 原生 USB Serial/JTAG（303A:1001，无 USB-UART 桥，CH343G 已于 2026-10-29 移除），指定 `--usb PORT --usb-kind c6usb`；Wi-Fi/BLE 指定 `--profile top_board_v2_kiss_c6_review`。上面“首次无线配置”的命令用于 KISS 板时要加这些参数，否则 `hello` 以板型不符拒绝：
+
+```sh
+.venv/bin/python scripts/robot_control.py --usb PORT --usb-kind c6usb provision --wifi-config wifi.local --key-file control-key.local
+.venv/bin/python scripts/robot_control.py --wifi HOST --key-file control-key.local --profile top_board_v2_kiss_c6_review status
+.venv/bin/python scripts/robot_control.py --ble BLE_ID --key-file control-key.local --profile top_board_v2_kiss_c6_review status
+```
+
+引脚以 `include/board_profile_kiss_c6.h` 和 EasyEDA 网表 `hardware/top_board_v2/easyeda/logic_netlist.json` 为准；ARM 请求 GPIO0 保持 LOW，运动仍禁用。电池电压、电机电流（INA180，IO5）、`usb_power` 和 `charge` 只在 `rails` 中报告。首次刷写需短接 BOOT 焊盘；经焊盘手动下载后，要用 SW1 断电重启才能回到应用。原始计数可用，速度/位置待标定；旧 R3/Pico 引脚不能直接套用。刷写步骤、命令和验证见[固件说明](../hardware/top_board_v2/jlc_budget_6v/controller_core/logic/FIRMWARE.md)。本节以上为各历史板型的说明。

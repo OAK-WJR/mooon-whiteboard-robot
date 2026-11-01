@@ -16,21 +16,28 @@ import time
 
 from pcb_diagnostics import Client, DiagnosticError, FrameDecoder, validate_status
 
-NATIVE_USB = (0x303A, 0x1001)
+NATIVE_USB = (0x303A, 0x1001)  # ESP32-C6 USB Serial/JTAG; its USB serial number is the chip MAC.
 CP2102N_USB = (0x10C4, 0xEA60)  # Default bridge identity; not proof of an R3 PCB.
 CH343P_USB = (0x1A86, 0x55D3)  # WCH's CH343 family ID, not proof of a Pico PCB.
-CH343G_USB = CH343P_USB  # Shared family identity; downstream MCU is selected separately.
-UART_USB_KINDS = ("cp2102n", "ch343p", "ch343g")
+# DTR/RTS auto-download bridges: esptool --before default-reset over a UART.
+UART_USB_KINDS = ("cp2102n", "ch343p")
+# Kinds that pin one board profile: explicit local --usb path, serial/location anchor, isolated esptool config.
+# c6usb is the KISS C6 board's own USB Serial/JTAG (303A:1001); it has no bridge (CH343G removed 2026-10-29).
+EXPLICIT_USB_KINDS = UART_USB_KINDS + ("c6usb",)
+USB_KINDS = ("native",) + EXPLICIT_USB_KINDS
 
 
 def usb_identity(kind):
-    if kind == "native":
+    if kind in ("native", "c6usb"):
         return NATIVE_USB
     if kind == "cp2102n":
         return CP2102N_USB
-    if kind in ("ch343p", "ch343g"):
+    if kind == "ch343p":
         return CH343P_USB
-    raise DiagnosticError("Unknown USB kind; expected native, cp2102n, ch343p or ch343g")
+    if kind == "ch343g":
+        raise DiagnosticError("USB kind ch343g was removed with the CH343G (2026-10-29); "
+                              "the KISS C6 board uses its native USB Serial/JTAG: --usb-kind c6usb")
+    raise DiagnosticError("Unknown USB kind; expected native, c6usb, cp2102n or ch343p")
 
 
 def usb_chip(kind):
@@ -40,9 +47,14 @@ def usb_chip(kind):
 
 def rom_config_text(kind):
     usb_identity(kind)
-    # esptool 5.3 Classic/UnixTight: 100ms EN hold then this BOOT hold.
-    # Keep its OS-specific line-control implementation and suppress user overrides.
-    return "[esptool]\nreset_delay = 0.05\n" if kind == "ch343g" else "[esptool]\n"
+    # An empty section replaces any user esptool.cfg: its custom_reset_sequence would override --before
+    # (including usb-reset) and custom_hard_reset_sequence --after hard-reset. esptool's built-in
+    # strategies (UnixTight/Classic for the bridges, USBJTAGSerialReset for 303A:1001) then apply.
+    return "[esptool]\n"
+
+
+def explicit_path(path):
+    return isinstance(path, str) and bool(path.strip()) and "://" not in path
 
 
 def identity(port):
@@ -52,16 +64,18 @@ def identity(port):
 
 def select_port(ports, requested=None, kind="native"):
     expected = usb_identity(kind)
-    if kind in UART_USB_KINDS and (not isinstance(requested, str) or not requested.strip() or "://" in requested):
+    if kind in EXPLICIT_USB_KINDS and not explicit_path(requested):
         raise DiagnosticError(f"{kind.upper()} requires an explicit local --usb port path")
     ports = list(ports)
     found = [p for p in ports if (p.vid, p.pid) == expected
              and (requested is None or p.device == requested)]
     if len(found) != 1:
+        if kind == "c6usb":
+            raise DiagnosticError("Select exactly one ESP32-C6 USB Serial/JTAG device (303A:1001) at the explicit --usb path")
         if kind in UART_USB_KINDS:
             raise DiagnosticError(f"Select exactly one {kind.upper()} bridge ({expected[0]:04X}:{expected[1]:04X}) at the explicit --usb path")
         raise DiagnosticError("Select exactly one Espressif native USB device (303A:1001) with --port")
-    if kind in UART_USB_KINDS:
+    if kind in EXPLICIT_USB_KINDS:
         # Require an anchor before opening/resetting, including duplicate-serial rejection.
         # Reconnection may rename the port, but must retain serial or location identity.
         match_port(ports, identity(found[0]))
@@ -143,9 +157,11 @@ def wait_for_app(target, before, profile, software, timeout, ports_fn, opener=op
 
 def rom_command(path, stay, kind="native"):
     usb_identity(kind)
-    if kind in UART_USB_KINDS and (not isinstance(path, str) or not path.strip() or "://" in path):
+    if kind in EXPLICIT_USB_KINDS and not explicit_path(path):
         raise DiagnosticError(f"{kind.upper()} ROM recovery requires an explicit local port path")
-    # esptool 5.3: default-reset selects UART DTR/RTS; usb-reset is native JTAG only.
+    # esptool 5.3: default-reset selects UART DTR/RTS; usb-reset is USBJTAGSerialReset (USB Serial/JTAG, no baud).
+    # --after hard-reset over USB Serial/JTAG is an RTS *core* reset: it does not re-sample GPIO9, so a chip that
+    # was put into download mode with the BOOT pads stays in ROM until a power cycle.
     before = "default-reset" if kind in UART_USB_KINDS else "usb-reset"
     uart_options = ["--baud", "115200", "--connect-attempts", "3"] if kind in UART_USB_KINDS else []
     return [sys.executable, "-m", "esptool", "--chip", usb_chip(kind), "--port", path,

@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
-"""Control over native USB, R3/CP2102N, Pico/CH343P, KISS C6/CH343G, UDP or BLE.
+"""Control over native USB, R3/CP2102N, Pico/CH343P, KISS C6 USB Serial/JTAG (c6usb), UDP or BLE.
 
 The current board build rejects all motion. JSON results never imply measured
 motor power or verified radio range. Reconnection never resumes an old lease.
+
+KISS C6 (2026-10-29 board) has no USB-UART bridge: its console is the ESP32-C6's
+own USB Serial/JTAG (303A:1001, USB serial = chip MAC). Select it with
+--usb PORT --usb-kind c6usb; that binds profile top_board_v2_kiss_c6_review.
 """
 import argparse
 import asyncio
@@ -18,7 +22,7 @@ import subprocess
 import tempfile
 import time
 
-from pcb_control import (UART_USB_KINDS, identity, match_port, open_serial,
+from pcb_control import (EXPLICIT_USB_KINDS, USB_KINDS, identity, match_port, open_serial,
                          rom_command, rom_config_text, select_port, usb_chip, usb_identity)
 from pcb_diagnostics import FrameDecoder, DiagnosticError
 
@@ -29,9 +33,28 @@ R3_PROFILE = "top_board_v2_r3_review"
 PICO_PROFILE = "top_board_v2_pico_review"
 KISS_C6_PROFILE = "top_board_v2_kiss_c6_review"
 PROFILES = ("top_board_v2", R3_PROFILE, PICO_PROFILE, KISS_C6_PROFILE)
-USB_PROFILES = dict(native="top_board_v2", cp2102n=R3_PROFILE, ch343p=PICO_PROFILE, ch343g=KISS_C6_PROFILE)
+USB_PROFILES = dict(native="top_board_v2", cp2102n=R3_PROFILE, ch343p=PICO_PROFILE, c6usb=KISS_C6_PROFILE)
+KISS_FAULT_REASON = "GPIO0_SAFE_LOW_FAILED"  # ARM request (MOT_EN) = GPIO0; src/top_v2_main.cpp safeDefaultsFailure
+KISS_WIRELESS_WAITING = frozenset(("waiting_voltage", "qualifying", "inhibited"))
+KISS_WIRELESS_ATTEMPTED = frozenset(("starting", "online", "init_failed", "restart"))
+KISS_CURRENT_RAIL_MV = 3150  # include/kiss_c6_voltage.h currentRailMv: INA180 output at its 3V3 rail
+KISS_ADC_SAMPLES, KISS_CURRENT_MAX_MV = 8, 3300  # VoltageMonitor::samples and maxPinMv[1] (12 dB clamp)
+# Lowest 8-sample averages the firmware can report with the flag set / with a raw average of 4095 (see below).
+KISS_SATURATED_MIN_AVERAGE_MV = (KISS_CURRENT_RAIL_MV + KISS_ADC_SAMPLES // 2) // KISS_ADC_SAMPLES  # 394
+KISS_FULL_SCALE_MIN_AVERAGE_MV = (4 * KISS_CURRENT_MAX_MV + KISS_ADC_SAMPLES // 2) // KISS_ADC_SAMPLES  # 1650
+# After ROM recovery the USB Serial/JTAG device can re-enumerate; poll its MAC serial this long.
+C6USB_REENUMERATION_S = 2.0
+# Shared by the CLI help and the reset hint: the RTS core reset does not re-sample GPIO9 (BOOT).
+# IO8 sits behind Q1 (2N7002, gate on 3V3): it has no voltage while SW1 holds 3V3 off, and reads high (USB present)
+# only once SW1 brings 3V3 up.
+C6USB_FIRST_FLASH = ("KISS C6 first flash / manual download: SW1 off; plug USB; short the BOOT pads (GPIO9 low); "
+                     "SW1 on (IO8 reads high once 3V3 is up); flash; remove the short; switch SW1 off and on.")
+C6USB_POWER_CYCLE_NOTE = ("No application answered after the USB reset. If ROM was entered with the BOOT pads, the "
+                          "USB Serial/JTAG RTS core reset does not re-sample GPIO9: remove the BOOT short and "
+                          "switch SW1 off and on.")
 PICO_BLOCKED_COMMANDS = frozenset(("start", "goto", "wheel", "arm", "pulse", "source_cycle", "logic_cycle"))
 PICO_RESPONSE_PAYLOAD_LIMIT = 1792
+KISS_RESPONSE_PAYLOAD_LIMIT = 1240   # firmware replyPayloadBytes for KISS C6 (src/top_v2_main.cpp)
 PICO_LINE_LIMIT = 2304
 PICO_RAIL_STATES = ("not_started", "starting", "initializing", "sampling", "ready", "expired", "fault", "stopped")
 PICO_RAIL_ERRORS = ("none", "start_failed", "setup_timeout", "bus_fault", "cleanup_failed",
@@ -53,6 +76,17 @@ class CommandRejected(DiagnosticError):
     """The validated profile or an authenticated peer explicitly rejected a command."""
 
 
+class ReplyTimeout(DiagnosticError):
+    """No framed reply arrived at all (for example a chip still sitting in its ROM)."""
+
+
+class RestartNotVerified(DiagnosticError):
+    """The application return was not verified; records whether any application answered."""
+    def __init__(self, message, application_answered=False):
+        super().__init__(message)
+        self.application_answered = application_answered
+
+
 def selected_profile(args):
     """Bind bridge and application identity before opening a port or issuing ROM reset."""
     kind = getattr(args, "usb_kind", "native")
@@ -60,13 +94,13 @@ def selected_profile(args):
     requested = getattr(args, "profile", None)
     if requested is not None and requested not in PROFILES:
         raise DiagnosticError("Unknown application profile")
-    if kind in UART_USB_KINDS and (not isinstance(args.usb, str) or not args.usb.strip() or "://" in args.usb):
+    if kind in EXPLICIT_USB_KINDS and (not isinstance(args.usb, str) or not args.usb.strip() or "://" in args.usb):
         raise DiagnosticError(f"--usb-kind {kind} requires an explicit local --usb path")
     if args.usb:
         if requested is not None and requested != USB_PROFILES[kind]:
-            raise DiagnosticError("--profile does not match --usb-kind; Pico uses ch343p, R3 cp2102n, KISS C6 ch343g")
-        # Preserve legacy native discovery; bridge selection explicitly pins the app.
-        return USB_PROFILES[kind] if kind in UART_USB_KINDS else requested
+            raise DiagnosticError("--profile does not match --usb-kind; Pico uses ch343p, R3 cp2102n, KISS C6 c6usb")
+        # Preserve legacy native discovery; explicit kinds pin the app.
+        return USB_PROFILES[kind] if kind in EXPLICIT_USB_KINDS else requested
     return requested
 
 
@@ -82,7 +116,8 @@ def unpack(envelope, key=None, wireless=True, expected_profile=None):
     if not isinstance(envelope, dict) or not isinstance(envelope.get("payload"), str):
         raise DiagnosticError("Malformed control response")
     payload = envelope["payload"]
-    payload_limit = PICO_RESPONSE_PAYLOAD_LIMIT if expected_profile == PICO_PROFILE else 1200
+    payload_limit = (PICO_RESPONSE_PAYLOAD_LIMIT if expected_profile == PICO_PROFILE else
+                     KISS_RESPONSE_PAYLOAD_LIMIT if expected_profile == KISS_C6_PROFILE else 1200)
     if len(payload.encode("utf-8")) >= payload_limit:
         raise DiagnosticError("Oversized response")
     if wireless:
@@ -105,7 +140,7 @@ def check_status(frame, expected_profile=None):
     if frame["profile"] == PICO_PROFILE and expected_profile != PICO_PROFILE:
         raise DiagnosticError("Pico requires explicit --profile top_board_v2_pico_review or --usb-kind ch343p")
     if frame["profile"] == KISS_C6_PROFILE and expected_profile != KISS_C6_PROFILE:
-        raise DiagnosticError("KISS C6 requires explicit --profile top_board_v2_kiss_c6_review or --usb-kind ch343g")
+        raise DiagnosticError("KISS C6 requires --usb-kind c6usb (USB) or explicit --profile top_board_v2_kiss_c6_review")
     if frame["profile"] in (R3_PROFILE, PICO_PROFILE, KISS_C6_PROFILE):
         for field, expected in (("motion_enabled", False), ("charge_enabled", False),
                                 ("power_disconnect", False),
@@ -121,6 +156,7 @@ def check_status(frame, expected_profile=None):
                 raise DiagnosticError(f"Unqualified KISS C6 field: {field}")
         if frame.get("wheel_speed_mps") != [None, None, None]:
             raise DiagnosticError("KISS C6 speed must remain uncalibrated/null")
+        check_kiss_status(frame)
     boot = frame.get("boot", "")
     if not isinstance(boot, str) or len(boot) != 16 or any(c not in "0123456789abcdef" for c in boot):
         raise DiagnosticError("Invalid boot identifier")
@@ -141,6 +177,52 @@ def check_status(frame, expected_profile=None):
     return frame
 
 
+def check_kiss_wireless_phase(frame, started_field):
+    """Radio supply policy (include/kiss_c6_radio_power.h): a start is attempted exactly when the phase leaves
+    waiting_voltage/qualifying/inhibited."""
+    phase = frame.get("wireless_power_state")
+    if (not isinstance(phase, str) or phase not in KISS_WIRELESS_WAITING | KISS_WIRELESS_ATTEMPTED
+            or type(frame.get(started_field)) is not bool
+            or frame[started_field] != (phase in KISS_WIRELESS_ATTEMPTED)):
+        raise DiagnosticError("Invalid wireless supply policy state")
+
+
+def check_kiss_status(frame):
+    """KISS status, including the latched GPIO fault, which is read-only over USB and (since 2026-10-29) the radio."""
+    fault = frame.get("state") == "gpio_fault"
+    if not fault:
+        if frame.get("gpio_fault_latched", False) is not False:
+            raise DiagnosticError("KISS GPIO fault contradicts the reported state")
+        counts = frame.get("encoder_counts")
+        if "encoder_counts" in frame and (not isinstance(counts, list) or len(counts) != 3 or any(
+                type(c) is not int or not -0x80000000 <= c <= 0x7fffffff for c in counts)):
+            raise DiagnosticError("Invalid KISS raw encoder counts")
+        return
+    for field, expected in (("gpio_fault_latched", True), ("read_only", True), ("wireless_control_enabled", False),
+                            ("telemetry_available", False), ("usb_reboot", True)):
+        if field not in frame or frame[field] is not expected:
+            raise DiagnosticError(f"Invalid KISS latched-fault status: {field}")
+    if frame.get("reason") != KISS_FAULT_REASON:
+        raise DiagnosticError(f"KISS GPIO fault reason must be {KISS_FAULT_REASON} (ARM request on GPIO0)")
+    if type(frame.get("gpio_error")) is not int or frame["gpio_error"] == 0 or type(frame.get("gpio_release_error")) is not int:
+        raise DiagnosticError("KISS GPIO fault must retain its SDK errors")
+    if frame.get("encoder_counts") != [None, None, None] or frame.get("pwm_command") != [0, 0, 0]:
+        raise DiagnosticError("KISS GPIO fault must not report encoder or PWM activity")
+    if type(frame.get("owner")) is not int or frame["owner"] != 0:
+        raise DiagnosticError("KISS GPIO fault must clear the control owner")
+    check_kiss_wireless_phase(frame, "wireless_status")
+    for field in ("wifi_connected", "ble_ready", "ble_connected", "authenticated_wireless"):
+        if type(frame.get(field)) is not bool:
+            raise DiagnosticError(f"Invalid KISS fault wireless field: {field}")
+    if not isinstance(frame.get("wifi_ip"), str) or "wifi_rssi_dbm" not in frame:
+        raise DiagnosticError("Invalid KISS fault Wi-Fi identity")
+    rssi = frame["wifi_rssi_dbm"]
+    if (rssi is not None if not frame["wifi_connected"] else type(rssi) is not int or not -128 <= rssi <= 0):
+        raise DiagnosticError("Invalid KISS fault Wi-Fi RSSI")
+    if (frame["wifi_connected"] or frame["ble_ready"] or frame["ble_connected"]) and not frame["wireless_status"]:
+        raise DiagnosticError("KISS radio link reported before the radio was started")
+
+
 def check_kiss_rail_report(frame, expected_profile=None):
     """ADC-calibrated pin measurements; not board/divider calibration."""
     if (expected_profile != KISS_C6_PROFILE or not isinstance(frame, dict)
@@ -153,13 +235,7 @@ def check_kiss_rail_report(frame, expected_profile=None):
             raise DiagnosticError(f"Invalid rail capability: {field}")
     # Optional as a pair for earlier read-only firmware reports of this profile.
     if "wireless_power_state" in frame or "wireless_start_attempted" in frame:
-        phase = frame.get("wireless_power_state")
-        waiting = {"waiting_voltage", "qualifying", "inhibited"}
-        attempted = {"starting", "online", "init_failed", "restart"}
-        if (not isinstance(phase, str) or phase not in waiting | attempted
-                or type(frame.get("wireless_start_attempted")) is not bool
-                or frame["wireless_start_attempted"] != (phase in attempted)):
-            raise DiagnosticError("Invalid wireless supply policy state")
+        check_kiss_wireless_phase(frame, "wireless_start_attempted")
     if "previous_radio_power_reset" in frame and type(frame["previous_radio_power_reset"]) is not bool:
         raise DiagnosticError("Invalid previous radio power reset marker")
     states = {"not_started", "init", "settling", "ready", "stale", "stopped", "adc_release",
@@ -177,27 +253,57 @@ def check_kiss_rail_report(frame, expected_profile=None):
     vectors = (frame.get("adc_raw"), frame.get("adc_pin_mv"))
     if any(not isinstance(v, list) or len(v) != 2 for v in vectors):
         raise DiagnosticError("Incomplete paired ADC measurements")
-    numeric = ("battery_voltage_mv", "motor_voltage_mv", "seq", "age_ms", "span_ms")
+    # Since the 2026-10-28 board IO5 is the INA180 motor-current output (2 V per A), not a VMOT divider.
+    if "motor_voltage_mv" not in frame or frame["motor_voltage_mv"] is not None:
+        raise DiagnosticError("KISS C6 has no motor-voltage divider: motor_voltage_mv must be null")
+    # IO8 senses USB/charger 5 V. No IP2326 status reaches the MCU, so the report names the power source only:
+    # never null, never "charging"/"full" (whether the pack is still charging is not observable).
+    usb = frame.get("usb_power")
+    if type(usb) is not bool or "charge" not in frame or frame["charge"] not in ("external_power", "battery"):
+        raise DiagnosticError("Invalid USB power/charge state")
+    if frame["charge"] != ("external_power" if usb else "battery"):
+        raise DiagnosticError("Charge state contradicts USB power")
+    numeric = ("battery_voltage_mv", "motor_current_ma", "seq", "age_ms", "span_ms")
     if not frame["fresh"]:
         if (frame["state"] == "ready" or any(k not in frame or frame[k] is not None for k in numeric)
-                or any(v is not None for a in vectors for v in a)):
+                or any(v is not None for a in vectors for v in a)
+                or frame.get("motor_current_saturated") is not None):
             raise DiagnosticError("Unavailable ADC measurements must be null")
         return frame
     if frame["state"] != "ready" or frame["adc_error"] or frame["adc_cleanup_error"] or frame["failing_channel"] != -1:
         raise DiagnosticError("Fresh ADC report has a fault")
-    bounds = {"battery_voltage_mv": (0, 13000), "motor_voltage_mv": (0, 13000),
+    bounds = {"battery_voltage_mv": (0, 13000), "motor_current_ma": (0, 1650),
               "seq": (1, 2**32-1), "age_ms": (0, 250), "span_ms": (0, 25)}
     for field, (low, high) in bounds.items():
         if type(frame.get(field)) is not int or not low <= frame[field] <= high:
             raise DiagnosticError(f"Invalid ADC measurement: {field}")
     if frame["span_ms"] > frame["age_ms"]:
         raise DiagnosticError("ADC sample age precedes acquisition")
-    for vector, maximum in zip(vectors, (4094, 1000)):
-        if any(type(v) is not int or not 0 <= v <= maximum for v in vector):
+    # IO4 (VBAT divider) reads 0-1000 mV at 0 dB; IO5 (INA180) 0-3300 mV at 12 dB and may sit at its rail.
+    for vector, maximum in zip(vectors, ((4094, 4095), (1000, 3300))):
+        if any(type(v) is not int or not 0 <= v <= m for v, m in zip(vector, maximum)):
             raise DiagnosticError("Invalid raw/calibrated ADC pair")
-    for field, mv in zip(numeric[:2], vectors[1]):
-        if abs(frame[field]-13*mv) > 6:
-            raise DiagnosticError("ADC divider scaling mismatch")
+    if abs(frame["battery_voltage_mv"]-13*vectors[1][0]) > 6:
+        raise DiagnosticError("ADC divider scaling mismatch")
+    if frame["motor_current_ma"] != vectors[1][1]//2:
+        raise DiagnosticError("Motor-current scaling mismatch")
+    saturated = frame.get("motor_current_saturated")
+    # include/kiss_c6_voltage.h poll(): the flag is set iff one of the 8 samples sits at the INA180 rail (calibrated
+    # >= 3150 mV, or raw 4095 counted as 3300 mV); every sample is clamped to 0..3300 mV and both averages round
+    # (sum + 4) // 8. Hence, in both directions:
+    # - an average at or above the rail, or a raw average of 4095, needs the flag (no sample below the rail can
+    #   produce either);
+    # - a set flag needs an average of at least (3150 + 4) // 8 = 394 mV (one rail sample, seven at 0 mV);
+    # - a raw average of 4095 needs at least 4 of the 8 samples at full scale (4 x 4095 + 4 x 4094 is the lowest raw
+    #   sum that still rounds to 4095), i.e. an average of at least (4 x 3300 + 4) // 8 = 1650 mV.
+    # A set flag with a lower average is legal (one saturated sample); the real current is then at least
+    # motor_current_ma.
+    raw_full_scale = vectors[0][1] == 4095
+    if (type(saturated) is not bool
+            or ((vectors[1][1] >= KISS_CURRENT_RAIL_MV or raw_full_scale) and not saturated)
+            or (saturated and vectors[1][1] < KISS_SATURATED_MIN_AVERAGE_MV)
+            or (raw_full_scale and vectors[1][1] < KISS_FULL_SCALE_MIN_AVERAGE_MV)):
+        raise DiagnosticError("Invalid motor-current saturation flag")
     return frame
 
 
@@ -479,7 +585,7 @@ class Wire:
             for frame in self.decoder.feed(data):
                 if "payload" in frame:
                     self.pending.append(frame)
-        raise DiagnosticError("Control reply timed out")
+        raise ReplyTimeout("Control reply timed out")
 
 
 class Controller:
@@ -575,17 +681,26 @@ async def wait_for_restart(wire, key, before, software=True, timeout=20, interva
     expected_profile = expected_profile or getattr(wire, "expected_profile", None) or (before.get("profile") if before else None)
     deadline = time.monotonic()+timeout
     error = "Application not returned"
+    answered = False  # Any framed reply at all, even a rejected one: the chip is not silent (not stuck in ROM).
     while time.monotonic() < deadline:
         await asyncio.sleep(interval)
         try:
             await wire.open()
+        except Exception as exc:
+            error = str(exc) or type(exc).__name__
+            await wire.close()
+            continue
+        try:
             after = await Controller(wire, key, expected_profile).hello()
+            answered = True
             verify_restart(before, after, software=software, expected_profile=expected_profile)
             return after
         except Exception as exc:
-            error = str(exc)
+            if not isinstance(exc, (ReplyTimeout, TimeoutError, OSError)):
+                answered = True
+            error = str(exc) or type(exc).__name__
             await wire.close()
-    raise DiagnosticError(f"Reset sent, return NOT verified: {error}")
+    raise RestartNotVerified(f"Reset sent, return NOT verified: {error}", answered)
 
 
 async def run(args):
@@ -613,7 +728,7 @@ async def run(args):
         raise DiagnosticError("Wireless control requires a USB-provisioned --key-file")
     wire = Wire(args)
     result = {"action": args.action, "result": "FAIL", "hardware_power_measured": False}
-    if usb_kind in UART_USB_KINDS:
+    if usb_kind in EXPLICIT_USB_KINDS:
         result.update(usb_kind=usb_kind, custom_pcb_identity_verified=False,
                       physical_power_cycle=False, flash_modified=False)
     if expected_profile == PICO_PROFILE:
@@ -631,10 +746,10 @@ async def run(args):
             result["usb_device"] = wire.target
             command = rom_command(selected.device, args.action == "bootloader", usb_kind)
             result["rom_command"] = command
-            if usb_kind in UART_USB_KINDS:
-                # esptool custom_reset_sequence overrides --before. Keep bridge recovery
-                # on its declared UART strategy, independent of user esptool.cfg.
-                with tempfile.TemporaryDirectory(prefix="wbb-uart-rom-") as folder:
+            if usb_kind in EXPLICIT_USB_KINDS:
+                # esptool custom_reset_sequence overrides --before (usb-reset too) and custom_hard_reset_sequence
+                # --after hard-reset. Keep recovery on the declared strategy, independent of user esptool.cfg.
+                with tempfile.TemporaryDirectory(prefix="wbb-usb-rom-") as folder:
                     config_path = Path(folder) / "esptool.cfg"
                     config_path.write_text(rom_config_text(usb_kind))
                     rom_env = dict(os.environ, ESPTOOL_CFGFILE=str(config_path), ESPTOOL_OPEN_PORT_ATTEMPTS="1")
@@ -646,16 +761,27 @@ async def run(args):
             result.update(esptool_stdout=done.stdout, esptool_stderr=done.stderr, esptool_exit_code=done.returncode)
             if done.returncode:
                 raise DiagnosticError(f"{usb_chip(usb_kind)} ROM recovery failed")
-            if usb_kind in UART_USB_KINDS:
-                result["usb_port_after_rom"] = match_port(list_ports.comports(), wire.target)
+            if usb_kind in EXPLICIT_USB_KINDS:
+                # A bridge stays enumerated. The C6's own USB Serial/JTAG can drop off the bus briefly
+                # around the reset, so poll for the same MAC serial (an ambiguous match still fails at once).
+                deadline = time.monotonic() + (C6USB_REENUMERATION_S if usb_kind == "c6usb" else 0)
+                while True:
+                    result["usb_port_after_rom"] = match_port(list_ports.comports(), wire.target)
+                    if result["usb_port_after_rom"] or time.monotonic() >= deadline:
+                        break
+                    await asyncio.sleep(.1)
                 if not result["usb_port_after_rom"]:
-                    raise DiagnosticError(f"{usb_kind.upper()} bridge identity lost after ROM recovery")
+                    label = "ESP32-C6 USB Serial/JTAG" if usb_kind == "c6usb" else f"{usb_kind.upper()} bridge"
+                    raise DiagnosticError(f"{label} identity lost after ROM recovery")
             result.update(rom_chip=usb_chip(usb_kind), rom_chip_verified=True,
                           custom_pcb_identity_verified=False)
             if args.action == "bootloader":
                 chip_label = "S3" if usb_kind == "ch343p" else "C6"
                 result.update(result=f"{chip_label}_ROM_VERIFIED", application_running=False,
                               identity_scope=f"{chip_label} ROM and USB interface only; custom PCB identity is unproven")
+                if usb_kind == "c6usb":
+                    result["note"] = ("ROM entered through the USB Serial/JTAG (usb-reset); the reset action returns to "
+                                      "the application. After a BOOT-pad download a power cycle (SW1 off/on) is needed.")
                 return result
             result["result"] = "RESET_SENT"
             before = None
@@ -664,7 +790,7 @@ async def run(args):
             client = Controller(wire, key, expected_profile)
             before = await client.hello()
             result["before"] = before
-            if usb_kind in UART_USB_KINDS:
+            if usb_kind in EXPLICIT_USB_KINDS:
                 result.update(usb_device=wire.target, app_profile_verified=True)
             if expected_profile == PICO_PROFILE:
                 result["app_profile_verified"] = True
@@ -714,11 +840,21 @@ async def run(args):
         if args.action in ("reset", "reboot", "provision"):
             await wire.close()
             client = None
-            after = await wait_for_restart(wire, key, before, software=args.action != "reset",
-                                           expected_profile=expected_profile)
+            try:
+                after = await wait_for_restart(wire, key, before, software=args.action != "reset",
+                                               expected_profile=expected_profile)
+            except RestartNotVerified as exc:
+                if usb_kind == "c6usb" and args.action == "reset":
+                    # A silent port after the RTS core reset is the BOOT-pad case: GPIO9 is not re-sampled.
+                    result["manual_power_cycle_required"] = not exc.application_answered
+                    if not exc.application_answered:
+                        result["manual_power_cycle_note"] = C6USB_POWER_CYCLE_NOTE
+                raise
             result.update(result="APP_RETURN_VERIFIED", after=after,
                           new_boot_verified=before is not None, prior_app_observed=before is not None)
-            if usb_kind in UART_USB_KINDS or expected_profile == PICO_PROFILE:
+            if usb_kind == "c6usb" and args.action == "reset":
+                result["manual_power_cycle_required"] = False
+            if usb_kind in EXPLICIT_USB_KINDS or expected_profile == PICO_PROFILE:
                 result["app_profile_verified"] = True
         if client:
             result["round_trip_ms"] = client.latencies
@@ -738,14 +874,16 @@ async def run(args):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(description=__doc__)
+    p = argparse.ArgumentParser(description=__doc__, epilog=C6USB_FIRST_FLASH,
+                                formatter_class=argparse.RawDescriptionHelpFormatter)
     group = p.add_mutually_exclusive_group(required=True)
     group.add_argument("--usb", metavar="PORT")
     group.add_argument("--wifi", metavar="HOST")
     group.add_argument("--ble", metavar="ADDRESS_OR_MACOS_UUID")
     group.add_argument("--scan-ble", action="store_true", help="List advertised control services; discovery is unauthenticated")
-    p.add_argument("--usb-kind", choices=["native", "cp2102n", "ch343p", "ch343g"], default="native",
-                   help="USB interface: cp2102n/R3, ch343p/Pico, ch343g/KISS C6; bridges require explicit --usb PORT")
+    p.add_argument("--usb-kind", choices=USB_KINDS, default="native",
+                   help="USB interface: cp2102n/R3, ch343p/Pico, c6usb/KISS C6 (ESP32-C6 USB Serial/JTAG 303A:1001; "
+                        "the CH343G was removed 2026-10-29); every kind but native requires an explicit --usb PORT")
     p.add_argument("--profile", choices=PROFILES,
                    help="Expected application identity; required for Pico/KISS C6 over Wi-Fi/BLE, checked against USB kind")
     p.add_argument("action", nargs="?", default="status", choices=["status", "cells", "rails", "stop", "watch", "reboot", "reset", "bootloader", "provision",

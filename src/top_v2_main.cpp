@@ -26,7 +26,8 @@ static volatile uint32_t radioRestartCookie[2]{};
 #endif
 static constexpr uint32_t radioResetMagic=0x52504631;
 static bool previousRadioPowerReset=false;
-static constexpr const char* safeDefaultsFailure="GPIO14_SAFE_LOW_FAILED";
+static constexpr const char* safeDefaultsFailure="GPIO0_SAFE_LOW_FAILED";
+static_assert(kiss_c6::motorArmRequest==0,"the KISS fault reason names the ARM request pin");
 #elif defined(WBB_TOP_BOARD_R3)
 #include "r3_gpio_safe.h"
 namespace selectedBoard = r3;
@@ -200,7 +201,7 @@ static void fillCellReport(JsonDocument& d){
 #endif
 #ifdef WBB_TOP_BOARD_KISS_C6
 static void fillVoltageReport(JsonDocument& d){
- if(!boardSafe.ready())voltageMonitor.stop();
+ // The rail monitor keeps running in the GPIO-fault state: read-only status must stay complete over USB and Wi-Fi.
  const auto v=voltageMonitor.reading();
  d["protocol"]=2;d["firmware"]="wbb-control-2";d["profile"]=kiss_c6::profile;
  d["kind"]="rails";d["device"]=deviceName;d["uptime_ms"]=millis();
@@ -214,14 +215,21 @@ static void fillVoltageReport(JsonDocument& d){
  d["wireless_start_attempted"]=radioPower.hasStarted();
  d["previous_radio_power_reset"]=previousRadioPowerReset;
  auto raw=d["adc_raw"].to<JsonArray>();auto pins=d["adc_pin_mv"].to<JsonArray>();
+ // IO5 is the INA180 motor-current output since the 2026-10-28 board (2 V per A), not a VMOT divider.
+ d["motor_voltage_mv"]=nullptr;
  if(v.valid){
-  d["battery_voltage_mv"]=v.railMv[0];d["motor_voltage_mv"]=v.railMv[1];
+  d["battery_voltage_mv"]=v.railMv[0];d["motor_current_ma"]=v.pinMv[1]/2;
+  d["motor_current_saturated"]=v.currentSaturated;  // INA180 at its rail (~1.6 A): the real current is at least this
   d["seq"]=v.sequence;d["age_ms"]=uint32_t(millis()-v.at);d["span_ms"]=v.span;
   for(int i=0;i<2;++i){raw.add(v.raw[i]);pins.add(v.pinMv[i]);}
  }else{
-  for(const char* field:{"battery_voltage_mv","motor_voltage_mv","seq","age_ms","span_ms"})d[field]=nullptr;
+  for(const char* field:{"battery_voltage_mv","motor_current_ma","seq","age_ms","span_ms"})d[field]=nullptr;
   for(int i=0;i<2;++i){raw.add(nullptr);pins.add(nullptr);}
  }
+ // USB power (IO8). No IP2326 status reaches the MCU and VBAT is uncalibrated (+-150 mV against an ~8.3 V CV level),
+ // so "charging" vs "done" is not observable: report the power source and let the pack voltage speak for itself.
+ const bool usb=digitalRead(kiss_c6::usbPowerSense);
+ d["usb_power"]=usb;d["charge"]=usb?"external_power":"battery";
 }
 static void fillKissCalibrationStatus(JsonDocument& d){
  d["odometry_qualified"]=false;
@@ -233,7 +241,7 @@ static void fillKissCalibrationStatus(JsonDocument& d){
 static void fillStatus(JsonDocument& d){
 #if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO) || defined(WBB_TOP_BOARD_KISS_C6)
  if(!boardSafe.ready()){
-  // No robot, encoder, or radio status access in the latched fault path.
+  // Latched fault: no robot or encoder access; status stays readable over USB and (KISS, read-only) the radio.
   d["protocol"]=2;d["firmware"]="wbb-control-2";d["profile"]=selectedBoard::profile;
   d["boot"]=boot;d["device"]=deviceName;d["uptime_ms"]=millis();d["reset_reason"]=int(esp_reset_reason());
   d["state"]="gpio_fault";d["reason"]=safeDefaultsFailure;
@@ -255,6 +263,11 @@ static void fillStatus(JsonDocument& d){
 #endif
 #ifdef WBB_TOP_BOARD_KISS_C6
   fillKissCalibrationStatus(d);
+  // Read-only wireless status: the same report reaches Wi-Fi/BLE once the radio has qualified the battery.
+  d["wireless_status"]=radioPower.hasStarted();d["wireless_power_state"]=radioPower.state();
+  d["wifi_connected"]=transport.wifiUp;d["wifi_ip"]=WiFi.localIP().toString();
+  if(transport.wifiUp)d["wifi_rssi_dbm"]=WiFi.RSSI();else d["wifi_rssi_dbm"]=nullptr;
+  d["ble_ready"]=transport.bleReady;d["ble_connected"]=transport.bleUp.load();d["authenticated_wireless"]=keySet;
 #endif
   return;
  }
@@ -284,6 +297,14 @@ static void fillStatus(JsonDocument& d){
  fillKissCalibrationStatus(d);
 #endif
 }
+#if defined(WBB_TOP_BOARD_PICO)
+static constexpr size_t replyPayloadBytes=1792;
+#elif defined(WBB_TOP_BOARD_KISS_C6)
+// The worst-case KISS status (200-waypoint plan, maximal counters, longest IP) is ~1200 B; the signed frame stays < 1472 B.
+static constexpr size_t replyPayloadBytes=1240;
+#else
+static constexpr size_t replyPayloadBytes=1200;
+#endif
 static void reply(control::Link link,uint64_t peer,uint32_t id,const char* error=nullptr,bool details=false,bool cells=false,bool rails=false){
  JsonDocument d;d["id"]=id;d["ok"]=error==nullptr;d["error"]=error?error:"";
  d["boot"]=boot;d["lease"]=owner.owns(link,peer)?owner.lease:0;
@@ -294,11 +315,7 @@ static void reply(control::Link link,uint64_t peer,uint32_t id,const char* error
  if(rails)fillVoltageReport(d);else
 #endif
  if(details)fillStatus(d);
-#ifdef WBB_TOP_BOARD_PICO
- char payload[1792];
-#else
- char payload[1200];
-#endif
+ char payload[replyPayloadBytes];
  size_t n=measureJson(d);
  if(n>=sizeof(payload)){++transport.dropped;return;}
  serializeJson(d,payload,sizeof(payload));
@@ -314,7 +331,12 @@ static void reply(control::Link link,uint64_t peer,uint32_t id,const char* error
  size_t count=serializeJson(envelope,output,sizeof(output));output[count++]='\n';output[count]=0;
 #if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO) || defined(WBB_TOP_BOARD_KISS_C6)
  if(!boardSafe.ready()){
+#ifdef WBB_TOP_BOARD_KISS_C6
+  // KISS answers read-only queries over the radio too (command() admits nothing else from it here).
+  if(link!=control::Link::USB){transport.send(link,peer,output);return;}
+#else
   if(link!=control::Link::USB)return;
+#endif
   if(!Serial||Serial.availableForWrite()<int(count)||Serial.write(reinterpret_cast<const uint8_t*>(output),count)!=count)
    ++transport.dropped;
   return;
@@ -333,7 +355,7 @@ static void scheduleReboot(control::Link link,uint64_t peer,uint32_t id){
  rebootLink=link;rebootPeer=peer;reply(link,peer,id);
 }
 static void command(control::Link link,uint64_t peer,const char* line){
-#if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO) || defined(WBB_TOP_BOARD_KISS_C6)
+#if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO)
  if(!boardSafe.ready()&&link!=control::Link::USB)return;
 #endif
  if(owner.expired(millis()))halt("HEARTBEAT_TIMEOUT");
@@ -371,7 +393,8 @@ static void command(control::Link link,uint64_t peer,const char* line){
  if(rebootPending){reply(link,peer,id,"REBOOT_PENDING");return;}
 #if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO) || defined(WBB_TOP_BOARD_KISS_C6)
  if(!boardSafe.ready()){
-  if(!strcmp(op,"reboot")){scheduleReboot(link,peer,id);return;}
+  // Recovery reboot is USB-only; from the radio only hello/status/rail_status/stop (above) are answered.
+  if(!strcmp(op,"reboot")&&link==control::Link::USB){scheduleReboot(link,peer,id);return;}
   reply(link,peer,id,safeDefaultsFailure,true);return;
  }
 #endif
@@ -460,6 +483,24 @@ static void receive(control::Link link,uint64_t peer,const uint8_t* bytes,size_t
   if(r==frame.Line)command(link,peer,frame.data());
  }
 }
+#ifdef WBB_TOP_BOARD_KISS_C6
+// What the read-only report needs, also in the GPIO-fault state: rails, USB power, the wireless config.
+static void beginKissReporting(){
+ Preferences prefs;JsonDocument config;
+ if(prefs.begin("wbb-control",true)){deserializeJson(config,prefs.getString("config","{}"));prefs.end();}
+ keySet=unhex(config["key"]|"",key,sizeof(key));
+ voltageMonitor.begin();
+ pinMode(kiss_c6::usbPowerSense,INPUT);  // R53 100k pull-up / Q1 to the VBUS divider set the level; no internal pull
+ radioSSID=keySet?(config["ssid"]|""):"";radioPassword=config["password"]|"";
+}
+// The radio start may block in the SDK: it only happens with this task watchdog running.
+static bool startTaskWatchdog(){
+ esp_task_wdt_config_t wdt{3000,1,true};
+ esp_err_t rc=esp_task_wdt_reconfigure(&wdt);
+ if(rc==ESP_ERR_INVALID_STATE)rc=esp_task_wdt_init(&wdt);
+ return rc==ESP_OK&&esp_task_wdt_add(nullptr)==ESP_OK;
+}
+#endif
 void setup(){
 #ifdef WBB_TOP_BOARD_KISS_C6
  previousRadioPowerReset=esp_reset_reason()==ESP_RST_SW&&
@@ -483,7 +524,7 @@ void setup(){
  // The selected MotorDriver owns FI/BI after the checked ARM-low step.
  // An earlier Arduino pinMode would enable a retained HIGH latch before that.
  Serial.setTxBufferSize(8192);Serial.setRxBufferSize(2048);
-#if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO) || defined(WBB_TOP_BOARD_KISS_C6)
+#if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO)
  // HardwareSerial has no CDC TX timeout or host/cable-present signal.
  // Writes remain capacity-checked in ControlTransport; leases still expire.
  Serial.begin(115200,SERIAL_8N1,selectedBoard::uartRx,selectedBoard::uartTx);
@@ -495,25 +536,30 @@ void setup(){
  snprintf(boot,sizeof(boot),"%08lx%08lx",(unsigned long)esp_random(),(unsigned long)esp_random());
  snprintf(deviceName,sizeof(deviceName),"WhiteBoardBot-%06lx",(unsigned long)(ESP.getEfuseMac()&0xffffff));
 #if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO) || defined(WBB_TOP_BOARD_KISS_C6)
+#ifdef WBB_TOP_BOARD_KISS_C6
+ if(!boardSafe.ready()){beginKissReporting();watchdogReady=startTaskWatchdog();reply(control::Link::USB,0,0,nullptr,true);return;}
+#else
  if(!boardSafe.ready()){reply(control::Link::USB,0,0,nullptr,true);return;}
+#endif
 #endif
  robot.begin();
 #if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO) || defined(WBB_TOP_BOARD_KISS_C6)
  robotInitialized=true;
 #endif
  halt("BOARD_POWER_UNREVIEWED");
-#if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO) || defined(WBB_TOP_BOARD_KISS_C6)
+#ifdef WBB_TOP_BOARD_KISS_C6
+ if(!boardSafe.ready()){beginKissReporting();watchdogReady=startTaskWatchdog();return;}
+#elif defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO)
  if(!boardSafe.ready())return;
 #endif
- Preferences prefs;JsonDocument config;
- if(prefs.begin("wbb-control",true)){deserializeJson(config,prefs.getString("config","{}"));prefs.end();}
- keySet=unhex(config["key"]|"",key,sizeof(key));
 #ifdef WBB_TOP_BOARD_KISS_C6
- voltageMonitor.begin();
- radioSSID=keySet?(config["ssid"]|""):"";radioPassword=config["password"]|"";
+ beginKissReporting();
  // ControlTransport::poll services USB without initializing either radio.
  const bool transportReady=true;
 #else
+ Preferences prefs;JsonDocument config;
+ if(prefs.begin("wbb-control",true)){deserializeJson(config,prefs.getString("config","{}"));prefs.end();}
+ keySet=unhex(config["key"]|"",key,sizeof(key));
  const bool transportReady=transport.begin(deviceName,keySet?(config["ssid"]|""):"",config["password"]|"");
 #endif
  if(!transportReady)reason="TRANSPORT_INIT_FAILED";
@@ -544,7 +590,6 @@ void setup(){
 }
 void loop(){
 #ifdef WBB_TOP_BOARD_KISS_C6
- if(!boardSafe.ready())voltageMonitor.stop();
  // Inspect old evidence before replacing it. A stalled loop cannot conceal an
  // expired supply sample by taking a new one before deciding whether to reset.
  if(radioPower.hasStarted()&&radioPower.observe(voltageMonitor.reading(),millis(),false)==kiss_c6::RadioPower::Action::Restart){
@@ -565,9 +610,25 @@ void loop(){
   // An earlier wireless reboot must not block intentional USB recovery.
   if(rebootPending&&rebootLink!=control::Link::USB)rebootPending=false;
   if(rebootPending&&uint32_t(millis()-rebootAt)>=100){esp_restart();return;}
+#ifdef WBB_TOP_BOARD_KISS_C6
+  // Read-only over the radio as well: same battery qualification and supply-loss restart as in normal
+  // operation; command()/reply() answer only hello/status/rail_status/stop from it in this state.
+  voltageMonitor.poll();
+  const auto radioAction=radioPower.observe(voltageMonitor.reading(),millis(),watchdogReady&&!rebootPending);
+  if(radioAction==kiss_c6::RadioPower::Action::Restart){restartForRadioPower();return;}
+  if(radioAction==kiss_c6::RadioPower::Action::Start){
+   radioPower.started(transport.begin(deviceName,radioSSID.c_str(),radioPassword.c_str()));
+   // The SDK init blocks for hundreds of ms: take a fresh sample before the next supply check judges it stale.
+   voltageMonitor.poll();
+   if(radioPower.observe(voltageMonitor.reading(),millis(),false)==kiss_c6::RadioPower::Action::Restart){restartForRadioPower();return;}
+  }
+  if(transport.takeOverflow())bleFrame.feed(0);   // drop a half-received BLE line, as the normal loop does
+  transport.poll(receive);
+#else
   uint8_t bytes[64];size_t count=0;
   while(count<sizeof(bytes)&&Serial.available())bytes[count++]=Serial.read();
   if(count)receive(control::Link::USB,0,bytes,count);
+#endif
   // Keep the read-only task alive instead of resetting automatically on its TWDT.
 #ifdef WBB_TOP_BOARD_PICO
   if(watchdogReady)watchdogReady=esp_task_wdt_reset()==ESP_OK;
@@ -595,13 +656,15 @@ void loop(){
   // Initialization may block in the SDK. Drop any existing control lease first;
   // the already enrolled task watchdog remains active throughout startup.
   halt("RADIO_STARTING");
-  if(!boardSafe.ready()){restartForRadioPower();return;}
+  // A GPIO fault latched here is handled by the fault branch next loop (radio stays up, read-only).
   const bool ready=transport.begin(deviceName,radioSSID.c_str(),radioPassword.c_str());
   radioPower.started(ready);reason=ready?"BOARD_POWER_UNREVIEWED":"TRANSPORT_INIT_FAILED";
   voltageMonitor.poll();
   if(radioPower.observe(voltageMonitor.reading(),millis(),false)==kiss_c6::RadioPower::Action::Restart){
    restartForRadioPower();return;
   }
+  // Motion was halted for the blocking SDK init: that gap is not a control-loop overrun.
+  lastControlAt=millis();
  }
  // ADC conversion can consume time; do not retain an expired control owner.
  if(owner.expired(millis()))halt("HEARTBEAT_TIMEOUT");

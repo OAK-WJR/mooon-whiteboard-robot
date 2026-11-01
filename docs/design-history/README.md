@@ -11,7 +11,8 @@ over time, with evidence for each date.
   [`hardware/top_board_v2/motor_controller.epro2`](../../hardware/top_board_v2/motor_controller.epro2).
   No image here was redrawn by hand.
 - **Reproducible.** [`make_figures.py`](make_figures.py) rebuilds every figure
-  directly from the git history of that file:
+  directly from the git history of that file. It needs the full-history
+  repository; this curated snapshot has only one version of the file:
 
   ```bash
   python3 docs/design-history/make_figures.py   # needs Pillow
@@ -28,7 +29,7 @@ Dates come from three sources. Each caption says which one it uses:
 3. **The EasyEDA backup file names**, which carry the save time.
 
 The October commits were added to git on 2026-10-28 from those timestamped
-backups (see the [main README](../../README.md#how-this-was-built)).
+backups, in the full-history repository.
 
 ## Mechanical CAD (Onshape)
 
@@ -44,7 +45,7 @@ when the version was saved. Full-size renders are in [`cad/`](cad/).
 | Version | Created (Onshape server time, UTC) | What changed |
 |---|---|---|
 | Start | 2026-02-08 19:05 | Empty document |
-| V1 | 2026-02-13 21:26 | Off-the-shelf modules: three TB6612 driver boards and an ESP32 DevKit on a printed chassis, with 38 mm omni wheels and N20 motors |
+| V1 | 2026-02-13 21:26 | Off-the-shelf modules: two TB6612 driver boards and an ESP32 DevKit on a printed chassis, with 38 mm omni wheels and N20 motors |
 | V2 | 2026-02-16 02:41 | Redesigned lower printed body |
 | V3 | 2026-03-12 19:40 | The first custom PCB, imported as `3D_PCB1_2026-03-10.step` from EasyEDA, replaces the modules |
 | V4 | 2026-04-13 19:39 | New printed chassis under the v1 board |
@@ -66,9 +67,9 @@ The CAD and the circuit-board dates agree:
 |---|---|---|
 | v1 board | created 2026-03-09 | Socket for a 38-pin ESP32 DevKit and three RZ7899 drivers. Its saved preview had inactive layers greyed out, so its contrast is stretched in the figure. Motor 1's encoder pins (GPIO36/39) picked up PWM noise, which led to the next generation. [Schematic](v1-schematic.jpg), [netlist](../../hardware/v1_base_board/). |
 | base board (`bottom_board`) | created 2026-07-01 | Triangular base with three RZ7889 H-bridges and the battery input. Still in use. Its own preview is a bottom view, so the figure shows its top view from the fabrication panel (`combine`). |
-| ESP32-C6 adapter (`top_board`) | created 2026-07-02, updated 2026-07-03 | Carries the Waveshare ESP32-C6-LCD module. The first fabricated adapter had the M1 header footprint mirrored. The respin was brought up on 2026-09-17 and is in use now. |
+| ESP32-C6 adapter (`top_board`) | created 2026-07-02, updated 2026-07-03 | Carries the Waveshare ESP32-C6-LCD module. The first fabricated adapter had the M1 header placed rotated 180°. The respin was brought up on 2026-09-17 and is in use now. |
 | `top_board_v2`, R2 | September 2026 | First attempts at one integrated controller board. Never fabricated. |
-| `top_board_v2_logic` | 2026-10-27 → | Current design: ESP32-C6-MINI-1, CH343G USB, 3.3 V and 6 V supplies, and on-board 2S charging. |
+| `top_board_v2_logic` | 2026-10-27 → | Current design: ESP32-C6-MINI-1 on native USB (CH343G removed 2026-10-29), 3.3 V and 6 V supplies, on-board 2S charging (IP2326) and INA180 motor-current sensing. |
 
 The September directions that were explored in KiCad and dropped are covered
 in [`hardware/README.md`](../../hardware/README.md#earlier-top-board-directions-not-fabricated):
@@ -85,7 +86,8 @@ in [`hardware/README.md`](../../hardware/README.md#earlier-top-board-directions-
 ![Logic board evolution](logic-board-evolution.jpg)
 
 Each frame is the PCB preview stored in the project file at that commit. The
-last frame is the live editor. To see the full message for any frame, run:
+last frame is the live editor. In the full-history repository, the full
+message for any frame can be seen with:
 
 ```bash
 git show <hash> --stat
@@ -101,7 +103,8 @@ Steps worth noting:
   of 46 nets and was not kept.
 - **28 Oct, final steps.** A MOOON-style re-route, then a swap to LCSC-stocked
   parts with 3D models, then a copper pour. The 2S charger went into the
-  schematic and is being placed now.
+  schematic; it was placed and routed later (see
+  [`hardware/README.md`](../../hardware/README.md)).
 
 ## Schematic: before and after
 

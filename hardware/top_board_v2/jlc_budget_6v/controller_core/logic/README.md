@@ -1,5 +1,7 @@
 # 顶部板：MINI 原理图与两层布局审查稿
 
+> **已被取代（2026-10-27）。** 当前板是 EasyEDA 工程中的 `top_board_v2_logic`（同名，见 [hardware/README.md](../../../../README.md)）：板上 IP2326 充电，原生 USB（2026-10-29 去掉 CH343G），VBAT 分压加 INA180 电机电流采样。当前引脚以 [`include/board_profile_kiss_c6.h`](../../../../../include/board_profile_kiss_c6.h) 和 EasyEDA 网表为准，固件说明见 [FIRMWARE.md](FIRMWARE.md)。本页的 KiCad 六页图、引脚表、布线和验证记录都是 2026-09 历史，文中“当前”“最新”均指当时。
+
 当前预算只覆盖 **五片顶部 PCB、板上元件和焊接成品**，合计目标 ¥30、上限 ¥50。当前候选没有满足预算，也未完成布线或制造验证。
 
 - [KiCad 工程](top_board_v2_logic.kicad_pro) / [PCB](top_board_v2_logic.kicad_pcb) / [布局预览](preview/placement.png)
@@ -13,7 +15,9 @@
 
 空间审查候选改为 **ESP32-C6-MINI-1-N4 / C5736265**。在保留 19 个通孔接点与天线禁布区的保守粗网格筛选中，原 WROOM 没有找到位置；这不是数学上不可布局的证明。MINI 试布局可放入现有板框，但其国际站料号为 **Standard Only、需 X 光检查**，不能沿用经济型贴装价格。因此这份图是空间与接线审查候选，**没有获得低成本定案**。[JLC 料号限制](https://jlcpcb.com/partdetail/ESPRESSIFINC-ESP32_C6_MINI_1N4/C5736265)。
 
-MINI 按[Espressif v1.5 手册](https://www.espressif.com/sites/default/files/documentation/esp32-c6-mini-1_mini-1u_datasheet_en.pdf)表 3-1 和推荐焊盘独立核对，使用 53 个物理脚号、61 个原生焊盘对象，含 9 个同属 49 脚的接地焊盘。不能沿用 WROOM 的 29 脚映射。MINI 不引出 GPIO10/11，故 ARM 改为 **GPIO14 / 19 脚**，M0_BI 改为 **GPIO23 / 29 脚**；相应固件已同步。
+MINI 按[Espressif v1.5 手册](https://www.espressif.com/sites/default/files/documentation/esp32-c6-mini-1_mini-1u_datasheet_en.pdf)表 3-1 和推荐焊盘独立核对，使用 53 个物理脚号、61 个原生焊盘对象，含 9 个同属 49 脚的接地焊盘。不能沿用 WROOM 的 29 脚映射。MINI 不引出 GPIO10/11，故 ARM 改为 **GPIO14 / 19 脚**，M0_BI 改为 **GPIO23 / 29 脚**；当时固件已同步。现固件按 EasyEDA 新图：ARM 为 GPIO0（12 脚），GPIO14 是 M2_FI。
+
+2026-09 KiCad 引脚（已取代；当前为 Motor1 22/23、20/21，Motor2 14/7、19/18，Motor3 1/6、2/3）：
 
 | 实体电机 | 顶板 → 底板 | FI / BI GPIO | 编码器 A / B GPIO |
 | --- | --- | --- | --- |
@@ -21,7 +25,7 @@ MINI 按[Espressif v1.5 手册](https://www.espressif.com/sites/default/files/do
 | Motor2 | M2 → H3 | 20 / 21 | 6 / 7 |
 | Motor3 | M1 → H1 | 18 / 19 | 2 / 3 |
 
-UART TX16/RX17 对应模组 31/30 脚；USB 原生 GPIO12/13 暂不使用。GPIO4/5 的采样物理脚为 9/10。GPIO15 上拉及 GPIO6/7 的编码器使用依赖默认 JTAG 选择，不能覆盖任意 eFuse 配置。GPIO14 在芯片复位阶段浮空，外加 10k 下拉；这不等于已经验证实际电机供电默认关闭。[C6 芯片手册](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)。
+当时 UART TX16/RX17 对应模组 31/30 脚，USB 原生 GPIO12/13 不用；现在 31/30 脚为 I2C_SCL（GPIO16）和 IR_EN_N（GPIO17），GPIO12/13 是原生 USB 控制台。GPIO4/5 的采样物理脚为 9/10。GPIO15 上拉及 GPIO6/7 的编码器使用依赖默认 JTAG 选择，不能覆盖任意 eFuse 配置。GPIO14 在芯片复位阶段浮空，外加 10k 下拉；这不等于已经验证实际电机供电默认关闭。[C6 芯片手册](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)。
 
 ## 布局与接口
 
@@ -71,7 +75,7 @@ USB 接口完成本轮局部手动布线：U2 转向并靠近 Type-C 接口，�
 
 新增 [24 个 DTR 启动偏置模拟](usb_startup_review/README.md)：在电源达到 3.3V 后，现有外部上拉保持足够的模型高电平；增加错误下拉的对照能检出余量不足，没有因此新增器件。采样时刻、实际缓升／欠压及整板 USB 行为仍未验证。[无线供电策略](WIRELESS_POWER.md)已实现按有效电压启动无线，并在供电失效后自动复位；USB 取电额度与挂起电流仍需整板验证。
 
-最新固件 **73 项离线检查及 C6/R3 两次交叉编译通过**，见[实际日志及源文件绑定](firmware_verification/report.json)。运动仍由 `BOARD_POWER_UNREVIEWED` 禁止；无刷写、USB 枚举、无线或带载实测。
+2026-09-09 固件 **73 项离线检查及 C6/R3 两次交叉编译通过**；当时的日志和报告已被当前固件验证覆盖，见 git 历史及 [FIRMWARE.md](FIRMWARE.md#验证)。运动仍由 `BOARD_POWER_UNREVIEWED` 禁止；无刷写、USB 枚举、无线或带载实测。
 
 此前 ADC 更新只改变原理图注释及实现状态，当时没有改变 PCB，见[原注释版本记录](verification/adc_revision_evidence.json)。后续 U4、U5 布线修改了 PCB；之前 [7 段铜线](../archive/u4_before_supply/README.md)和 [55 段铜线](../archive/u5_before_supply/README.md)的报告与预览分别保存在历史检查点。[103 段铜线检查点](../archive/usb_before_interface/README.md)保存 USB 布线前的主板，[170 段铜线检查点](../archive/reset_before_control/README.md)保存复位与串口布线前的主板。[255 段铜线检查点](../archive/mcu_before_supply/CHECKPOINT.md)保存主控供电布线前的主板。[319 段线检查点](../archive/controls_before_routing/CHECKPOINT.md)保存控制布线前的主板。[375 段线检查点](../archive/encoder_before_links/CHECKPOINT.md)保存编码器布线前的主板。[422 段线检查点](../archive/left_encoder_before_pair/CHECKPOINT.md)保存 M1 编码器主控布线前的主板。[456 段线检查点](../archive/right_encoder_before_pair/CHECKPOINT.md)保存 M0 编码器主控布线前的主板。[522 段线检查点](../archive/right_motor_before_pair/CHECKPOINT.md)保存 M0 控制线布线前的主板。[554 段线检查点](../archive/vmot_before_distribution/CHECKPOINT.md)保存 VMOT 分配前的主板。[566 段线检查点](../archive/logic_before_input/CHECKPOINT.md)保存 USB/OR 布线前的主板。当前[输入布线版本记录](verification/logic_input_layout_revision.json)核对 123 个固件和原理图源文件未变，不把既有子电路模拟当作新 PCB 的动态、热、USB、复位或射频验证。
 

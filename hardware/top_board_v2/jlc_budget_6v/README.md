@@ -1,5 +1,7 @@
 # 五片顶部板：当前布局与成本范围
 
+> **2026-10-28 起已被取代：** 当前板 `top_board_v2_logic`（EasyEDA）在板上用 IP2326 给 2S 电池 USB-C 充电，2026-10-29 又去掉 CH343G、改用 C6 原生 USB，见 [hardware/README.md](../../README.md)。下文的外置充电、“顶板不充电”以及 70 个元件的六页 KiCad 图都是 2026-09 记录。
+
 预算只算 **5 片顶部 PCB、板上元件及焊接成品**，合计目标 ¥30、上限 ¥50，人民币优先；美元同额度仅为可考虑的备选。底板、电机、电池、充电器及外部配套不计入，也不继续选购。
 
 - [两层 PCB 布局预览](controller_core/logic/preview/placement.png) / [KiCad 工程和验证范围](controller_core/logic/README.md)

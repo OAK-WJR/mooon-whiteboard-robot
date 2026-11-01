@@ -337,11 +337,57 @@ static uint32_t staConnectedSince = 0;
 
 extern "C" bool verifyRollbackLater() { return true; }  // we confirm only once back online
 
+// ------------------------------------------------------------------ event log
+// Every message goes to USB serial and into this ring, which Wi-Fi reads at /api/log (and both links with the "log"
+// command), so a robot on the wall shows everything a USB cable would. The status JSON carries the newest number.
+static constexpr int kLogLines = 48;
+static struct { uint32_t seq, t; char msg[120]; } logRing[kLogLines];
+static uint32_t logSeq = 0;
+static portMUX_TYPE logMux = portMUX_INITIALIZER_UNLOCKED;
+
+static void logEvent(const char* fmt, ...) {
+    char buf[sizeof(logRing[0].msg)];
+    va_list ap;
+    va_start(ap, fmt);
+    vsnprintf(buf, sizeof(buf), fmt, ap);
+    va_end(ap);
+    portENTER_CRITICAL(&logMux);
+    auto& e = logRing[logSeq % kLogLines];
+    e.seq = ++logSeq;
+    e.t = millis();
+    memcpy(e.msg, buf, sizeof(buf));
+    portEXIT_CRITICAL(&logMux);
+    Serial.println(buf);
+}
+
+static void logInto(JsonDocument& d, uint32_t since) {
+    // Snapshot on the heap: called from both the httpd task and the main loop, too big for either stack.
+    auto* copy = static_cast<decltype(&logRing[0])>(malloc(sizeof(logRing)));
+    if (!copy) { d["seq"] = logSeq; d["error"] = "NO_MEMORY"; return; }
+    uint32_t last;
+    portENTER_CRITICAL(&logMux);
+    memcpy(copy, logRing, sizeof(logRing));
+    last = logSeq;
+    portEXIT_CRITICAL(&logMux);
+    d["seq"] = last;
+    JsonArray a = d["lines"].to<JsonArray>();
+    const uint32_t first = last > kLogLines ? last - kLogLines + 1 : 1;
+    for (uint32_t s = since + 1 > first ? since + 1 : first; s <= last; ++s) {
+        const auto& e = copy[(s - 1) % kLogLines];
+        if (e.seq != s) continue;
+        JsonObject o = a.add<JsonObject>();
+        o["n"] = e.seq;
+        o["t"] = e.t;
+        o["msg"] = e.msg;  // ArduinoJson copies char arrays, so the snapshot can go
+    }
+    free(copy);
+}
+
 static void confirmOta(const char* why) {
     if (!otaPendingVerify || otaConfirmed) return;
     if (esp_ota_mark_app_valid_cancel_rollback() == ESP_OK) {
         otaConfirmed = true;
-        Serial.printf("OTA image confirmed (%s)\n", why);
+        logEvent("OTA image confirmed (%s)", why);
     }
 }
 
@@ -368,6 +414,7 @@ static String telemetry() {
     d["t"] = "s";
     d["fw"] = buildId();
     d["up"] = millis();
+    d["log"] = logSeq;  // newest event-log number: fetch /api/log?since=N (or op "log") when it moves
     {
         Locked l;
         d["mode"] = modeName(motion.mode);
@@ -487,6 +534,10 @@ static const char* runCommand(JsonVariantConst d, JsonDocument& reply, bool usb)
     const uint32_t now = millis();
     bool save = false, saveSlipNow = false, saveFront = false, saveRadius = false;
     const char* error = nullptr;
+    if (!strcmp(op, "log")) {  // event log since "since": identical on USB and Wi-Fi
+        logInto(reply, d["since"] | 0U);
+        return nullptr;
+    }
     if (!strcmp(op, "drive")) {  // hot path: no reply payload
         const float x = number(d["x"], 0), y = number(d["y"], 0), w = number(d["w"], 0);
         const bool body = !strcmp(d["frame"] | "board", "body");
@@ -742,6 +793,20 @@ static esp_err_t statusHandler(httpd_req_t* req) {
     httpd_resp_set_hdr(req, "Cache-Control", "no-store");
     return httpd_resp_send(req, s.c_str(), s.length());
 }
+static esp_err_t logHandler(httpd_req_t* req) {
+    char q[48] = {}, v[16] = {};
+    uint32_t since = 0;
+    if (httpd_req_get_url_query_str(req, q, sizeof(q)) == ESP_OK && httpd_query_key_value(q, "since", v, sizeof(v)) == ESP_OK)
+        since = strtoul(v, nullptr, 10);
+    JsonDocument d;
+    d["t"] = "log";
+    logInto(d, since);
+    String s;
+    serializeJson(d, s);
+    httpd_resp_set_type(req, "application/json");
+    httpd_resp_set_hdr(req, "Cache-Control", "no-store");
+    return httpd_resp_send(req, s.c_str(), s.length());
+}
 static esp_err_t cmdHandler(httpd_req_t* req) {
     char buf[1024];
     if (req->content_len >= sizeof(buf)) return httpd_resp_send_err(req, HTTPD_400_BAD_REQUEST, "too long");
@@ -864,6 +929,7 @@ static void startHttp() {
     httpd_uri_t uris[] = {
         {.uri = "/", .method = HTTP_GET, .handler = pageHandler, .user_ctx = nullptr},
         {.uri = "/api/status", .method = HTTP_GET, .handler = statusHandler, .user_ctx = nullptr},
+        {.uri = "/api/log", .method = HTTP_GET, .handler = logHandler, .user_ctx = nullptr},
         {.uri = "/api/cmd", .method = HTTP_POST, .handler = cmdHandler, .user_ctx = nullptr},
         {.uri = "/ota", .method = HTTP_POST, .handler = otaHandler, .user_ctx = nullptr},
     };
@@ -1008,7 +1074,10 @@ void setup() {
     delay(3000);
     abort();  // rollback test image: must never be confirmed
 #endif
-    Serial.printf("\nWBB c6_wall %s  AP %s / %s  host %s.local\n", buildId().c_str(), apName, apPass, hostName);
+    // The AP password stays on the USB console only; everything else is in the shared log.
+    Serial.printf("\nAP password %s\n", apPass);
+    logEvent("WBB c6_wall %s  AP %s  host %s.local  reset reason %d", buildId().c_str(), apName, hostName,
+             int(esp_reset_reason()));
 }
 
 void loop() {
@@ -1035,7 +1104,7 @@ void loop() {
     if (!sta) staConnectedSince = 0;
     if (sta && staConnectedSince && now - staConnectedSince > 45000) confirmOta("wifi up 45 s");
     if (otaPendingVerify && !otaConfirmed && now > 150000) {
-        Serial.println("OTA image never came back online: rolling back");
+        logEvent("OTA image never came back online: rolling back");
         Locked l;
         saveResume();
         holdPinsForReboot();
@@ -1047,7 +1116,7 @@ void loop() {
         WiFi.reconnect();
     }
     if (rebootAt && int32_t(now - rebootAt) >= 0) {
-        Serial.println("Rebooting");
+        logEvent("Rebooting");
         Serial.flush();
         {
             Locked l;  // the control task cannot change the outputs from here on

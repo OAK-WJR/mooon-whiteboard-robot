@@ -56,4 +56,15 @@ int main(){
     }std::cout<<"inhibited startup and failed-init state still monitor supply PASS\n";
     {RadioPower g;start(g,UINT32_MAX-499);}
     std::cout<<"millisecond wrap preserves qualification PASS\n";
+    {
+        // A blocking SDK init (BLEDevice::init ~300 ms) outlives the 250 ms sample age: judging the pre-init
+        // sample afterwards requests a restart, so the caller must take a fresh sample first (both the normal
+        // and the GPIO-fault loop do). A fresh sample taken after the init keeps the radio.
+        RadioPower stale;start(stale);
+        assert(stale.observe(sample(1000),1300,false)==Action::Restart);
+        RadioPower fresh;start(fresh);
+        assert(fresh.observe(sample(1300),1300,false)==Action::None);
+        assert(fresh.observe(sample(1300),1550,false)==Action::None);
+        assert(fresh.observe(sample(1300),1551,false)==Action::Restart);
+    }std::cout<<"post-init supply check needs a sample taken after the blocking init PASS\n";
 }

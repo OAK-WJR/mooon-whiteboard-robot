@@ -9,7 +9,7 @@
   "profile": "top_board_v2_kiss_c6_review",
   "kind": "rails",
   "device": "WhiteBoardBot-789abc",
-  "uptime_ms": 1024,
+  "uptime_ms": 1324,
   "state": "ready",
   "adc_error": 0,
   "adc_cleanup_error": 0,
@@ -31,9 +31,13 @@
     600,
     460
   ],
+  "motor_voltage_mv": null,
   "battery_voltage_mv": 7800,
-  "motor_voltage_mv": 5980,
-  "seq": 11,
+  "motor_current_ma": 230,
+  "motor_current_saturated": false,
+  "seq": 12,
   "age_ms": 14,
-  "span_ms": 0
+  "span_ms": 0,
+  "usb_power": true,
+  "charge": "external_power"
 }

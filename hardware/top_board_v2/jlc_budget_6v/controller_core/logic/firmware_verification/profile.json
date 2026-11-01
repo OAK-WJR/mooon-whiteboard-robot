@@ -1,0 +1,42 @@
+{
+  "profile": "top_board_v2_kiss_c6_review",
+  "arm": 0,
+  "battery_sense": 4,
+  "motor_sense": 5,
+  "usb_power_sense": 8,
+  "i2c_sda": 15,
+  "i2c_scl": 16,
+  "ir_enable_n": 17,
+  "fault_reason": "GPIO0_SAFE_LOW_FAILED",
+  "headers": [
+    {
+      "header": "M0",
+      "fi": 22,
+      "bi": 23,
+      "enc_a": 20,
+      "enc_b": 21,
+      "physical": 1
+    },
+    {
+      "header": "M1",
+      "fi": 1,
+      "bi": 6,
+      "enc_a": 2,
+      "enc_b": 3,
+      "physical": 3
+    },
+    {
+      "header": "M2",
+      "fi": 14,
+      "bi": 7,
+      "enc_a": 19,
+      "enc_b": 18,
+      "physical": 2
+    }
+  ],
+  "header_order": [
+    "M0",
+    "M2",
+    "M1"
+  ]
+}

@@ -12,20 +12,34 @@
 #if !defined(WBB_TOP_BOARD_V2) || WBB_TOP_BOARD_V2 != 1 || defined(WBB_R3_DIAGNOSTIC) || defined(MOTOR_TEST_MODE)
 #error "KISS C6 requires the gated integrated runtime"
 #endif
-#if !defined(ARDUINO_USB_CDC_ON_BOOT) || ARDUINO_USB_CDC_ON_BOOT != 0
-#error "KISS C6 CH343G requires UART0 Serial"
+#if !defined(ARDUINO_USB_CDC_ON_BOOT) || ARDUINO_USB_CDC_ON_BOOT != 1
+#error "KISS C6 has no USB-UART bridge (CH343G removed 2026-10-29): Serial is the C6's native USB CDC"
 #endif
 
 #include <stdint.h>
 namespace kiss_c6 {
 constexpr const char* profile = "top_board_v2_kiss_c6_review";
-constexpr int uartTx = 16, uartRx = 17;
 // GPIO map follows the 2026-10-27 escape re-route: each header takes the module pads nearest to it.
 constexpr int motorArmRequest = 0;
 // Factory ADC conversion uses these pins. Divider calibration/off-state review pending.
+// batterySense: VBAT divider (120k/10k). motorSense (2026-10-28 board rev): total motor current from INA180A1
+// (gain 20) on the 0.1 ohm VMOT shunt R49, via 1k/100nF -> 2.0 V per A. Linear (datasheet gain error) to ~1.4 A
+// (VOUT <= VS-0.5 V); the output rails near 3.27 V (~1.6 A). It is no longer VMOT.
 constexpr int batterySense = 4, motorSense = 5;
-// Sensor head (J1): I2C on the unused native-USB pads, IR LED switch on the GPIO15 strap (R25 pull-up = off at boot).
-constexpr int i2cSda = 12, i2cScl = 13, irEnableN = 15;
+// Sensor head (J1), 2026-10-29: GPIO12/13 are the native USB again, so I2C SDA moved to the GPIO15 strap (sampled
+// only if the JTAG-select eFuse is burned) and SCL to GPIO16 (the ROM boot log toggles it with SDA high: no START).
+// The IR LED switch moved to GPIO17, which stays quiet at boot; R25 still pulls it up (IR off).
+constexpr int i2cSda = 15, i2cScl = 16, irEnableN = 17;
+// USB power sense (2026-10-29): VBUS -> R52 1k -> USB_DIV -> R10 2.2k -> GND, isolated from IO8 by Q1 (2N7002, gate 3V3,
+// drain USB_DIV, source IO8) with R53 100k IO8 -> 3V3. USB present: USB_DIV ~3.4 V (3.0 V at a 4.4 V sag), Q1 off, IO8 = 3.3 V.
+// No USB: VBUS floats except for D1's reverse leakage (SS14, up to ~0.3 mA hot), which the stiff divider turns into <=0.66 V,
+// so Q1 conducts and IO8 <= 0.72 V (< VIL 0.825 V). 3V3 off while charging: Q1 off, nothing drives the unpowered IO8.
+// IO8 is a strap that only matters for manual download mode, which always has USB plugged in (so it reads high).
+// The board reports "battery" vs "external_power" over USB and Wi-Fi; whether the IP2326 is still charging is not
+// observable (no charger status pin reaches the MCU). Charging draws ~1.2 A at 5 V (0.6 A into the 2S pack). Since
+// 2026-10-30 a CC gate (LM393 U8 vs a 0.65 V CJ431 threshold, Q2 on IP2326 EN) enables charging only on a USB-C source
+// advertising >=1.5 A; a Default-USB source or a USB-A cable powers the board but does not charge.
+constexpr int usbPowerSense = 8;
 struct MotorPins { uint8_t fi, bi, encA, encB, physical; const char* header; };
 constexpr MotorPins headers[] = {
     {22, 23, 20, 21, 1, "M0"},
@@ -44,7 +58,7 @@ constexpr bool isMotorPair(int fi, int bi) {
 constexpr bool pinsAreDistinct() {
     const int used[] = {headers[0].fi,headers[0].bi,headers[0].encA,headers[0].encB,
                         headers[1].fi,headers[1].bi,headers[1].encA,headers[1].encB,
-                        headers[2].fi,headers[2].bi,headers[2].encA,headers[2].encB,uartTx,uartRx,
+                        headers[2].fi,headers[2].bi,headers[2].encA,headers[2].encB,i2cScl,irEnableN,
                         motorArmRequest,batterySense,motorSense};
     for (unsigned i=0; i<sizeof(used)/sizeof(used[0]); ++i) {
         if (used[i]<0 || used[i]>23 || used[i]==8 || used[i]==9 ||
@@ -54,6 +68,9 @@ constexpr bool pinsAreDistinct() {
     return true;
 }
 static_assert(pinsAreDistinct(), "KISS C6 pins alias reserved or application pins");
+static_assert(i2cSda == 15 && !isMotorPin(i2cSda) && i2cSda != i2cScl && i2cSda != irEnableN,
+              "SDA is the only application pin allowed on the GPIO15 strap");
+static_assert(usbPowerSense == 8 && !isMotorPin(usbPowerSense), "USB power sense is the only input on the GPIO8 strap");
 } // namespace kiss_c6
 
 #undef MOTOR0_FI_PIN

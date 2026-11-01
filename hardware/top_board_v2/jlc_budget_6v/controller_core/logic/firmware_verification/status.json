@@ -52,7 +52,7 @@
   "profile": "top_board_v2_kiss_c6_review",
   "charge_enabled": false,
   "device": "WhiteBoardBot-789abc",
-  "uptime_ms": 1012,
+  "uptime_ms": 1312,
   "reset_reason": 1,
   "motion_enabled": false,
   "reason": "BOARD_POWER_UNREVIEWED",

@@ -80,3 +80,18 @@ c6_drive/portfolio/robust/*.mp4
 
 # KiCad local history
 .history/
+
+# ---------------------------------------------------------------------------
+# Curated snapshot: raw logs, videos and EasyEDA backups stay offline
+# ---------------------------------------------------------------------------
+c6_wall/logs/
+c6_wall/tools/vision_cache.json
+*.mp4
+!docs/media/coverage-run.mp4
+hardware/top_board_v2/versions/*.epro2
+**/*.kicad_prl
+**/*.lck
+**/*-backups/
+
+# Key run logs that the README cites
+!c6_wall/results/*.log

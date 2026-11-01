@@ -22,12 +22,15 @@ inline int xQueueReceive(QueueHandle_t q,void* value,unsigned){
 inline size_t uxQueueMessagesWaiting(QueueHandle_t q){assert(q);return q->data.size();}
 inline int xQueueReset(QueueHandle_t q){assert(q);q->data.clear();return pdTRUE;}
 
+// Status-budget fixtures widen these to the longest values the SDK can report.
+inline std::string fakeIpText="192.0.2.1";
+inline int fakeRssi=-50;
 struct IPAddress {
     uint32_t value=0xc0000201;
     IPAddress()=default;
     explicit IPAddress(uint32_t value):value(value){}
     explicit operator uint32_t()const{return value;}
-    std::string toString()const{return "192.0.2.1";}
+    std::string toString()const{return fakeIpText;}
 };
 constexpr int WIFI_STA=1,WL_CONNECTED=3;
 inline unsigned radioFailureStage=0;
@@ -36,7 +39,7 @@ struct FakeWiFi {
     bool mode(int){++modeCalls;return radioFailureStage!=4;} void setAutoReconnect(bool value){autoReconnect=value;}
     void begin(const char*,const char*){++beginCalls;} int status()const{return connected?WL_CONNECTED:0;}
     void reconnect(){++reconnectCalls;} IPAddress localIP()const{return IPAddress();}
-    int RSSI()const{return -50;}
+    int RSSI()const{return fakeRssi;}
 };
 inline FakeWiFi WiFi;
 struct Datagram {IPAddress ip;uint16_t port;std::string data;};

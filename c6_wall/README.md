@@ -13,6 +13,7 @@ the adapter v2 PCB and the RZ7889 base board.
 | `web/index.html` | Control page. `tools/prebuild.py` gzips it into the firmware at build time |
 | `tests/sim_test.cpp` | Desktop simulation tests for `wbb_core.h` |
 | `tools/` | Host scripts (Python 3), listed below |
+| `results/` | A few key run logs (coverage, erase, "67"), see [`results/README.md`](results/README.md) |
 
 ## Build, flash and test
 
@@ -64,6 +65,10 @@ distance are in `tools/vision.json`.
 | `bench.py`, `safe_step.py`, `wheel_diag.py`, `jitter_probe.py`, `chatter.py`, `leg_probe.py` | Scripted moves, guarded steps, per-wheel health checks, chatter scoring |
 | `erase_test.py` | Spin-erase test (wheels sweep while the robot turns) |
 | `step_assembly.py` | Reads robot geometry from a CAD STEP assembly without OpenCASCADE |
+| `sysid_erase.py` | Erase-speed system ID: open-loop vs camera-corrected moves, and how wide one eraser pass cleans (2026-10-28) |
+| `clean_dirty.py` | Finds ink with the camera, plans lanes over it and erases only the dirty parts, then a fine wipe (2026-10-28) |
+| `draw_digits.py` | Draws "67" as one continuous pen line with live camera corrections (2026-10-31) |
+| `make_demo.py` | Cuts a demo video from a `clean_dirty.py` session log |
 
 ## Safety notes from testing
 

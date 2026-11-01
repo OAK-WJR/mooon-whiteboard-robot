@@ -31,10 +31,14 @@ inline int requestPin = 21;
 inline int levelFailures = 0, outputFailures = 0, releaseFailures = 0;
 inline int levelFailurePin = -1, outputFailurePin = -1, releaseFailurePin = -1;
 constexpr int failure = -42;
+// Optional: called before each gpio_set_level, so a test can arm a failure for one specific write
+// (e.g. the ARM write inside halt("RADIO_STARTING")) without knowing the loop count in advance.
+inline void (*beforeSetLevel)(int pin) = nullptr;
 inline int consume(int& failures) { if (failures) { --failures; return failure; } return 0; }
 }
 
 inline esp_err_t gpio_set_level(gpio_num_t pin, uint32_t level) {
+    if (gpio_mock::beforeSetLevel) gpio_mock::beforeSetLevel(pin);
     const int result = gpio_mock::levelFailurePin == -1 || gpio_mock::levelFailurePin == pin
         ? gpio_mock::consume(gpio_mock::levelFailures) : 0;
     gpio_mock::events.push_back({"idf_set_level", pin, int(level), result});

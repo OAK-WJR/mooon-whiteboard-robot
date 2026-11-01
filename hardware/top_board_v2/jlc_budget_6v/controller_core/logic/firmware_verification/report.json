@@ -1,6 +1,7 @@
 {
-  "time_utc": "2026-09-09T09:56:03.904859+00:00",
   "all_passed": true,
+  "failed_step": null,
+  "time_utc": "2026-10-30T12:28:42.100511+00:00",
   "checks": [
     {
       "name": "production_runtime_compile",
@@ -15,10 +16,11 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "-DWBB_TOP_BOARD_KISS_C6=1",
         "-DCONFIG_IDF_TARGET_ESP32C6=1",
-        "-DARDUINO_USB_CDC_ON_BOOT=0",
+        "-DARDUINO_USB_MODE=1",
+        "-DARDUINO_USB_CDC_ON_BOOT=1",
         "-DWBB_TOP_BOARD_V2=1",
         "-include",
         "include/kiss_c6_build_config.h",
@@ -40,6 +42,22 @@
       ]
     },
     {
+      "name": "compiled_consumers_match_easyeda_netlist",
+      "passed": true,
+      "usb_power_sense": "VBUS divider R52/R10 isolated by Q1 (gate 3V3), R53 pull-up on IO8"
+    },
+    {
+      "name": "usb_power_sense_rejects_regressions",
+      "passed": true,
+      "rejected": [
+        "divider_straight_to_io8",
+        "no_pull_up",
+        "gate_not_3v3",
+        "extra_part_on_io8",
+        "extra_part_on_tap"
+      ]
+    },
+    {
       "name": "status_budget",
       "passed": true,
       "exit_code": 0,
@@ -55,6 +73,15 @@
       "command": [
         "$STAGE/kiss-native",
         "rails"
+      ]
+    },
+    {
+      "name": "rails_budget",
+      "passed": true,
+      "exit_code": 0,
+      "command": [
+        "$STAGE/kiss-native",
+        "rails_budget"
       ]
     },
     {
@@ -211,6 +238,15 @@
       ]
     },
     {
+      "name": "radio_start_gpio_fault",
+      "passed": true,
+      "exit_code": 0,
+      "command": [
+        "$STAGE/kiss-native",
+        "radio_start_gpio_fault"
+      ]
+    },
+    {
       "name": "radio_init_fail",
       "passed": true,
       "exit_code": 0,
@@ -274,6 +310,69 @@
       ]
     },
     {
+      "name": "fault_wireless",
+      "passed": true,
+      "exit_code": 0,
+      "command": [
+        "$STAGE/kiss-native",
+        "fault_wireless"
+      ]
+    },
+    {
+      "name": "fault_no_watchdog",
+      "passed": true,
+      "exit_code": 0,
+      "command": [
+        "$STAGE/kiss-native",
+        "fault_no_watchdog"
+      ]
+    },
+    {
+      "name": "fault_init_loss",
+      "passed": true,
+      "exit_code": 0,
+      "command": [
+        "$STAGE/kiss-native",
+        "fault_init_loss"
+      ]
+    },
+    {
+      "name": "fault_battery_loss",
+      "passed": true,
+      "exit_code": 0,
+      "command": [
+        "$STAGE/kiss-native",
+        "fault_battery_loss"
+      ]
+    },
+    {
+      "name": "fault_adc_loss",
+      "passed": true,
+      "exit_code": 0,
+      "command": [
+        "$STAGE/kiss-native",
+        "fault_adc_loss"
+      ]
+    },
+    {
+      "name": "fault_stale",
+      "passed": true,
+      "exit_code": 0,
+      "command": [
+        "$STAGE/kiss-native",
+        "fault_stale"
+      ]
+    },
+    {
+      "name": "fault_budget",
+      "passed": true,
+      "exit_code": 0,
+      "command": [
+        "$STAGE/kiss-native",
+        "fault_budget"
+      ]
+    },
+    {
       "name": "motor_level_22",
       "passed": true,
       "exit_code": 0,
@@ -292,39 +391,39 @@
       ]
     },
     {
-      "name": "motor_level_20",
+      "name": "motor_level_1",
       "passed": true,
       "exit_code": 0,
       "command": [
         "$STAGE/kiss-native",
-        "motor_level_20"
+        "motor_level_1"
       ]
     },
     {
-      "name": "motor_level_21",
+      "name": "motor_level_6",
       "passed": true,
       "exit_code": 0,
       "command": [
         "$STAGE/kiss-native",
-        "motor_level_21"
+        "motor_level_6"
       ]
     },
     {
-      "name": "motor_level_18",
+      "name": "motor_level_14",
       "passed": true,
       "exit_code": 0,
       "command": [
         "$STAGE/kiss-native",
-        "motor_level_18"
+        "motor_level_14"
       ]
     },
     {
-      "name": "motor_level_19",
+      "name": "motor_level_7",
       "passed": true,
       "exit_code": 0,
       "command": [
         "$STAGE/kiss-native",
-        "motor_level_19"
+        "motor_level_7"
       ]
     },
     {
@@ -346,44 +445,40 @@
       ]
     },
     {
-      "name": "motor_config_20",
+      "name": "motor_config_1",
       "passed": true,
       "exit_code": 0,
       "command": [
         "$STAGE/kiss-native",
-        "motor_config_20"
+        "motor_config_1"
       ]
     },
     {
-      "name": "motor_config_21",
+      "name": "motor_config_6",
       "passed": true,
       "exit_code": 0,
       "command": [
         "$STAGE/kiss-native",
-        "motor_config_21"
+        "motor_config_6"
       ]
     },
     {
-      "name": "motor_config_18",
+      "name": "motor_config_14",
       "passed": true,
       "exit_code": 0,
       "command": [
         "$STAGE/kiss-native",
-        "motor_config_18"
+        "motor_config_14"
       ]
     },
     {
-      "name": "motor_config_19",
+      "name": "motor_config_7",
       "passed": true,
       "exit_code": 0,
       "command": [
         "$STAGE/kiss-native",
-        "motor_config_19"
+        "motor_config_7"
       ]
-    },
-    {
-      "name": "compiled_consumers_match_actual_kicad_netlist",
-      "passed": true
     },
     {
       "name": "adc_failure_boundaries_compile",
@@ -398,10 +493,11 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "-DWBB_TOP_BOARD_KISS_C6=1",
         "-DCONFIG_IDF_TARGET_ESP32C6=1",
-        "-DARDUINO_USB_CDC_ON_BOOT=0",
+        "-DARDUINO_USB_MODE=1",
+        "-DARDUINO_USB_CDC_ON_BOOT=1",
         "-DWBB_TOP_BOARD_V2=1",
         "-include",
         "include/kiss_c6_build_config.h",
@@ -431,10 +527,11 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "-DWBB_TOP_BOARD_KISS_C6=1",
         "-DCONFIG_IDF_TARGET_ESP32C6=1",
-        "-DARDUINO_USB_CDC_ON_BOOT=0",
+        "-DARDUINO_USB_MODE=1",
+        "-DARDUINO_USB_CDC_ON_BOOT=1",
         "-DWBB_TOP_BOARD_V2=1",
         "-include",
         "include/kiss_c6_build_config.h",
@@ -464,7 +561,7 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "control_tests/test_transport.cpp",
         "-o",
         "$STAGE/transport-regression"
@@ -491,9 +588,10 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "-DWBB_TOP_BOARD_KISS_C6=1",
-        "-DARDUINO_USB_CDC_ON_BOOT=0",
+        "-DARDUINO_USB_MODE=1",
+        "-DARDUINO_USB_CDC_ON_BOOT=1",
         "-DWBB_TOP_BOARD_V2=1",
         "-include",
         "include/kiss_c6_build_config.h",
@@ -516,13 +614,39 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "-DWBB_TOP_BOARD_KISS_C6=1",
         "-DCONFIG_IDF_TARGET_ESP32C6=1",
+        "-DARDUINO_USB_MODE=1",
         "-DWBB_TOP_BOARD_V2=1",
         "-include",
         "include/kiss_c6_build_config.h",
-        "-DARDUINO_USB_CDC_ON_BOOT=1",
+        "-DARDUINO_USB_CDC_ON_BOOT=0",
+        "$STAGE/profile.cpp",
+        "-o",
+        "$STAGE/reject"
+      ]
+    },
+    {
+      "name": "reject_missing_usb",
+      "passed": true,
+      "exit_code": 1,
+      "command": [
+        "c++",
+        "-std=c++17",
+        "-fsanitize=address,undefined",
+        "-fno-sanitize-recover=all",
+        "-Icontrol_tests/mock",
+        "-Icontrol_tests/pico_mock",
+        "-Iinclude",
+        "-Isrc",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
+        "-DWBB_TOP_BOARD_KISS_C6=1",
+        "-DCONFIG_IDF_TARGET_ESP32C6=1",
+        "-DARDUINO_USB_MODE=1",
+        "-DWBB_TOP_BOARD_V2=1",
+        "-include",
+        "include/kiss_c6_build_config.h",
         "$STAGE/profile.cpp",
         "-o",
         "$STAGE/reject"
@@ -541,10 +665,11 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "-DWBB_TOP_BOARD_KISS_C6=1",
         "-DCONFIG_IDF_TARGET_ESP32C6=1",
-        "-DARDUINO_USB_CDC_ON_BOOT=0",
+        "-DARDUINO_USB_MODE=1",
+        "-DARDUINO_USB_CDC_ON_BOOT=1",
         "-DWBB_TOP_BOARD_V2=1",
         "-include",
         "include/kiss_c6_build_config.h",
@@ -567,10 +692,11 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "-DWBB_TOP_BOARD_KISS_C6=1",
         "-DCONFIG_IDF_TARGET_ESP32C6=1",
-        "-DARDUINO_USB_CDC_ON_BOOT=0",
+        "-DARDUINO_USB_MODE=1",
+        "-DARDUINO_USB_CDC_ON_BOOT=1",
         "-DWBB_TOP_BOARD_V2=1",
         "-include",
         "include/kiss_c6_build_config.h",
@@ -578,6 +704,32 @@
         "$STAGE/profile.cpp",
         "-o",
         "$STAGE/reject"
+      ]
+    },
+    {
+      "name": "accept_usb_cdc",
+      "passed": true,
+      "exit_code": 0,
+      "command": [
+        "c++",
+        "-std=c++17",
+        "-fsanitize=address,undefined",
+        "-fno-sanitize-recover=all",
+        "-Icontrol_tests/mock",
+        "-Icontrol_tests/pico_mock",
+        "-Iinclude",
+        "-Isrc",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
+        "-DWBB_TOP_BOARD_KISS_C6=1",
+        "-DCONFIG_IDF_TARGET_ESP32C6=1",
+        "-DARDUINO_USB_MODE=1",
+        "-DARDUINO_USB_CDC_ON_BOOT=1",
+        "-DWBB_TOP_BOARD_V2=1",
+        "-include",
+        "include/kiss_c6_build_config.h",
+        "$STAGE/profile.cpp",
+        "-o",
+        "$STAGE/accept"
       ]
     },
     {
@@ -593,7 +745,7 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "control_tests/test_runtime_commands.cpp",
         "-o",
         "$STAGE/commands-native"
@@ -620,7 +772,7 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "-DWBB_TOP_BOARD_R3=1",
         "-DCONFIG_IDF_TARGET_ESP32C6=1",
         "-DARDUINO_USB_CDC_ON_BOOT=0",
@@ -650,10 +802,11 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "-DWBB_TOP_BOARD_KISS_C6=1",
         "-DCONFIG_IDF_TARGET_ESP32C6=1",
-        "-DARDUINO_USB_CDC_ON_BOOT=0",
+        "-DARDUINO_USB_MODE=1",
+        "-DARDUINO_USB_CDC_ON_BOOT=1",
         "-DWBB_TOP_BOARD_V2=1",
         "-include",
         "include/kiss_c6_build_config.h",
@@ -683,7 +836,7 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "control_tests/test_r3_gpio_init.cpp",
         "-o",
         "$STAGE/r3-gpio"
@@ -774,7 +927,7 @@
         "-Icontrol_tests/pico_mock",
         "-Iinclude",
         "-Isrc",
-        "-I<repo>/.pio/libdeps/top_board_v2/ArduinoJson/src",
+        "-I$ROOT/.pio/libdeps/top_board_v2_kiss_c6/ArduinoJson/src",
         "-DWBB_TOP_BOARD_R3=1",
         "-DCONFIG_IDF_TARGET_ESP32C6=1",
         "-DARDUINO_USB_CDC_ON_BOOT=0",
@@ -809,7 +962,7 @@
       "passed": true,
       "exit_code": 0,
       "command": [
-        "<repo>/.venv/bin/python",
+        "$ROOT/.venv/bin/python",
         "-m",
         "unittest",
         "discover",
@@ -825,7 +978,7 @@
       "passed": true,
       "exit_code": 0,
       "command": [
-        "<repo>/.venv/bin/python",
+        "$ROOT/.venv/bin/python",
         "-m",
         "unittest",
         "discover",
@@ -841,10 +994,21 @@
       "passed": true,
       "exit_code": 0,
       "command": [
-        "<repo>/.venv/bin/python",
+        "$ROOT/.venv/bin/python",
         "-c",
-        "import sys,json;sys.path.insert(0,\"scripts\");import robot_control as h;h.check_status(json.load(open(sys.argv[1])),h.KISS_C6_PROFILE);print(\"Actual compiled status accepted\")",
-        "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/firmware_verification/status.json"
+        "import sys,json;sys.path.insert(0,\"scripts\");import robot_control as h;h.check_status(json.load(open(sys.argv[1])),h.KISS_C6_PROFILE);print(\"Actual compiled frame accepted\")",
+        "$ROOT/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/firmware_verification/status.json"
+      ]
+    },
+    {
+      "name": "actual_fault_status_host_validation",
+      "passed": true,
+      "exit_code": 0,
+      "command": [
+        "$ROOT/.venv/bin/python",
+        "-c",
+        "import sys,json;sys.path.insert(0,\"scripts\");import robot_control as h;h.check_status(json.load(open(sys.argv[1])),h.KISS_C6_PROFILE);print(\"Actual compiled frame accepted\")",
+        "$ROOT/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/firmware_verification/fault_status.json"
       ]
     },
     {
@@ -852,10 +1016,10 @@
       "passed": true,
       "exit_code": 0,
       "command": [
-        "<repo>/.venv/bin/python",
+        "$ROOT/.venv/bin/python",
         "-c",
-        "import sys,json;sys.path.insert(0,\"scripts\");import robot_control as h;h.check_kiss_rail_report(json.load(open(sys.argv[1])),h.KISS_C6_PROFILE);print(\"Actual compiled rails accepted\")",
-        "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/firmware_verification/rails.json"
+        "import sys,json;sys.path.insert(0,\"scripts\");import robot_control as h;h.check_kiss_rail_report(json.load(open(sys.argv[1])),h.KISS_C6_PROFILE);print(\"Actual compiled frame accepted\")",
+        "$ROOT/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/firmware_verification/rails.json"
       ]
     },
     {
@@ -863,7 +1027,7 @@
       "passed": true,
       "exit_code": 0,
       "command": [
-        "<repo>/.venv/bin/pio",
+        "$ROOT/.platformio/penv/bin/pio",
         "run",
         "-e",
         "top_board_v2_kiss_c6"
@@ -874,7 +1038,7 @@
       "passed": true,
       "exit_code": 0,
       "command": [
-        "<repo>/.venv/bin/pio",
+        "$ROOT/.platformio/penv/bin/pio",
         "run",
         "-e",
         "top_board_v2_r3"
@@ -882,132 +1046,119 @@
     }
   ],
   "source_hashes": {
-    "src/path_planner.cpp": "48dff6ec8ef8b5d476abe09a0d65fcccdc14ee1d7ea9798c7438ead779e1639b",
-    "src/control_transport.cpp": "5183a4bd166c41b0d41bfba488a3d1ea51d5728e18434ed6a884a54e5c8b5f71",
-    "src/pid_controller.cpp": "1c8e872a80d1e4de95509efcf081c86c808dd1ffee1d28fd7e91dffa783be8bd",
-    "src/motor_test_main.cpp": "25c080312a5177232b95cf6db954767225b7e7fa9a08a7ca06dda044531be9ea",
-    "src/ina3221_monitor.cpp": "a50908f24f092d4c8e9b27c502b8f71c08dfc03bf6245a952e636bebbd32fcea",
-    "src/trajectory_follower.cpp": "40daeaf4abd73baba91aefcc16968c159c033b2d9d016021d3ba66cefab7ef31",
-    "src/kinematics.cpp": "8ab77e23c10d17e68dc0f51fe68d610f37ad47e16fd47891ced36b2169e7a9dd",
-    "src/top_v2_platform.h": "3516df7320e2210b78d82a22b1da2fbcb41c44d2cff648c178b8d0df3ab70933",
-    "src/motor_driver.h": "f2ec1949ae4e7583a311e59ea79c59becb833b57c5d29c6b0d774438bec0a69e",
-    "src/robot_controller.h": "0cdd6d685826b91ab4b172ea16508e3d27d5ef1a888585e3c971bf2925110fe7",
-    "src/pico_i2c_transport.cpp": "d4a7f0e3697ab48b2465eaf692604bdb55a68b96845a6295c5670b4c1ce69fe7",
-    "src/odometry.h": "528b32730f1b4896aeb778096e8c2f01ff66b6d881164b702fcb5779fda4bdbc",
-    "src/path_planner.h": "c72ad791b4d50aa055cb06949a0230f324dc44c500f3303f2a2ed75d2b138337",
-    "src/control_transport.h": "4028ad5c5701eea93bbd6820ad4c5b55a2a2fdc0505a69941b168e0e673c1268",
-    "src/pico_i2c_esp_backend.cpp": "deb702d6f968cd39169008db9c27f06da2a24eab55b8d02cbd045a78ca57a6f8",
-    "src/wifi_comm.h": "3c48c9c80777754aea5656bc4bf6ba11e070bd2803595cd2c6bfc520cb8c672d",
-    "src/wifi_comm.cpp": "d4caaaea2d5f20aedccafdd2f5ba63c90b41d185313542b6eaefb9c9d3c82099",
-    "src/odometry.cpp": "0eb75e4eaa8fd2de066540797b2bac4e71790f927d18d4e85d43764cdcaf2c3b",
-    "src/kinematics.h": "7d6c9c60ab10499e47d115413ecdb1be77c97442c0085a71d937377e619cbc9d",
-    "src/bq76905_monitor.cpp": "167b1a9e63b9eb317ee99f4b7aec85e3e24c88951de1273995704437252ad4b2",
-    "src/trajectory_follower.h": "c84bb0f282b9d8e9b080d135d9d809d6b30fe985cb60e05ba0d271ef8559f458",
-    "src/pico_rail_service.cpp": "dd8c3c0020c80733bd3e12fa576ea325d262eb48d4a67cff35198e32ad1a484d",
-    "src/pico_i2c_native.c": "9d9dc04a1e2af0040a0e1fa4e456094b3edf1649f4d296b7d1db5e786b2a5b0b",
-    "src/top_v2_main.cpp": "dc67513ab381df8153f907532a7cc374c715a587b1de10287b51a84d5dba3bd9",
-    "src/motor_driver.cpp": "cd9807826c166dd0f5d6fd0b2d624c922fbb973faebe9284d195dcec0c777a66",
-    "src/main.cpp": "9125d8dac89ae7232cfa74a49d029dfd6f8c9a0dff94c1aa94b425a459c09724",
-    "src/pico_rail_platform.cpp": "d71a900dee8cca121287031020980eaeee01eebf51bcddad1bef4aa34499da93",
-    "src/robot_controller.cpp": "340d97ab7b16f4756afd26b111ee986d257e1c804902ed7748d5c7d488b9f415",
-    "src/pid_controller.h": "3c6b65752c222ffed5ad7d085bf8f214cafa467e33603c256551ff4a352308db",
-    "include/pico_watchdog.h": "f23cd2cb5e66eedf99d6ddfd9518d1c2fe4d1dcac2bab244205da9c309a7b27e",
-    "include/pico_rail_service.h": "a8225c18cb7de3709d73fc8ccebdc8d98622f313be9ecdd759158629cf706aa4",
-    "include/board_profile_kiss_c6.h": "55dab9f6467f776d02e91c042d165a21a6b9a3a1025ae03c1c091e143f51c6eb",
-    "include/pico_i2c_native.h": "dc1dea3c8ca816ca1a244606e07d0c3e04fd2cf971ed6ab6874e7fecadc2f324",
-    "include/r3_gpio_safe.h": "21068731627673b0a9a7c9be36dc23745e99db97de00fb1537b5d84c916647d7",
-    "include/config.example.h": "0f0f564abc6d839f31d3b466d87b346543057314d9f9c6551b0c0c36066965e4",
-    "include/kiss_c6_gpio_safe.h": "93fe61ccd11f284b683d352efdbe2f3c84fe73b45ef256511faab7bb6cae7b3c",
-    "include/pico_gpio_safe.h": "dbade36f5381de2173cc108e335a281ccfbb2a49ddf82b2eb7dbdaa8e701db76",
-    "include/pico_i2c_transport.h": "9467b21eb6cd52f3bb7baa8d7f6a17bcb0dea81dd2d1e7d2676cb35854001ae6",
-    "include/kiss_c6_radio_power.h": "46b59d3f7b3a806760f242326391e740f710f63d40203a69d0ee55be516b1d32",
-    "include/ina3221_monitor.h": "265dafac151a8201d0c3c1d67404bcad9dbf4a34ee5dda42a6442a02d2825817",
-    "include/board_profile_pico.h": "2ab88f48b1623f86b45ef4af2bb7826efe29cc1fb04e917eb6a169cea73f365b",
-    "include/board_profile_r3.h": "3be091e49f8345bacdac74353374ddfb738aaa426e8eb8016937b1e407030a05",
-    "include/control_session.h": "44156b097c6c2a31ac8caad371df1a4fe58aa25f5b57bdf311a67331a50d6913",
-    "include/c6_safe_low.h": "1cf12616b2b8021e33ae4f5ef070f9c2e680e7753a4a9573b5c38e80566466b3",
-    "include/pico_build_config.h": "c3505073090d777c421f7c9472686b3d7a674c1ebcdce83445b20acc1e28abd8",
-    "include/kiss_c6_build_config.h": "a35c76f458899e43b456b4cd9c0240cb440ee444045cfad4aaac0cf898194c26",
-    "include/firmware_config.h": "75d7ba2e1ba344674f5ed20e96f8312d1f946967333a60f279a4df30d3c4d0b5",
-    "include/bq76905_monitor.h": "592e47e6a6317bb906adb814880e0ebdf1ea598423027309bfba1d42bf0d2de8",
-    "include/kiss_c6_voltage.h": "fbfac5147ea2842eb2ba641ed87d62edec19cd0e637ddf74da2ad874a8c51b21",
-    "include/pico_i2c_esp_backend.h": "99b3c74d5bec15510bf4cab6e4df3c91fc9373219b3f5c234db7867736931a7c",
-    "include/r3_build_config.h": "860f42feae64f26a67274e5f033f8d9215d492fc3ec14d2c75d00d1d88463a3e",
-    "control_tests/test_r3_gpio_init.cpp": "c82096c11f7bc53613a9549b00c19c725b527aed4eb4649e2fbc77b691ea9072",
-    "control_tests/test_kiss_c6_voltage.cpp": "499d4ad7e56b48597988e5a0f38bb6b1f6addd29513d925ca7e1b143d21fecf3",
-    "control_tests/test_kiss_c6_profile.cpp": "e7a0195f18e4e7258ae1e4ae3e1dd8ccb9dabef00e99988680a926d352ab0e47",
-    "control_tests/test_transport_reboot.cpp": "e48e49d2ec95c42cdde5a1468d2507d110ab50306e0b16c640fb40ec2ac06af5",
-    "control_tests/test_pico_rails.cpp": "47b9f995ab7d59619a800571f0709fe15010a74010a12319763acf3a692ad34a",
-    "control_tests/test_runtime_commands.cpp": "320c42c92ae233bc79783ffef7b6a6cb9f3afce5ebf34bcd453b3c85db25bf15",
-    "control_tests/transport_stubs.h": "6853128258d0c1615ecc4e31074a49d403d13a17094d777d558b1e92dbd2da4d",
-    "control_tests/test_robot_driver.cpp": "2ef093a1ead067fabcb382e7e46038411f0a507052906a359b34d40af1f23f93",
-    "control_tests/runtime_stubs.h": "93256810d00b7351a4a3b45c85da14102c0e22a24fc9cb8c05e9a078d4e69e64",
-    "control_tests/test_kiss_c6_radio_power.cpp": "a53ec44e5fd3fe9cd91b91d84fc4f329464ca404ef841a4bc0e5016ecbd8c693",
-    "control_tests/pico_host_status_fixture.cpp": "ba02fadaae6a8d4287417b72873bc41228ea0c5248f9293b767e212ae0b7491e",
-    "control_tests/test_stall_timing.cpp": "51e91f8a35173b6f346e61c683805e3681c68ed4830934521a4b38532acb3eae",
+    "control_tests/bq76905/device_model.h": "0290802fcdce55a18253b3e75856e5ab2004ffa64e8321d74711c824f34274f1",
+    "control_tests/bq76905/test_monitor.cpp": "91b7114b77adfb67fdcf5e80ed31edc9d508b4b690b4ec4dacfda19aca91ec7b",
+    "control_tests/ina3221/test_monitor.cpp": "6e6837936a935268d8f82559eaed8558c983cbeb397744413932e77f94b47b90",
+    "control_tests/kiss_adc_stubs.h": "85baa7d0dfbd2cd063c7576962a6f598d3de3c323d701940c8f7ed4f7c17525f",
+    "control_tests/mock/Arduino.h": "67bae1463179e996ca4758c1ed6314d52b24923d12c2eea8c050df146ce88fb7",
+    "control_tests/mock/driver/gpio.h": "1f970a3be678026fcf66dce45d9a63f53d8fe0cb8afb295e63d729ca4844cacd",
+    "control_tests/mock/freertos/FreeRTOS.h": "35aeaa46e371dfc77110b4847c9fa73a6ca572c93a3e843f753e842d7e3052a0",
+    "control_tests/mock/freertos/task.h": "f6306cc771c0f917c9fe6cd5a4969fda26cf4c714ec6e9109ecc092cd9caef90",
+    "control_tests/mock/soc/gpio_reg.h": "abe4b5a7e3d57f636609eba0f6878fe9ccd5a0a6ef23f8e3804cbdf21d396883",
     "control_tests/pico_cell_host_fixture.cpp": "5137f64d3838d8f3326da6562858098e4272d8052d799be3de2bf3bc566cd5a9",
-    "control_tests/test_r3_motor_gpio.cpp": "f6af1b359951a164263f8a697ea537bc315362526c316618d60bc170fec0625d",
-    "control_tests/test_r3_pins.cpp": "43e07e25122900fdc1a7d1df65751ff1f1b328245e29bd63affac4f459407551",
-    "control_tests/test_runtime_timing.cpp": "74151b4898f6b29da6a133e7b96a248d140b074c121b52f9fb87e5c090331454",
-    "control_tests/test_transport.cpp": "0482d7c34656a0c234dc11b8917d8896e48c22c9f0ccebb034bcbb48186f14d3",
-    "control_tests/test_pico_gpio_safe.cpp": "44627d5037aa7a90d5b92318778ba0e1e99d2f504ae3fee8549d70f91f0dba34",
-    "control_tests/kiss_adc_stubs.h": "acdad31215cff133ee3f3610ccc621bbe998ce2157b36b7267dad5a68984b63c",
-    "control_tests/test_odometry.cpp": "29757af45208503bc2aa4cdb8eedcdf27a27a9ba3b11d71715b137841c2b5069",
-    "control_tests/pico_rail_mock.h": "3469a63a95d1b7e14a4f1c53eec5fb51b02eb5ad3c5890bac90e26a9f7676f81",
-    "control_tests/test_pico_cells.cpp": "ac4f5ece81bdcc15f2d6d68f0fc80f029e7846dfa567e33281e9d6618fb99cc2",
-    "control_tests/test_session.cpp": "1dfd98cdc7da8f5990788387500fc95b13585c49bc4155af8d897c8d0d53a511",
-    "control_tests/test_motor_driver.cpp": "0eb00d73730ab51c9a594bcbee7c1896c4545eb1ba7c59288a6f7bb979cf6e76",
-    "control_tests/test_r3_diagnostic.cpp": "ff7d16f9882b39eb9809cddd4bf91b362e859e8d556048a618eb8dbe3a03f767",
-    "control_tests/test_pico_profile.cpp": "7a3b36496e4b62260592db56b60f591d79d47840cd454733cf2bcab75c8210d6",
-    "control_tests/test_pico_watchdog.cpp": "403376301105d9d94a915df45f14fe312c63e9dcbd0860e72fce0012f744d4ee",
+    "control_tests/pico_host_status_fixture.cpp": "ba02fadaae6a8d4287417b72873bc41228ea0c5248f9293b767e212ae0b7491e",
+    "control_tests/pico_i2c/mock/esp_timer.h": "854a53daba58e187315c3d95dce5f2123cd3ffe42dc4e2768194304e4a63b114",
+    "control_tests/pico_i2c/mock/freertos/FreeRTOS.h": "9784449e9672df6ede7971c5744d2537ee2ccd680e89c305ba92a4415de97a45",
+    "control_tests/pico_i2c/mock/freertos/task.h": "48aac7b604cd5ce16c2a17b29f3a6f98348281effac2034403786ab247bd5429",
+    "control_tests/pico_i2c/test_transport.cpp": "04906b5e71aa0741372c5dad17faadfa3627e68053203606ca880f1c37afdb7a",
+    "control_tests/pico_i2c_backend/mock/freertos/FreeRTOS.h": "c54fbf1cdddaa059c7ba1c187447a110195555253f2b6d40ca03be3cfb537cda",
+    "control_tests/pico_i2c_backend/mock/freertos/task.h": "b15356c9867bc9a97e9013d7687ad882b4144d22d485bf4907699d2d4bf90444",
     "control_tests/pico_i2c_backend/test_adapter.cpp": "f47b55906ade1731c9da7dde9514f30f79351f959ca87224be718a866de03488",
     "control_tests/pico_i2c_backend/test_driver_waits.c": "d80470a11704ed57c218bcef72ff2a2990c21b0bbc80ab3541b9a30a01c2cb06",
-    "control_tests/pico_mock/sdkconfig.h": "6eeb2b19b9d58eb9236c868c56b025a9fabdf6d8d5e2491d9d6cd9f7d69b0cdf",
-    "control_tests/mock/Arduino.h": "432c6f6237f0cc401cbcc41be12e395beb8c5163cf1ead8d207cac3d3bdaaad0",
-    "control_tests/bq76905/test_monitor.cpp": "91b7114b77adfb67fdcf5e80ed31edc9d508b4b690b4ec4dacfda19aca91ec7b",
-    "control_tests/bq76905/device_model.h": "0290802fcdce55a18253b3e75856e5ab2004ffa64e8321d74711c824f34274f1",
-    "control_tests/pico_i2c/test_transport.cpp": "04906b5e71aa0741372c5dad17faadfa3627e68053203606ca880f1c37afdb7a",
-    "control_tests/ina3221/test_monitor.cpp": "6e6837936a935268d8f82559eaed8558c983cbeb397744413932e77f94b47b90",
-    "control_tests/pico_i2c/mock/esp_timer.h": "854a53daba58e187315c3d95dce5f2123cd3ffe42dc4e2768194304e4a63b114",
-    "control_tests/pico_i2c/mock/freertos/task.h": "48aac7b604cd5ce16c2a17b29f3a6f98348281effac2034403786ab247bd5429",
-    "control_tests/pico_i2c/mock/freertos/FreeRTOS.h": "9784449e9672df6ede7971c5744d2537ee2ccd680e89c305ba92a4415de97a45",
-    "control_tests/mock/driver/gpio.h": "f53a60b3979cedcbb770fb640b1c023e544d5dfb9ca02a11e9379f9b8f40e38d",
-    "control_tests/mock/freertos/task.h": "f6306cc771c0f917c9fe6cd5a4969fda26cf4c714ec6e9109ecc092cd9caef90",
-    "control_tests/mock/freertos/FreeRTOS.h": "35aeaa46e371dfc77110b4847c9fa73a6ca572c93a3e843f753e842d7e3052a0",
     "control_tests/pico_mock/driver/gpio.h": "43f2262a3deadbfaabe095323ec59bfcc3bbf719530adfdf655a94f1ce40e4ad",
-    "control_tests/pico_i2c_backend/mock/freertos/task.h": "b15356c9867bc9a97e9013d7687ad882b4144d22d485bf4907699d2d4bf90444",
-    "control_tests/pico_i2c_backend/mock/freertos/FreeRTOS.h": "c54fbf1cdddaa059c7ba1c187447a110195555253f2b6d40ca03be3cfb537cda",
-    "scripts/pcb_control.py": "ce354f0e88c077104c8adfff1bfe9bc9278b2dc9d87ee08b2fc7b02aad26b076",
-    "scripts/robot_control.py": "7662c2461a7fe06c235b40d2a0a582eb63e7fca3c25ff31a93a9f247aa48bd6d",
-    "scripts/requirements-control.txt": "523741f8cb2697786c612325f007431e4fb2358fcd227d2a7a2da8d5e35cb7f7",
-    "platformio.ini": "9eb869d1432d17c4bc28efaad71148e1f8d59c451ec144ced06de2dc00b247f1",
-    "control_tests/test_ch343g_host.py": "a9793a70d2d9f99f3d503c5ed9772460ffb9673d5085607f344c7acf14cea8bb",
-    "control_tests/verify_kiss_c6.py": "74c48c5134a110d686c79096744ccace5a08b8949e583ecb7032034554541805",
+    "control_tests/pico_mock/sdkconfig.h": "6eeb2b19b9d58eb9236c868c56b025a9fabdf6d8d5e2491d9d6cd9f7d69b0cdf",
+    "control_tests/pico_rail_mock.h": "3469a63a95d1b7e14a4f1c53eec5fb51b02eb5ad3c5890bac90e26a9f7676f81",
+    "control_tests/runtime_stubs.h": "93256810d00b7351a4a3b45c85da14102c0e22a24fc9cb8c05e9a078d4e69e64",
+    "control_tests/test_c6usb_host.py": "107f54a98ed703778cca22c8e2c0e7b276a5daee87f5579b7f7142483f99bb49",
     "control_tests/test_cp2102n_host.py": "f2c3a63dd3f27e9fc860250a7530b41bd91d30bed125071148eb32b79f29a409",
     "control_tests/test_host.py": "849097b07562d9e83d96af2eae367dd1ef97f622aaaf7f07afdc896bccac32dc",
-    "control_tests/test_kiss_voltage_host.py": "77314b49a3ea71f9a0e6f043f66cda4abe0c47c529c1d46d9227cd8994f2dc03",
+    "control_tests/test_kiss_c6_profile.cpp": "bbe1dbec59bf52e93f9809a5ae6a8df14d5236b52f56ac070feea7a4bd9a749c",
+    "control_tests/test_kiss_c6_radio_power.cpp": "f8dbb3cbe15051aab669f301344c592d5c07a64e7189243cf8861f7d9e17cbf4",
+    "control_tests/test_kiss_c6_voltage.cpp": "debe19f71ec30678a2392ffde70cc7cf6cf22d916dda4ab23611b29645d102a0",
+    "control_tests/test_kiss_voltage_host.py": "d6e2ec9ec7360e2a149457d27889d337741b8875e8f5dc585fd73a9d437bbcea",
+    "control_tests/test_motor_driver.cpp": "0eb00d73730ab51c9a594bcbee7c1896c4545eb1ba7c59288a6f7bb979cf6e76",
+    "control_tests/test_odometry.cpp": "29757af45208503bc2aa4cdb8eedcdf27a27a9ba3b11d71715b137841c2b5069",
     "control_tests/test_pico_cell_host.py": "69bb109b5ba633dccc9de0cab484eb34eaaab054d3b547385e25a7e904f7fa03",
+    "control_tests/test_pico_cells.cpp": "ac4f5ece81bdcc15f2d6d68f0fc80f029e7846dfa567e33281e9d6618fb99cc2",
+    "control_tests/test_pico_gpio_safe.cpp": "44627d5037aa7a90d5b92318778ba0e1e99d2f504ae3fee8549d70f91f0dba34",
     "control_tests/test_pico_host.py": "20ed0a4a8fa30dc8a81bd3aea68d98f7d8de2e48f251638c65f803e9f612cad3",
-    "control_tests/test_pico_rail_host.py": "b357b8749919c1a84161bdf347073a84697f09542d7ffc549d393de0ba29628c"
+    "control_tests/test_pico_profile.cpp": "7a3b36496e4b62260592db56b60f591d79d47840cd454733cf2bcab75c8210d6",
+    "control_tests/test_pico_rail_host.py": "b357b8749919c1a84161bdf347073a84697f09542d7ffc549d393de0ba29628c",
+    "control_tests/test_pico_rails.cpp": "47b9f995ab7d59619a800571f0709fe15010a74010a12319763acf3a692ad34a",
+    "control_tests/test_pico_watchdog.cpp": "403376301105d9d94a915df45f14fe312c63e9dcbd0860e72fce0012f744d4ee",
+    "control_tests/test_r3_diagnostic.cpp": "ff7d16f9882b39eb9809cddd4bf91b362e859e8d556048a618eb8dbe3a03f767",
+    "control_tests/test_r3_gpio_init.cpp": "c82096c11f7bc53613a9549b00c19c725b527aed4eb4649e2fbc77b691ea9072",
+    "control_tests/test_r3_motor_gpio.cpp": "f6af1b359951a164263f8a697ea537bc315362526c316618d60bc170fec0625d",
+    "control_tests/test_r3_pins.cpp": "43e07e25122900fdc1a7d1df65751ff1f1b328245e29bd63affac4f459407551",
+    "control_tests/test_robot_driver.cpp": "2ef093a1ead067fabcb382e7e46038411f0a507052906a359b34d40af1f23f93",
+    "control_tests/test_runtime_commands.cpp": "191835b02dfd575fa8aa58271f19d52c80e624fa6be5b5e0b839ffe50b77d0af",
+    "control_tests/test_runtime_timing.cpp": "74151b4898f6b29da6a133e7b96a248d140b074c121b52f9fb87e5c090331454",
+    "control_tests/test_session.cpp": "1dfd98cdc7da8f5990788387500fc95b13585c49bc4155af8d897c8d0d53a511",
+    "control_tests/test_stall_timing.cpp": "51e91f8a35173b6f346e61c683805e3681c68ed4830934521a4b38532acb3eae",
+    "control_tests/test_transport.cpp": "0482d7c34656a0c234dc11b8917d8896e48c22c9f0ccebb034bcbb48186f14d3",
+    "control_tests/test_transport_reboot.cpp": "e48e49d2ec95c42cdde5a1468d2507d110ab50306e0b16c640fb40ec2ac06af5",
+    "control_tests/transport_stubs.h": "58f9e47c45696041152d2a8e0f3427c15d1e9a0ccb73919f3c42ec4524dbdd69",
+    "control_tests/verify_kiss_c6.py": "c180277d8a1fc7b502a52a810167eaf474f6b4bb8ae0412250f3c4a540ccf13f",
+    "hardware/top_board_v2/easyeda/logic_netlist.json": "773ad6953fbeb1317b43fe860d5d181adbd5dbd4078223bc3f497dd2c75ca460",
+    "include/board_profile_kiss_c6.h": "fad1add8f6a37f898cd07c4b982c55b4a25e7fe6f63d6ecc377466f271c51f0b",
+    "include/board_profile_pico.h": "2ab88f48b1623f86b45ef4af2bb7826efe29cc1fb04e917eb6a169cea73f365b",
+    "include/board_profile_r3.h": "3be091e49f8345bacdac74353374ddfb738aaa426e8eb8016937b1e407030a05",
+    "include/bq76905_monitor.h": "592e47e6a6317bb906adb814880e0ebdf1ea598423027309bfba1d42bf0d2de8",
+    "include/c6_safe_low.h": "1cf12616b2b8021e33ae4f5ef070f9c2e680e7753a4a9573b5c38e80566466b3",
+    "include/config.example.h": "0f0f564abc6d839f31d3b466d87b346543057314d9f9c6551b0c0c36066965e4",
+    "include/control_session.h": "44156b097c6c2a31ac8caad371df1a4fe58aa25f5b57bdf311a67331a50d6913",
+    "include/firmware_config.h": "75d7ba2e1ba344674f5ed20e96f8312d1f946967333a60f279a4df30d3c4d0b5",
+    "include/ina3221_monitor.h": "265dafac151a8201d0c3c1d67404bcad9dbf4a34ee5dda42a6442a02d2825817",
+    "include/kiss_c6_build_config.h": "a35c76f458899e43b456b4cd9c0240cb440ee444045cfad4aaac0cf898194c26",
+    "include/kiss_c6_gpio_safe.h": "93fe61ccd11f284b683d352efdbe2f3c84fe73b45ef256511faab7bb6cae7b3c",
+    "include/kiss_c6_radio_power.h": "46b59d3f7b3a806760f242326391e740f710f63d40203a69d0ee55be516b1d32",
+    "include/kiss_c6_voltage.h": "6c7d5bb33294e58da568ded7f6441d79c75001b43719fb9371f23395f5c01b68",
+    "include/pico_build_config.h": "c3505073090d777c421f7c9472686b3d7a674c1ebcdce83445b20acc1e28abd8",
+    "include/pico_gpio_safe.h": "dbade36f5381de2173cc108e335a281ccfbb2a49ddf82b2eb7dbdaa8e701db76",
+    "include/pico_i2c_esp_backend.h": "99b3c74d5bec15510bf4cab6e4df3c91fc9373219b3f5c234db7867736931a7c",
+    "include/pico_i2c_native.h": "dc1dea3c8ca816ca1a244606e07d0c3e04fd2cf971ed6ab6874e7fecadc2f324",
+    "include/pico_i2c_transport.h": "9467b21eb6cd52f3bb7baa8d7f6a17bcb0dea81dd2d1e7d2676cb35854001ae6",
+    "include/pico_rail_service.h": "a8225c18cb7de3709d73fc8ccebdc8d98622f313be9ecdd759158629cf706aa4",
+    "include/pico_watchdog.h": "f23cd2cb5e66eedf99d6ddfd9518d1c2fe4d1dcac2bab244205da9c309a7b27e",
+    "include/r3_build_config.h": "860f42feae64f26a67274e5f033f8d9215d492fc3ec14d2c75d00d1d88463a3e",
+    "include/r3_gpio_safe.h": "21068731627673b0a9a7c9be36dc23745e99db97de00fb1537b5d84c916647d7",
+    "platformio.ini": "ff618c7ee0dc33f600dd434f74d50d2ea555e4fb248ca467fccba07654200d70",
+    "scripts/pcb_control.py": "26e9f4a09088dad3815290b059eb143411d7bca5cdc23c1c184ae13b5d05f68c",
+    "scripts/requirements-control.txt": "523741f8cb2697786c612325f007431e4fb2358fcd227d2a7a2da8d5e35cb7f7",
+    "scripts/robot_control.py": "811772a3c700403ae60c035331c371ec1979b235d920678c92057e8ef666e868",
+    "src/bq76905_monitor.cpp": "167b1a9e63b9eb317ee99f4b7aec85e3e24c88951de1273995704437252ad4b2",
+    "src/control_transport.cpp": "5183a4bd166c41b0d41bfba488a3d1ea51d5728e18434ed6a884a54e5c8b5f71",
+    "src/control_transport.h": "4028ad5c5701eea93bbd6820ad4c5b55a2a2fdc0505a69941b168e0e673c1268",
+    "src/ina3221_monitor.cpp": "a50908f24f092d4c8e9b27c502b8f71c08dfc03bf6245a952e636bebbd32fcea",
+    "src/kinematics.cpp": "8ab77e23c10d17e68dc0f51fe68d610f37ad47e16fd47891ced36b2169e7a9dd",
+    "src/kinematics.h": "7d6c9c60ab10499e47d115413ecdb1be77c97442c0085a71d937377e619cbc9d",
+    "src/main.cpp": "eac91879367456b6c2fffba7981fa96d1a2f78bdf967ca06ab387116b327874c",
+    "src/motor_driver.cpp": "cd9807826c166dd0f5d6fd0b2d624c922fbb973faebe9284d195dcec0c777a66",
+    "src/motor_driver.h": "f2ec1949ae4e7583a311e59ea79c59becb833b57c5d29c6b0d774438bec0a69e",
+    "src/motor_test_main.cpp": "25c080312a5177232b95cf6db954767225b7e7fa9a08a7ca06dda044531be9ea",
+    "src/odometry.cpp": "0eb75e4eaa8fd2de066540797b2bac4e71790f927d18d4e85d43764cdcaf2c3b",
+    "src/odometry.h": "528b32730f1b4896aeb778096e8c2f01ff66b6d881164b702fcb5779fda4bdbc",
+    "src/path_planner.cpp": "48dff6ec8ef8b5d476abe09a0d65fcccdc14ee1d7ea9798c7438ead779e1639b",
+    "src/path_planner.h": "c72ad791b4d50aa055cb06949a0230f324dc44c500f3303f2a2ed75d2b138337",
+    "src/pico_i2c_esp_backend.cpp": "deb702d6f968cd39169008db9c27f06da2a24eab55b8d02cbd045a78ca57a6f8",
+    "src/pico_i2c_native.c": "9d9dc04a1e2af0040a0e1fa4e456094b3edf1649f4d296b7d1db5e786b2a5b0b",
+    "src/pico_i2c_transport.cpp": "d4a7f0e3697ab48b2465eaf692604bdb55a68b96845a6295c5670b4c1ce69fe7",
+    "src/pico_rail_platform.cpp": "d71a900dee8cca121287031020980eaeee01eebf51bcddad1bef4aa34499da93",
+    "src/pico_rail_service.cpp": "dd8c3c0020c80733bd3e12fa576ea325d262eb48d4a67cff35198e32ad1a484d",
+    "src/pid_controller.cpp": "1c8e872a80d1e4de95509efcf081c86c808dd1ffee1d28fd7e91dffa783be8bd",
+    "src/pid_controller.h": "3c6b65752c222ffed5ad7d085bf8f214cafa467e33603c256551ff4a352308db",
+    "src/robot_controller.cpp": "340d97ab7b16f4756afd26b111ee986d257e1c804902ed7748d5c7d488b9f415",
+    "src/robot_controller.h": "0cdd6d685826b91ab4b172ea16508e3d27d5ef1a888585e3c971bf2925110fe7",
+    "src/top_v2_main.cpp": "8184296d51f77a4573ab59bc1f2167e5534fd328dd9af0cefaca0adf200cb9ee",
+    "src/top_v2_platform.h": "3516df7320e2210b78d82a22b1da2fbcb41c44d2cff648c178b8d0df3ab70933",
+    "src/trajectory_follower.cpp": "40daeaf4abd73baba91aefcc16968c159c033b2d9d016021d3ba66cefab7ef31",
+    "src/trajectory_follower.h": "c84bb0f282b9d8e9b080d135d9d809d6b30fe985cb60e05ba0d271ef8559f458",
+    "src/wifi_comm.cpp": "d4caaaea2d5f20aedccafdd2f5ba63c90b41d185313542b6eaefb9c9d3c82099",
+    "src/wifi_comm.h": "3c48c9c80777754aea5656bc4bf6ba11e070bd2803595cd2c6bfc520cb8c672d"
   },
-  "schematic_source_hashes": {
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/top_board_v2_logic.kicad_sch": "55f403e61b767bed812559ee7af3904c9054c0f221407a9441c18baee60b1e7a",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/controller.kicad_sch": "6075dbe9ff309993e9aeec81a155ddaa61b9a2f304134c048f3467b56d5ed818",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/usb_recovery.kicad_sch": "178579713891ff98c1f031460c175a931baa71387662792cac17c33de6a76609",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/bottom_interfaces.kicad_sch": "8c99769a9398c6a09fd93fd42bc7e4d09a30a81ba228e36f5a0cfe243b81d7d9",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/voltage_sense.kicad_sch": "38d46a5f9820de32e4b5fe2554bc774891796f790179783057d72d75281b8a47",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/power_stage.kicad_sch": "58582da81ad1a42861418fac88af821b06a638d8da9cc9c88a172d56f24dd28a",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/KISS_Power.kicad_sym": "684c2f7f547b76993ad38bd39bb3890700c583a5b2aae13741f35ec48293d495",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/verification/voltage_sense_limits.json": "a45ad0acaa5bb20b2b3e1bb0eac3fd4e34f7a4602103834380ce88bdb864abaa",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/logic.net.xml": "ddc23b4173a6dd6c938fbca1998e175a1a010ce8e67e73e3cbbbff25d2d22046",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/logic_contract.json": "19cc99ccd1365e8f02cb6bda0ec8d3c7bef79737ff85fc656dc4a931928412e2",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/common_parts.json": "40afd6a4dd3a24f85a2f2a1095b42121a7a7771d887e26fa11c6a4ac07053f10",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/additional_parts.json": "302c2d2baae42c9c49ecf86c3eb7f36ebf4130ba40567f4fdbc9ae30c05167cf",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/KISS_Core.kicad_sym": "5a585b8e333cb90348edefe745b6fc16309920f0ea68d304b9ae06aaaa2d2e66",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/KISS_USB.kicad_sym": "8aff1add9dcce635db35e47d72a980471bc4d0f66ca5b475a2b932297e7109c5",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/KISS_Core.pretty/ESP32-C6-MINI-1.kicad_mod": "e462f984c05405fd02c626f0f3d218f22442bbaee0fdbc1593c27fc4338ce127",
-    "<repo>/hardware/top_board_v2/jlc_budget_6v/controller_core/logic/c6_pin_plan.json": "b6aea9af0f62d6898f0708f3f9caa3a987046e566b51a9a03310899b14fdd777"
-  },
+  "netlist": "hardware/top_board_v2/easyeda/logic_netlist.json",
+  "netlist_sha256": "773ad6953fbeb1317b43fe860d5d181adbd5dbd4078223bc3f497dd2c75ca460",
+  "module_pad_table": "ESP32-C6-MINI-1 datasheet v1.5, Table 3-1",
   "cross_compiled": true,
   "scope": "Production C6 profile/runtime/driver/ISRs/transport with SDK and OS doubles; no hardware qualification",
   "physical_hardware_tested": false,
