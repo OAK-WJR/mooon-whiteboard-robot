@@ -15,10 +15,12 @@ measures where the robot really is and sends corrections over Wi-Fi.
 *2026-10-27: the robot from above, on the purple base board (v2.6) that I
 designed.*
 
-> This repository is a curated snapshot made on 2026-11-01 for review. It has
-> the current firmware, host tools, tests, board design files, design notes
-> and a few key run logs. The full history (Mar–Oct 2026, with about 1 GB of
-> raw logs and videos) is in my private repository `OAK-WJR/WhiteBoardBot`.
+> This repository keeps the real git history of the project from June 2026
+> (when it moved into git) to today, filtered for review: raw logs, videos,
+> vendor models and design backups were removed from every commit, and the
+> final commit adds my uncommitted work from Oct 28–31, 2026. The Feb–Apr 2026
+> work (v1 board, first chassis) appears only as images and netlists. The
+> unfiltered repository, with about 1 GB of raw logs and videos, stays private.
 
 ## Demo
 
