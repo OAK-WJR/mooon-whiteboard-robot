@@ -41,7 +41,7 @@ The goal is one board that replaces the module + adapter stack. It is board
   (0.25 × VDD). When 3.3 V is off, Q1 blocks the divider, so it cannot
   back-feed the C6 while the pack charges. Still to measure on the real board:
   IO8 on battery alone. See
-  [`FIRMWARE.md`](top_board_v2/jlc_budget_6v/controller_core/logic/FIRMWARE.md#io8-usb-供电检测).
+  [`FIRMWARE.md`](top_board_v2/jlc_budget_6v/controller_core/logic/FIRMWARE.md#io8-usb-power-detection).
 - On-board 2S USB-C charging (IP2326, 0.6 A into the pack, R40 150k). It
   draws about 1.2 A at 5 V (1.3 A worst case).
 - USB-C current gate (added 2026-10-30): the IP2326 EN pin only goes high
@@ -89,7 +89,8 @@ full-history repository, not in this snapshot.
 These designs were never ordered. To keep this snapshot small, only the
 `jlc_budget_6v/` notes and the September KiCad sources of
 `top_board_v2_logic` are included here; the other folders below are in the
-full-history repository. Most notes are in Chinese.
+full-history repository. Most of the notes included here were written in Chinese
+and translated into English in November 2026.
 
 | Folder | Direction | Why it stopped |
 |---|---|---|

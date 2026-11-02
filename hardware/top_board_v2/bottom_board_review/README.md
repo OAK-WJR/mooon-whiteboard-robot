@@ -1,60 +1,60 @@
-# 底部 controller board 实际工程复查
+# Review of the actual bottom controller board project
 
-> **2026-10-28 起已被取代：** 当前板 `top_board_v2_logic`（EasyEDA）在板上用 IP2326 给 2S 电池 USB-C 充电，2026-10-29 又去掉 CH343G、改用 C6 原生 USB，见 [hardware/README.md](../../README.md)。下文的外置充电及“顶板不充电”是 2026-09 记录。
+> **Superseded since 2026-10-28:** the current board `top_board_v2_logic` (EasyEDA) charges the 2S battery over USB-C on the board with an IP2326, and on 2026-10-29 the CH343G was removed in favor of the C6's native USB; see [hardware/README.md](../../README.md). The external charging and "the top board does not charge" below are records from 2026-09.
 
-**当前入口为 [5片预算版](../jlc_budget_6v/README.md)，原成品模块方案因预算暂停。** 下述底板连接证据继续有效；末尾 12V/6V 电机链接记录为历史选型过程。
+**The current entry point is the [5-board budget version](../jlc_budget_6v/README.md); the original ready-made module plan is paused for budget.** The base board connection evidence below stays valid; the 12V/6V motor link records at the end are the historical selection process.
 
-**用户现已确认 6V、300rpm 并提供参数及编码器线色图。** [最新接线与负载核对](../jlc_budget_6v/motor_selection/README.md)重新读取本底板的 90 个编号焊盘，并对应当前顶板 19 个接点：编码器黑线正极应接板上第 2 脚 3V3、蓝线负极接第 5 脚 GND。实际插合面/出厂线束针序仍需核对，不能把线色图当作有编号的插头图。下方“未提供规格”类文字是补充截图前的历史状态。
+**The user has now confirmed 6V, 300rpm and provided the parameters and an encoder wire color diagram.** The [latest wiring and load check](../jlc_budget_6v/motor_selection/README.md) re-reads this base board's 90 numbered pads and maps them to the current top board's 19 contacts: the encoder black wire (positive) should go to pin 2 on the board, 3V3, and the blue wire (negative) to pin 5, GND. The actual mating face/factory harness pin order still needs checking; the wire color diagram cannot be taken as a numbered plug diagram. Text below of the "no specs provided" kind is the historical state before the extra screenshots.
 
-2026-09-08 补充：[保存底板的铜连接复核](native_copper/README.md)已比较原始铜数据并检查 KiCad 导入模型。21 个网络在该模型中连通，但 DRC 和填充轮廓差异尚未解决，不能据此认定原板或实物全部通过。
+2026-09-08 addition: the [copper connection re-check of the saved base board](native_copper/README.md) compared the original copper data and checked the KiCad import model. 21 nets are connected in that model, but DRC and fill outline differences are not resolved, so this cannot establish that the original board or the hardware fully passes.
 
-2026-09-07（America/Los_Angeles）。本次直接读取保存的 `motor_controller_kicad_r2.epro2`，查看其中底板原理图和 PCB 预览，并提取底板的真实焊盘网络。不是对在线未保存版本或实物的检查。
+2026-09-07 (America/Los_Angeles). This time the saved `motor_controller_kicad_r2.epro2` was read directly, its base board schematic and PCB preview were viewed, and the base board's real pad nets were extracted. This is not a check of an unsaved online version or of the hardware.
 
-- 原理图页 UUID：`e928385bc2a56e10`；PCB UUID：`a7681f7930a373e5`。
-- [工程原理图预览](bottom_schematic.webp) / [工程 PCB 预览](bottom_pcb.webp)，均直接从该 EDA 工程提取，没有重画电路。
-- 底板实际包含 24 个封装：3 个电机驱动、3 个电机插座、4 个板间插座、9 个电容、5 个机械孔。3 个驱动均为 **RZ7889-MS / C22462543**。没有 MCU、升降压芯片、充电芯片或电感。
-- 现代 `.epro2` 的全部 **90 个编号焊盘网络**与已有 `validation/reverification/refined_export.epro` 中 `bottom_board` 的 90 个编号焊盘网络逐项相同，包括未接网的机械焊盘。这不是铜箔连通性、DRC 或实物通断证明。
-- [本次提取与核对记录](inspection.json) 保存两个工程的 SHA-256、24 个封装的全部焊盘网络、43 项接口核对及两张原始预览的哈希。
+- Schematic page UUID: `e928385bc2a56e10`; PCB UUID: `a7681f7930a373e5`.
+- [Project schematic preview](bottom_schematic.webp) / [project PCB preview](bottom_pcb.webp), both extracted directly from that EDA project; the circuit was not redrawn.
+- The base board actually has 24 footprints: 3 motor drivers, 3 motor sockets, 4 board-to-board sockets, 9 capacitors, 5 mechanical holes. All 3 drivers are **RZ7889-MS / C22462543**. There is no MCU, buck/boost chip, charger chip or inductor.
+- All **90 numbered pad nets** in the modern `.epro2` are identical, item by item, to the 90 numbered pad nets of `bottom_board` in the existing `validation/reverification/refined_export.epro`, including unconnected mechanical pads. This is not proof of copper connectivity, DRC or hardware continuity.
+- The [record of this extraction and check](inspection.json) saves the SHA-256 of both projects, all pad nets of the 24 footprints, 43 interface checks and the hashes of the two original previews.
 
-## 复用边界
+## Reuse limits
 
-**继续复用底板三路驱动，不在 top_board_v2 新增重复 H 桥。** 顶板负责 ESP32 主控、USB、无线通信与受保护的供电。用户已接受[电池离车外置充电](../jlc_budget_6v/external_charging/README.md)，顶板不再承担充电或均衡。当前整车共用一个固定 6V 电机电源，送入现有底板 H4；三个电机型号/额定电压整车一致。
+**Keep reusing the base board's three drive channels; no duplicate H-bridges are added on top_board_v2.** The top board handles the ESP32 main controller, USB, wireless communication and protected power. The user has accepted [off-robot external battery charging](../jlc_budget_6v/external_charging/README.md), so the top board no longer handles charging or balancing. Currently the whole robot shares one fixed 6V motor supply, fed into the existing base board's H4; the three motors have the same model/rated voltage across the robot.
 
-底板 H4 的 1 脚接 GND，2/3/4 脚共同接 `BAT+`。三个 RZ7889-MS 的 4 脚均直接接这条 `BAT+`，3 脚均接 GND。因此该网名在新系统代表顶板输出的受控 VMOT，不能据名称把原始 2S 电池直接跨过顶板稳压与切断器件接到这里。
+Pin 1 of base board H4 goes to GND, and pins 2/3/4 together go to `BAT+`. Pin 4 of all three RZ7889-MS connects directly to this `BAT+`, and pin 3 to GND. So in the new system this net name stands for the controlled VMOT output by the top board; the name must not be used as a reason to connect the raw 2S battery here directly, bypassing the top board's regulation and cutoff parts.
 
-RZ7889-MS 的电压工作范围已有[厂家手册](https://atta.szlcsc.com/upload/public/pdf/source/20240621/B131634ECE1FC6FF8A8E32F28CF9A987.pdf)记录；驱动芯片覆盖 6V/12V 不代表现有走线、连接器、电容耐压和散热已通过两套真实负载验证。底板的实际电容耐压、堵转电流和铜箔/温升仍需纳入整机审核。
+The RZ7889-MS working voltage range is recorded in the [manufacturer manual](https://atta.szlcsc.com/upload/public/pdf/source/20240621/B131634ECE1FC6FF8A8E32F28CF9A987.pdf); the driver chip covering 6V/12V does not mean the existing traces, connectors, capacitor voltage ratings and cooling have been verified with two sets of real loads. The base board's actual capacitor voltage ratings, stall current and copper/temperature rise still need to be part of the whole-robot review.
 
-## 实际接口
+## Actual interface
 
-| 顶板接口 | 底板接口 | 物理电机 |
+| Top board interface | Base board interface | Physical motor |
 |---|---|---|
 | M0 | H2 | Motor1 |
 | M2 | H3 | Motor2 |
 | M1 | H1 | Motor3 |
 
-各底板 H1/H2/H3 的 2 脚连对应驱动 BI（1 脚），3 脚连 FI（2 脚），4 脚连对应电机插座 4 脚，5 脚连电机插座 3 脚。**H2.1 是 3V3；H1.1/H3.1 是 GND**，不能把三个五针接口视为完全相同。
+On each base board H1/H2/H3, pin 2 connects to the matching driver BI (pin 1), pin 3 to FI (pin 2), pin 4 to pin 4 of the matching motor socket, and pin 5 to pin 3 of the motor socket. **H2.1 is 3V3; H1.1/H3.1 are GND**, so the three five-pin interfaces must not be treated as identical.
 
-三个电机插座均为 **ZX-ZH1.5-6PLT / C19272418**，PCB 网络一致如下。编号指本板封装编号，不是线束颜色，也不是从电机端观察的左右次序。
+All three motor sockets are **ZX-ZH1.5-6PLT / C19272418**, with the same PCB nets, as below. Numbers are this board's footprint pin numbers, not harness colors, and not the left-right order seen from the motor end.
 
-| 本板电机插座脚号 | 实际 PCB 网络/去向 |
+| Motor socket pin on this board | Actual PCB net/destination |
 |---|---|
-| 1 | 对应驱动 BO，驱动 7/8 脚 |
-| 2 | 3V3（编码器电源意图） |
-| 3 | 编码器 A 返回顶板 |
-| 4 | 编码器 B 返回顶板 |
+| 1 | Matching driver BO, driver pins 7/8 |
+| 2 | 3V3 (intended as encoder power) |
+| 3 | Encoder A back to the top board |
+| 4 | Encoder B back to the top board |
 | 5 | GND |
-| 6 | 对应驱动 FO，驱动 5/6 脚 |
-| 7/8 | 未接网的连接器机械焊盘 |
+| 6 | Matching driver FO, driver pins 5/6 |
+| 7/8 | Unconnected connector mechanical pads |
 
-**发现待核实的标注冲突：** 保存的原理图预览在电机插座旁标示 2=GND、5=VCC，而 PCB 网络为 2=3V3、5=GND。此处只确认图中标注与实际网络不一致，尚不能断言实物线束接反。需按确切电机、插座视图和线束端到端定义判定；不因通用 N20 接线图或线色就交换本板引脚。原有 19 个板间触点保留。
+**Found a label conflict to verify:** the saved schematic preview labels 2=GND, 5=VCC next to the motor socket, while the PCB nets are 2=3V3, 5=GND. This only confirms that the label in the drawing does not match the actual nets; it cannot yet be said that the real harness is reversed. This must be decided from the exact motor, the socket view and the end-to-end harness definition; this board's pins are not swapped because of a generic N20 wiring diagram or wire colors. The original 19 board-to-board contacts are kept.
 
-## 用户已给定的电机
+## Motors the user has specified
 
-- 当前：MECCANIXITY，N20、DC12V、300RPM、带编码器、两只装。商品页 [Amazon B0F8NHMBWF](https://www.amazon.com/dp/B0F8NHMBWF)。网页请求返回 Amazon 拦截页面，未读到完整规格或当前价格。12V/300RPM/两只装来自用户给出的商品标题；不把其他店铺的电流参数套用到它。
-- 未来：国内 GA12-N20 的 6V 编码器版本。商品页 [淘宝商品 565304239241](https://item.taobao.com/item.htm?id=565304239241)。尚未确认具体转速/减速比 SKU、堵转电流、编码器电压、输出类型和端子定义；分享链接内的价格参数不作为报价。
-- 不再把“未提供电机型号/链接”列为缺失信息。待补的是这两个确切版本的电气规格与线束定义，以及安装空间。
-- 上述双电压计划已由用户最新要求收敛为三台 6V 版本；不增加逐电机电压档位，不自动猜测电机额定电压。
+- Current: MECCANIXITY, N20, DC12V, 300RPM, with encoder, two-pack. Product page [Amazon B0F8NHMBWF](https://www.amazon.com/dp/B0F8NHMBWF). The web request returned an Amazon block page; the full specs and current price were not read. 12V/300RPM/two-pack come from the product title the user gave; current parameters from other stores are not applied to it.
+- Future: a 6V encoder version of the GA12-N20 sold in China. Product page [Taobao item 565304239241](https://item.taobao.com/item.htm?id=565304239241). The exact speed/gear ratio SKU, stall current, encoder voltage, output type and terminal definitions are not yet confirmed; the price parameters in the share link are not taken as a quote.
+- "No motor model/link provided" is no longer listed as missing information. What is still needed is the electrical specs and harness definitions of these two exact versions, and the mounting space.
+- The dual-voltage plan above has been narrowed by the user's latest requirement to three 6V versions; no per-motor voltage settings are added, and the motors' rated voltage is never guessed automatically.
 
-后续找到同 ASIN 转售页面引用的 [Amazon 托管商品配图](https://m.media-amazon.com/images/I/61qXv1v1T-L._AC_SL3840_.jpg)：图中线束一端是六位插头，另一端是六根裸线。此照片不能证明插头节距、引脚功能或实际发货线束，但说明不能把附线当成已有的两端插头转接线。底板所用 ZX-ZH1.5-6PLT 仍需匹配正确端子及端到端线序；不得用图中线色代替 VCC/GND/M+/M−/A/B 定义。图片来源链与哈希只保存在完整历史仓库中，未据此填写未知堵转电流或认定接反。
+Later, the [Amazon-hosted product image](https://m.media-amazon.com/images/I/61qXv1v1T-L._AC_SL3840_.jpg) referenced by a resale page with the same ASIN was found: in the picture, one end of the harness is a six-position plug and the other end is six bare wires. This photo cannot prove the plug pitch, pin functions or the harness actually shipped, but it shows the included wires cannot be taken as an existing adapter cable with plugs on both ends. The ZX-ZH1.5-6PLT used on the base board still needs the correct matching terminals and end-to-end wire order; the wire colors in the picture must not replace the VCC/GND/M+/M−/A/B definitions. The image source chain and hash are kept only in the full-history repository; no unknown stall current was filled in and no reversal was concluded from it.
 
-本次仅提取、核对和记录，未修改底板或其走线，未打开串口、给电池充电或操作电机。
+This time only extraction, checking and recording were done; the base board and its traces were not changed, and no serial port was opened, no battery was charged and no motor was operated.

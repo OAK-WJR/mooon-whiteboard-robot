@@ -31,7 +31,7 @@ def rectified(cam):
     img = cam.frame()
     H = vision.surface_homography(img, cam.cfg)
     if H is None:
-        raise RuntimeError("看不到胶带")
+        raise RuntimeError("Cannot see the tape")
     w, h = cam.cfg["surface_cm"]
     W, Hh = int(w * 10), int(h * 10)
     # board cm (y up) -> image mm (y down)
@@ -95,7 +95,7 @@ def main():
         before, top0, m0 = band_ink(cam, x0, y0, x1, y1, avoid=avoid)
         ack = r.cmd("spin", x=args.dx / 100, y=args.dy / 100, deg=360 * args.turns, speed=args.speed, accel=0.05, rate=args.rate)
         if not ack.get("ok"):
-            raise SystemExit(f"spin 被拒绝: {ack.get('error')}")
+            raise SystemExit(f"spin rejected: {ack.get('error')}")
         wait_still(r, timeout=300)
         _, b = vision.measure(cam, n=11)
         if args.back:
@@ -103,11 +103,11 @@ def main():
             wait_still(r, timeout=300)
         _, c = vision.measure(cam, n=11)
         after, top1, m1 = band_ink(cam, x0, y0, x1, y1, avoid=avoid)
-        print(f"去程实际: ({b['x'] - x0:+.2f}, {b['y'] - y0:+.2f}) cm  转角 {(b['heading'] - a['heading'] + 180) % 360 - 180:+.2f}° (命令 {360 * args.turns:+.0f}°)")
-        print(f"扫过区域墨迹: 前 {before / 100:.1f} cm^2  后 {after / 100:.1f} cm^2  擦掉 {100 * (1 - after / max(1, before)):.0f}%")
+        print(f"Outbound actual: ({b['x'] - x0:+.2f}, {b['y'] - y0:+.2f}) cm  turn {(b['heading'] - a['heading'] + 180) % 360 - 180:+.2f}° (commanded {360 * args.turns:+.0f}°)")
+        print(f"Ink in swept area: before {before / 100:.1f} cm^2  after {after / 100:.1f} cm^2  erased {100 * (1 - after / max(1, before)):.0f}%")
         if args.back:
             err = math.hypot(c["x"] - x0, c["y"] - y0) * 10
-            print(f"往返误差: {err:.2f} mm ({(c['x'] - x0) * 10:+.2f}, {(c['y'] - y0) * 10:+.2f})  航向 {(c['heading'] - a['heading'] + 180) % 360 - 180:+.2f}°")
+            print(f"Round-trip error: {err:.2f} mm ({(c['x'] - x0) * 10:+.2f}, {(c['y'] - y0) * 10:+.2f})  heading {(c['heading'] - a['heading'] + 180) % 360 - 180:+.2f}°")
         ys = int(top0.shape[0] - max(y0, y1) * 10 - 90)
         ye = int(top0.shape[0] - min(y0, y1) * 10 + 90)
         xs, xe = int(min(x0, x1) * 10 - 90), int(max(x0, x1) * 10 + 90)
@@ -115,7 +115,7 @@ def main():
         out = np.vstack([crop(top0), crop(top1)])
         path = os.path.join(ROOT, "logs", time.strftime("erase-%m%d-%H%M%S.png"))
         cv2.imwrite(path, out)
-        print("前/后对比图:", path)
+        print("Before/after image:", path)
     finally:
         cam.close()
 

@@ -1,29 +1,29 @@
-# 验签期间控制租约到期：停止遗漏修正
+# Control lease expires during signature check: missed-stop fix
 
-2026-09-08（America/Los_Angeles）。当前预算版尚未定稿；本次修正的是各集成板版本共用的运行固件，不代表新增 PCB 已通过审核。
+2026-09-08 (America/Los_Angeles). The current budget version is not finalized; this fix is in the runtime firmware shared by all integrated board versions, and does not mean the new PCB has passed review.
 
-`command()` 入口检查 750ms 控制期限，随后解析 JSON 并验签。如果期限在这段处理期间到达，`Session::accept()` 会清除控制权并返回 `LEASE_EXPIRED`。旧处理器直接回包，没有调用 `halt()`；下一轮也无法通过已经清空的 owner 找到过期会话。控制器因此可能保留原先的运行状态。
+`command()` checks the 750ms control deadline on entry, then parses the JSON and checks the signature. If the deadline arrives during this processing, `Session::accept()` clears control ownership and returns `LEASE_EXPIRED`. The old handler replied right away without calling `halt()`; the next loop could not find the expired session either, because owner was already cleared. So the controller could keep its previous running state.
 
-修正后，处理器收到 `LEASE_EXPIRED` 时先调用 `halt("HEARTBEAT_TIMEOUT")`，再发送原有错误响应。租约不会续期，接口错误码保持一致；停止路径也会执行所选板型的电机使能请求 LOW 操作。
+After the fix, when the handler gets `LEASE_EXPIRED` it first calls `halt("HEARTBEAT_TIMEOUT")`, then sends the original error response. The lease is not renewed, and the interface error codes stay the same; the stop path also performs the selected board type's motor-enable-request LOW operation.
 
-回归使用实际命令处理器和 `Session`，在模拟时钟的 749ms 开始验签，向 HMAC 测试适配器注入 1ms 耗时。覆盖 Wi-Fi、BLE 和两种时钟起点，其中一种跨越 32 位毫秒计时回绕。测试直接检查控制器停止调用及运行状态，不只检查错误码或 owner 已清空。未修正代码下，新断言失败（进程退出 -6）：
+The regression uses the real command handler and `Session`, starts the signature check at 749ms on a simulated clock, and injects 1ms of delay into the HMAC test adapter. It covers Wi-Fi, BLE and two clock start points, one of which crosses the 32-bit millisecond counter wraparound. The test directly checks the controller stop call and the running state, not only the error code or that owner was cleared. On the unfixed code, the new assertion fails (process exit -6):
 
 ```text
 Assertion failed: (!robot.moving&&robot.stops>previousStops)
 ```
 
-复现本次修正后的离线验证：
+Offline verification to reproduce this fix:
 
 ```sh
 python3 control_tests/verify_lease_deadline.py --build
 ```
 
-该命令复用现有公共源码暂存流程，跳过私人配置，并放入禁止被包含的替代文件。验证在临时目录编译，不连接串口或无线设备，不上传固件。
+This command reuses the existing public-source staging flow, skips private configuration, and puts in substitute files that fail the build if they are included. The verification compiles in a temporary directory, does not connect to a serial port or wireless device, and does not upload firmware.
 
-本次结果保存在 [report.json](lease_deadline_results/report.json)：
+The results this time are saved in [report.json](lease_deadline_results/report.json):
 
-- 原生 USB 配置及 R3 UART 配置各通过 21 组实际命令/循环场景，包含新的期限边界回归和一万条固定种子的畸形输入。
-- 租约/组帧、实际循环时间计算，以及 6 种传输队列/重启回归通过。
-- 原生 C++ 测试启用 AddressSanitizer、UndefinedBehaviorSanitizer；C6 `top_board_v2_r3` 交叉编译通过。
+- The native USB configuration and the R3 UART configuration each pass 21 real command/loop scenarios, including the new deadline boundary regression and 10,000 fixed-seed malformed inputs.
+- Lease/framing, real loop timing calculations, and 6 transport queue/restart regressions pass.
+- Native C++ tests enable AddressSanitizer and UndefinedBehaviorSanitizer; the C6 `top_board_v2_r3` cross-compile passes.
 
-原生测试的时钟、SDK、控制器和无线接口使用替身；传输重启回归另执行实际传输源码。本次证明停止处理的控制流，不能证明物理 PWM 电平、H 桥断电、无线时延或电机停转距离。现有电路审核门禁仍然禁止运动；本次没有开放它，也没有完成预算、供电、充电、线束或实板验收。
+The native tests use stand-ins for the clock, SDK, controller and wireless interfaces; the transport restart regression also runs the real transport source. This proves the control flow of stop handling; it cannot prove physical PWM levels, H-bridge power cut, wireless latency or motor stopping distance. The existing circuit review gate still forbids motion; this change did not open it, and did not complete budget, power supply, charging, wiring harness or real-board acceptance.

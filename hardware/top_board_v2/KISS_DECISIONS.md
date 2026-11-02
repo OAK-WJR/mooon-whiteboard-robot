@@ -1,14 +1,14 @@
-# KISS 设计约束 — 用户追加，2026-09-07
+# KISS design constraints — added by the user, 2026-09-07
 
-在原有 USB 控制/恢复、Wi-Fi/BLE、整机 6V 或 12V 电机、2S 充电和保护要求内，优先减少器件、配置项与特殊工作模式。简单和可检验优先于增加功能。
+Within the existing requirements for USB control/recovery, Wi-Fi/BLE, whole-robot 6V or 12V motors, 2S charging and protection, prefer fewer components, config items and special operating modes. Simple and checkable comes before adding features.
 
-- 全车共用一种电机电压，三台统一 6V 或统一 12V；不增加逐电机电压变换。
-- 复用现有底部 controller board 的三颗 RZ7889-MS 和 19 个板间触点；top_board_v2 不新增重复电机 H 桥。新增的电机功率部分指共用 VMOT 稳压/切断，不是重做三路驱动。当前电机已明确为 MECCANIXITY 12V 300RPM 编码器 N20，未来兼容整车 6V GA12-N20；见 [底板与电机复查](bottom_board_review/README.md)。
-- 保留一条 CP2102N USB 数据/恢复路径；USB 原生引脚可在核对启动行为后用于其他必要功能。
-- 硬件看门狗使用固定 200ms 档；选一个同时监控 MAIN 电压的器件，省去独立监控芯片及可调定时电容。
-- 同一双触发器完成“故障后见到心跳”和“收到新的启用边沿”。输出与门使请求拉低能直接撤销许可；这三个逻辑功能各有对应失效场景。
-- 优先复用已经审核过的器件型号和常规封装。新增器件必须对应明确功能或已发现的失效模式。
-- 完整原理图定稿后，先清理重复功能与试验选项，再进行一次连贯布局布线；不把机械底稿或未完成的原理图称作最新已布线 PCB。
-- 底板 19 个对接触点、三角外形、四层方向保持既有约束。器件精简不能以错误对接、缺少实际断电或省去电池保护为代价。
+- The whole robot uses one motor voltage: all three at 6V or all three at 12V; no per-motor voltage conversion.
+- Reuse the three RZ7889-MS and 19 board-to-board contacts of the existing bottom controller board; top_board_v2 adds no duplicate motor H-bridges. The new motor power section means the shared VMOT regulation/cutoff, not redoing the three drive channels. The current motor is confirmed as the MECCANIXITY 12V 300RPM encoder N20, with future compatibility for an all-6V GA12-N20 robot; see [base board and motor review](bottom_board_review/README.md).
+- Keep one CP2102N USB data/recovery path; the native USB pins can be used for other necessary functions after the boot behavior is checked.
+- The hardware watchdog uses a fixed 200ms setting; pick a device that also monitors the MAIN voltage, saving a separate supervisor chip and an adjustable timing capacitor.
+- One dual flip-flop handles both "heartbeat seen after a fault" and "new enable edge received". An output AND gate lets the request going low revoke permission directly; each of these three logic functions has a matching failure scenario.
+- Prefer reusing component part numbers and common packages that have already been reviewed. Any new component must map to a clear function or a failure mode that was found.
+- After the full schematic is finalized, first clean out duplicate functions and trial options, then do one coherent layout and routing pass; a mechanical draft or an unfinished schematic is not called the latest routed PCB.
+- The base board's 19 mating contacts, triangular shape and four-layer direction keep their existing constraints. Cutting components must not come at the cost of wrong mating, missing a real power cutoff, or dropping battery protection.
 
-现有看门狗模块为 10 个元件，已并入 147 元件、10 页的 R3 整合稿。最终数量、成本与投板条件以整板完成后的实际 BOM 和验证为准。
+The existing watchdog module has 10 components and has been merged into the 147-component, 10-page R3 integrated draft. The final count, cost and conditions for ordering the board follow the actual BOM and verification after the whole board is done.

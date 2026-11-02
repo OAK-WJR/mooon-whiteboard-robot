@@ -31,7 +31,7 @@ static int reachStall(RobotController& robot, int wheel) {
         robot.update(float(CONTROL_PERIOD_MS) / 1000.0f);
         int value = pwm(robot, wheel);
         if (running && value == 0) {
-            assert(Serial.tx.find("堵转!") != std::string::npos);
+            assert(Serial.tx.find("Stall!") != std::string::npos);
             return tick;
         }
         running |= value > 0;

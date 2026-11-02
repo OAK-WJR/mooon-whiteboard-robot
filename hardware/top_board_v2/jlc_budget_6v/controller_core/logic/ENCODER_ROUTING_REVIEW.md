@@ -1,44 +1,44 @@
-# 编码器接口与 M2 A/B 布线检查
+# Encoder interface and M2 A/B routing check
 
-此文记录六路接口上拉与 M2 编码器阶段：新增 **57 段线、11 个过孔**，替换既有 10 段线和 2 个过孔。当时为 **422 段线、118 个过孔、两块地铜、27 项未连接**。后续 M1 主控连接及当前数量见[主板说明](README.md)。所有元件位置、六页原理图、70 件 BOM 和固件均未改变。
+This document records the six-interface pull-up and M2 encoder stage: **57 trace segments and 11 vias** added, replacing 10 existing segments and 2 vias. At that time there were **422 trace segments, 118 vias, two ground pours, 27 unconnected items**. For the later M1 controller connections and the current counts, see the [main board notes](README.md). All component positions, the six-page schematic, the 70-part BOM and the firmware are unchanged.
 
-[当前 PCB](top_board_v2_logic.kicad_pcb) · [整板预览](preview/placement.png) · [编码器区域放大图](preview/encoder_links_detail.png) · [该阶段原生连接检查](../archive/left_encoder_before_pair/top_board_v2_logic.verification.json)
+[Current PCB](top_board_v2_logic.kicad_pcb) · [Full-board preview](preview/placement.png) · [Encoder area close-up](preview/encoder_links_detail.png) · [Native connection check of that stage](../archive/left_encoder_before_pair/top_board_v2_logic.verification.json)
 
-## 接通范围
+## Connected scope
 
-| 网络 | 本轮核对的焊盘连接 | 到主控的状态 |
+| Net | Pad connections checked this round | Status to the controller |
 | --- | --- | --- |
-| ENC0_A | M0.5 → R14.2 | U3.12 尚未连接 |
-| ENC0_B | M0.4 → R15.2 | U3.13 尚未连接 |
-| ENC1_A | M1.5 → R18.2 | U3.5 尚未连接 |
-| ENC1_B | M1.4 → R19.2 | U3.6 尚未连接 |
-| ENC2_A | M2.5 → R22.2 → U3.15 / GPIO6 | 全路径已连通 |
-| ENC2_B | M2.4 → R23.2 → U3.16 / GPIO7 | 全路径已连通 |
+| ENC0_A | M0.5 → R14.2 | U3.12 not yet connected |
+| ENC0_B | M0.4 → R15.2 | U3.13 not yet connected |
+| ENC1_A | M1.5 → R18.2 | U3.5 not yet connected |
+| ENC1_B | M1.4 → R19.2 | U3.6 not yet connected |
+| ENC2_A | M2.5 → R22.2 → U3.15 / GPIO6 | Full path connected |
+| ENC2_B | M2.4 → R23.2 → U3.16 / GPIO7 | Full path connected |
 
-六颗上拉电阻的另一端在前一供电阶段已接 MAIN_3V3。每组对接排针仍是 **4 脚编码器 B、5 脚编码器 A**；实体 Motor1/2/3 对应 M0/M2/M1。这里检查的是顶部铜连接，不能替代实际线束针序和编码器方向核对。
+The other end of the six pull-up resistors was already connected to MAIN_3V3 in the previous power stage. Each mating header is still **pin 4 encoder B, pin 5 encoder A**; physical Motor1/2/3 map to M0/M2/M1. What is checked here is the top copper connection; it cannot replace checking the actual harness pin order and encoder direction.
 
-M2 A/B 由主控下边引出，换层跨过既有供电、启动配置和控制线。GPIO15、M2_FI、BOOT 的局部路径及一个地过孔为编码器引出让位；替换前后的实体焊盘连接均重新检查。ENC2_B 在模组焊盘和启动配置走线之间用 0.2mm 引出，其余新增信号为 0.25mm，未放宽已有规则。新增过孔均为 0.6mm 外径、0.3mm 孔径。外侧折线使用 30°/60° 转向；所有坐标明确给定，没有自动寻路。
+M2 A/B exit from the bottom side of the controller and change layers to cross the existing power, boot config and control lines. The local paths of GPIO15, M2_FI and BOOT and one ground via made way for the encoder breakout; the physical pad connections before and after the replacement were all re-checked. ENC2_B exits at 0.2mm between the module pad and the boot config trace, and the other new signals are 0.25mm; existing rules were not relaxed. New vias are all 0.6mm outer diameter with a 0.3mm hole. The outer bends use 30°/60° turns; all coordinates are given explicitly, with no autorouting.
 
-## 检查结果
+## Check results
 
-KiCad 原生铜连接图确认六组表列连接，全部原有实体焊盘连接组仍然连通。22 个 MAIN_3V3 焊盘、30 个主控实体地焊盘和六个控制下拉地端均保留原连接；同名 49 脚的九个地焊盘逐一检查。全部 246 个物理引脚网络与当前 XML 一致。
+The KiCad native copper connection graph confirms the six listed connections, and all original physical pad connection groups are still connected. The 22 MAIN_3V3 pads, the 30 physical ground pads of the controller and the six control pull-down ground ends all keep their original connections; the nine ground pads that share pin name 49 were checked one by one. All 246 physical pin nets match the current XML.
 
-74 个封装的完整记录逐字保持，包括原 19 个对接触点及四个安装孔。472 个既有线段/过孔记录逐字保留，12 个替换记录列在[坐标方案](encoder_links_review.routing.json)。两块地铜和全部禁布区定义、板框、设计规则与网络类别均不变，铺铜从清空缓存的状态重新填充。
+The full records of the 74 footprints are kept verbatim, including the original 19 mating contacts and four mounting holes. 472 existing trace/via records are kept verbatim, and the 12 replaced records are listed in the [coordinate plan](encoder_links_review.routing.json). The two ground pours and all keep-out definitions, the board outline, design rules and net classes are unchanged, and the pours were refilled from a cleared cache.
 
-11 个临时副本分别切断六个接口到上拉的连接、两根 M2 编码器主控引出，以及改道的 M2_FI、GPIO15 和 BOOT。每个副本的原生连接图都检出预期断开，未连接项从 **27 增到 28**；没有把仅删去焊盘内短线当作断路对照。这些检查证明相应铜断线可被 CAD 检出，不是实板 USB 故障诊断测试。
+11 temporary copies each cut one of: the six interface-to-pull-up connections, the two M2 encoder controller breakouts, and the rerouted M2_FI, GPIO15 and BOOT. The native connection graph of each copy detected the expected break, and unconnected items rose from **27 to 28**; deleting only a short trace inside a pad was not used as an open-circuit control. These checks prove that the matching copper breaks can be detected by CAD; they are not a real-board USB fault diagnosis test.
 
-该阶段 DRC 未报告新增短路、铜间距、过孔、板边或孤立铜错误，仍有原来的 **M2/PWR1 装配边界重叠**。19 点上下板配准最大名义残差约 0.00103mm；天线到下板的约 0.046mm 名义净空仍未获得制造公差或射频验证。[阶段版本记录](../archive/left_encoder_before_pair/verification/encoder_links_layout_revision.json)核对 123 个固件和原理图源文件未变，没有重复运行无关固件测试。
+At this stage DRC reported no new short, copper clearance, via, board edge or isolated copper errors; the original **M2/PWR1 assembly boundary overlap** remains. The max nominal residual of the 19-point top/bottom board registration is about 0.00103mm; the nominal clearance of about 0.046mm from the antenna to the lower board still has no manufacturing tolerance or RF verification. The [stage version record](../archive/left_encoder_before_pair/verification/encoder_links_layout_revision.json) checks that 123 firmware and schematic source files did not change; unrelated firmware tests were not re-run.
 
-## 尚未完成
+## Not yet done
 
-本阶段剩余的 M1 编码器主控连接已在[后续布线](LEFT_ENCODER_ROUTING_REVIEW.md)完成；M0 编码器、M0/M1 控制主控引线、采样及电源仍有未完成项，见[当前剩余明细](remaining_connections.json)。ADC 掉电问题、完整输入连接器与保护、USB 用电及自动恢复、实际默认关闭、功率动态、温升、装配和无线测试仍未完成。
+The remaining M1 encoder controller connections from this stage were completed in [later routing](LEFT_ENCODER_ROUTING_REVIEW.md); the M0 encoder, the M0/M1 control leads to the controller, sensing and power still have unfinished items, see the [current remaining details](remaining_connections.json). The ADC power-off issue, full input connector and protection, USB power and auto recovery, actual default-off, power dynamics, temperature rise, assembly and wireless tests are still not done.
 
-本轮未增加器件费用，也没有改变当前方案预算不合格的结论。五片顶部成品的全 BOM 与装配报价仍缺失；CAD 局部通过不能作为制造或整机运行放行。
+This round added no component cost and did not change the conclusion that the current plan fails the budget. The full BOM and assembly quote for the five finished top boards are still missing; a partial CAD pass cannot be a release for manufacturing or whole-robot operation.
 
-在 `controller_core` 验证本阶段存档：
+Verify this stage's archive in `controller_core`:
 
 ```sh
 python3 verify_encoder_links.py --board archive/left_encoder_before_pair/top_board_v2_logic.kicad_pcb --baseline archive/encoder_before_links/top_board_v2_logic.kicad_pcb
 ```
 
-[375 段线检查点](../archive/encoder_before_links/CHECKPOINT.md)保留本轮前的主板。`route_encoder_links.py` 仅接受该旧版哈希，不可重复添加到当前板。
+The [375-segment checkpoint](../archive/encoder_before_links/CHECKPOINT.md) keeps the main board from before this round. `route_encoder_links.py` only accepts that old version's hash, and cannot be applied again to the current board.

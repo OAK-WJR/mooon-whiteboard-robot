@@ -1,174 +1,174 @@
-# BQ76905 独立监测驱动
+# BQ76905 standalone monitor driver
 
-此交付实现 **2S 监测、易失配置校验和故障后数据失效**。`Monitoring` 只表示配置与读回流程完成，**不表示允许充电或放电**。当前实现始终要求外部禁止信号保持有效，没有 CHG_ON、DSG_ON、FET_ENABLE 翻转或自动解除禁止的路径。
+This delivery implements **2S monitoring, volatile configuration verification and data invalidation after faults**. `Monitoring` only means the configure-and-read-back flow is done; it **does not mean charging or discharging is allowed**. The current implementation always requires the external inhibit signal to stay active; there is no path that toggles CHG_ON, DSG_ON or FET_ENABLE, or that lifts the inhibit automatically.
 
-原始独立交付未接入主固件。2026-09-08 已完成[主循环、GPIO39唤醒和主机 cells 诊断接入](PICO_CELL_RUNTIME.md)，仍未访问实物、串口或 USB。下文独立驱动交付及示例保留为历史接口说明；机械证据与软件测试结果无关。
+The original standalone delivery was not connected to the main firmware. On 2026-09-08 the [main loop, GPIO39 wake and host cells diagnostics integration](PICO_CELL_RUNTIME.md) was done; it still did not access hardware, a serial port or USB. The standalone driver delivery and examples below are kept as historical interface notes; mechanical evidence is unrelated to the software test results.
 
-## 文件与复跑
+## Files and re-running
 
-| 文件 | 内容 |
+| File | Contents |
 |---|---|
-| `include/bq76905_monitor.h` | 无 Arduino 依赖的公开 C++11 接口 |
-| `src/bq76905_monitor.cpp` | 固定内存、非阻塞有限状态机 |
-| `control_tests/bq76905/test_monitor.cpp` | 独立 TI 协议模拟器、源表示例与故障注入 |
-| `control_tests/bq76905/source_contract.json` | 保留资料标识、32 项实际源文检查与已知冲突 |
-| `control_tests/bq76905/run_tests.py` | 只编译上述驱动和测试，不运行项目固件构建 |
-| `control_tests/bq76905/test_report.json` | 本次编译、检测结果及对应代码摘要 |
-| `control_tests/bq76905/.gitignore` | 隔离本目录临时构建输出 |
-| `docs/BQ76905_MONITOR.md` | 本说明与待集成约束 |
+| `include/bq76905_monitor.h` | Public C++11 interface with no Arduino dependency |
+| `src/bq76905_monitor.cpp` | Fixed-memory, non-blocking finite state machine |
+| `control_tests/bq76905/test_monitor.cpp` | Independent TI protocol simulator, source-table examples and fault injection |
+| `control_tests/bq76905/source_contract.json` | Kept document identifiers, 32 checks against the actual source text, and known conflicts |
+| `control_tests/bq76905/run_tests.py` | Only compiles the driver and tests above; does not run the project firmware build |
+| `control_tests/bq76905/test_report.json` | This run's build and test results, with the matching code digests |
+| `control_tests/bq76905/.gitignore` | Isolates this folder's temporary build output |
+| `docs/BQ76905_MONITOR.md` | This document and the constraints still to integrate |
 
-在仓库根目录运行：
+Run from the repository root:
 
 ```sh
 python3 control_tests/bq76905/run_tests.py
 ```
 
-默认使用 `clang++ -std=c++11 -Wall -Wextra -Werror -pedantic`，同时启用 AddressSanitizer 与 UndefinedBehaviorSanitizer。可显式指定 `--compiler g++`；不支持 sanitizers 的主机可使用 `--no-sanitizers`，报告会记录这一限制。所有编译产物留在本测试目录的 `.build/` 中。
+By default it uses `clang++ -std=c++11 -Wall -Wextra -Werror -pedantic`, with both AddressSanitizer and UndefinedBehaviorSanitizer enabled. `--compiler g++` can be passed explicitly; hosts without sanitizers can use `--no-sanitizers`, and the report records this limit. All build output stays in `.build/` in this test folder.
 
-本次验证通过 **18 组测试、全部 296 次初始化传输的逐次不完整完成注入、32 项保留源文检查**。296 次指完整显式电压/内部过温配置到首次快照所需的模拟总线事务；不是实测器件时序或性能承诺。每个中断位置均单独从初始状态运行，并验证不能发布半帧或放行。
+This verification passed **18 test groups, incomplete-completion injection at each of all 296 initialization transfers, and 32 kept source-text checks**. 296 is the total number of simulated bus transactions needed from full explicit voltage/internal over-temperature configuration to the first snapshot; it is not measured device timing or a performance promise. Each interruption point runs separately from the initial state, and the test verifies that no half frame is published and nothing is released.
 
-模拟器依据实际寄存器、延迟模式切换、CFG 写入条件、W1C 锁存、长度提交以及 0x61 自动移窗等协议规则实现，没有导入驱动的内部命令常量。TI 波形中的 CRC 输入/输出字节是固定外部参照。测试覆盖 NAK、短读、短写、总线错误、一直忙、一直 Pending、错误回显/长度/校验和/配置读回、CFG 未进入/未退出、运行中及配置提交前 POR、CRC 退回 OTP 默认、数据陈旧、计时器回绕、下节低于 2 V、上节异常、TS 越界、保护状态和运行中配置漂移。
+The simulator implements protocol rules such as the actual registers, delayed mode switching, CFG write conditions, W1C latches, length commit and the 0x61 auto window shift; it does not import the driver's internal command constants. The CRC input/output bytes from the TI waveforms are a fixed external reference. Tests cover NAK, short read, short write, bus error, always busy, always Pending, wrong echo/length/checksum/config read-back, CFG not entered/not exited, POR while running and before config commit, CRC falling back to the OTP default, stale data, timer wraparound, lower cell below 2 V, upper cell abnormal, TS out of range, protection status and config drift while running.
 
-保护方向测试另按 TRM 表 11-2/4、12-12/13/14 独立解码实际写入的路由字节，在有/无 profile 下检查 34 个故障组合。它隔离验证“该保护对哪一路增加关断条件”，同时逐项确认实际 CHG/DSG 仍被 held OFF、所有充放电请求仍被拒绝。仅检查最终双 OFF 会掩盖路由错误，因此不作为方向正确的唯一证据。
+The protection direction test also independently decodes the routing bytes actually written, using TRM tables 11-2/4 and 12-12/13/14, and checks 34 fault combinations with and without a profile. It verifies in isolation "which channel this protection adds a turn-off condition to", while confirming item by item that the actual CHG/DSG are still held OFF and that all charge/discharge requests are still rejected. Checking only the final double OFF would hide routing errors, so it is not used as the only evidence that the direction is correct.
 
-这属于软件与协议仿真，**不是电池、保护 MOSFET、电源链或实物充电仿真/认证**。
+This is software and protocol simulation, **not simulation/certification of the battery, protection MOSFETs, power chain or real charging**.
 
-## 所用资料与纠错
+## Sources used and corrections
 
-先执行了 `hyperresearch search`，本地未找到 vault；随后读取现有 `cell_monitor_integration/sources/bq76905.pdf`、`bq76905_trm.pdf` 及其保留文本，并核对了 TI 官方资料。未使用外部搜索 key。原 PDF 的 SHA 与实际文本表检查保存在测试契约中；没有改写原资料。
+First ran `hyperresearch search`, which found no local vault; then read the existing `cell_monitor_integration/sources/bq76905.pdf`, `bq76905_trm.pdf` and their kept text, and checked TI's official documents. No external search key was used. The SHA of the original PDFs and the checks against the actual text tables are saved in the test contract; the original documents were not rewritten.
 
-| 结论 | 依据 |
+| Conclusion | Basis |
 |---|---|
-| Cell1 电压 `0x14`，物理 Cell5 电压 `0x1C`，均为 I2/mV | [SLUUCI8](https://www.ti.com/lit/ug/sluuci8/sluuci8.pdf)，表 5-1、11-1 |
-| 2S 上节接 VC5–VC4A，下节 VC1–VC0；`VcellMode=2` | SLUUCI8 表 5-8、12-6 |
-| `VcellMode` 在 `0x901B`，宽度 **H1** | SLUUCI8 表 12-6、数据存储器汇总 |
-| Stack `0x26` 为 U2/mV；TS `0x2A` 为有符号 ADC 码 | SLUUCI8 表 11-1 |
-| 设备识别返回 `0x7605` | [SLUAAM4 §2.1](https://www.ti.com/document-viewer/lit/html/SLUAAM4/GUID-4CF2CBF4-59FC-4D52-BF6B-6DBF6FD985E0) |
-| CRC 默认关闭；更改位在退出 CFG 后才生效 | SLUUCI8 §9.1、表 12-4 |
-| DSG/CHG 各 bit7 分别是 CUV/COV，各 bit0 是 OTINT；Both bit0 是 REGOUT | SLUUCI8 表 12-12、12-13、12-14 |
-| CRC 首字节和后续字节的固定波形参照 | [SLUAAM4 §4](https://www.ti.com/document-viewer/lit/html/SLUAAM4/GUID-8BA27471-7E9C-46CC-9D03-ECBD6DC8419B) |
-| 电气输入条件和标准器件信息 | [SLUSE97](https://www.ti.com/lit/ds/symlink/bq76905.pdf) |
+| Cell1 voltage `0x14`, physical Cell5 voltage `0x1C`, both I2/mV | [SLUUCI8](https://www.ti.com/lit/ug/sluuci8/sluuci8.pdf), tables 5-1, 11-1 |
+| 2S upper cell on VC5–VC4A, lower cell on VC1–VC0; `VcellMode=2` | SLUUCI8 tables 5-8, 12-6 |
+| `VcellMode` is at `0x901B`, width **H1** | SLUUCI8 table 12-6, data memory summary |
+| Stack `0x26` is U2/mV; TS `0x2A` is a signed ADC code | SLUUCI8 table 11-1 |
+| Device ID returns `0x7605` | [SLUAAM4 §2.1](https://www.ti.com/document-viewer/lit/html/SLUAAM4/GUID-4CF2CBF4-59FC-4D52-BF6B-6DBF6FD985E0) |
+| CRC is off by default; changing the bit only takes effect after leaving CFG | SLUUCI8 §9.1, table 12-4 |
+| DSG/CHG bit7 are CUV/COV respectively, and each bit0 is OTINT; Both bit0 is REGOUT | SLUUCI8 tables 12-12, 12-13, 12-14 |
+| Fixed waveform reference for the CRC first byte and following bytes | [SLUAAM4 §4](https://www.ti.com/document-viewer/lit/html/SLUAAM4/GUID-8BA27471-7E9C-46CC-9D03-ECBD6DC8419B) |
+| Electrical input conditions and standard device information | [SLUSE97](https://www.ti.com/lit/ds/symlink/bq76905.pdf) |
 
-已明确处理三处资料冲突：
+Three conflicts in the documents are handled explicitly:
 
-1. TRM §5.1.2 的旧地址正文不能覆盖真实命令表；2S 上节不能读取 Cell2/`0x16`。
-2. 软件指南 §3.4 的摘要表把 Vcell Mode 写成 H2；这里按 TRM 使用 H1，避免覆盖相邻 `0x901C` Alarm Mask。
-3. REGOUT 默认摘要 `0x08` 与 3.3 V 默认文字不一致。驱动读取实际 `REGOUT CONTROL` 和 DM `REGOUT Config`，要求低四位完全一致；不推测电压，也不改其配置。退出 CFG 会重新载入该值，因此不一致时在退出前拒绝继续。
+1. The old address text in TRM §5.1.2 cannot override the real command table; the 2S upper cell cannot be read from Cell2/`0x16`.
+2. The summary table in software guide §3.4 lists Vcell Mode as H2; here H1 is used per the TRM, to avoid overwriting the adjacent `0x901C` Alarm Mask.
+3. The REGOUT default summary `0x08` does not match the 3.3 V default text. The driver reads the actual `REGOUT CONTROL` and DM `REGOUT Config`, and requires the low four bits to match exactly; it does not guess the voltage, and does not change its config. Leaving CFG reloads this value, so on a mismatch it refuses to continue before leaving.
 
-## 运行序列与禁止控制
+## Run sequence and inhibit control
 
-1. 外部电路先保持禁止，完成 TS/唤醒时序后调用 `beginAfterWake()`。驱动不产生 GPIO 唤醒脉冲。
-2. 读取真正的 Battery Status，仅在这一最初只读阶段对 NAK 做有截止时间的重试（实际后端不能区分地址与寄存器字节 NAK）；SEC 尚未初始化也只有限等待。用 `DEVICE_NUMBER` 间接读取、回显、长度和校验确认 `0x7605`。
-3. 写 `FET CONTROL=0x0C` 请求双 OFF，并检查 Battery Status 的实际 CHG/DSG 位。默认 HOST_FETOFF_EN 未打开，**写成功本身不是双 OFF 的证据**。已开启自主 FET、实际输出为高、SEALED 或已被另一主机置于 CFG 的器件均拒绝接管；不盲发会翻转状态的 FET_ENABLE，也不尝试猜测解封密钥。
-4. 如处于 DEEPSLEEP，发 EXIT_DEEPSLEEP 并等待状态确认。写 `CB_ACTIVE_CELLS=0`、读回为零；已经禁止写入且仍在均衡的异常器件会被拒绝。
-5. 发 SET_CFGUPDATE `0x0090`，**看到 CFGUPDATE=1 后**才开始 DM 配置。每个 DM 提交前再次检查 CFG/SEC/POR/实际 FET 状态；每项写后读回比较，再检查 CFG 状态。
-6. 校验 CRC 位与调用参数吻合；配置下表各项。清除 TS_ON，但保留现有 LDO 使能与电压。检查 DM 将在退出时载入的 LDO 值和 I2C 地址也与当前值一致。
-7. 在测量暂停时设置并清除需要的锁存事件；发 EXIT_CFGUPDATE `0x0092`，等待 CFGUPDATE=0 且 POR=0。重新请求双 OFF、禁用 SLEEP，并确认实际输出、自主控制、FET CONTROL 和 Alarm Enable。
-8. 使用已使能、已清除的 **Alarm Status 锁存 INITCOMP/FULLSCAN** 等待真实新测量。Raw Status 的同名位是短脉冲，不能当锁存事件轮询。等待期间交替读取 Battery Status，检测 POR。
-9. 每轮先检查状态并审计全部已配置 DM、CRC、LDO、I2C 地址、FET CONTROL 和均衡状态；清除 FULLSCAN 后等待下一次锁存。读取 Cell1、Cell5、Stack、TS、Safety、Alarm；再检查 Battery Status，最后才发布快照。
+1. The external circuit holds the inhibit first; call `beginAfterWake()` after the TS/wake timing is done. The driver does not generate a GPIO wake pulse.
+2. Read the real Battery Status; only in this first read-only phase are NAKs retried, with a deadline (the actual backend cannot tell an address NAK from a register-byte NAK); an uninitialized SEC also gets only a limited wait. Confirm `0x7605` through an indirect `DEVICE_NUMBER` read, with echo, length and checksum.
+3. Write `FET CONTROL=0x0C` to request double OFF, and check the actual CHG/DSG bits in Battery Status. HOST_FETOFF_EN is not on by default, so **a successful write is not by itself evidence of double OFF**. It refuses to take over a device with autonomous FET control already on, an actual output high, SEALED, or already put in CFG by another host; it does not blindly send FET_ENABLE, which would toggle the state, and does not try to guess the unseal key.
+4. If in DEEPSLEEP, send EXIT_DEEPSLEEP and wait for status confirmation. Write `CB_ACTIVE_CELLS=0` and read back zero; an abnormal device that already has writes disabled but is still balancing is refused.
+5. Send SET_CFGUPDATE `0x0090`, and start DM configuration only **after seeing CFGUPDATE=1**. Before each DM commit, check CFG/SEC/POR/actual FET state again; after each write, read back and compare, then check CFG state.
+6. Verify that the CRC bit matches the call parameter; configure the items in the table below. Clear TS_ON, but keep the existing LDO enable and voltage. Check that the LDO value and I2C address that DM will load on exit also match the current values.
+7. While measurement is paused, set and clear the needed latched events; send EXIT_CFGUPDATE `0x0092`, and wait for CFGUPDATE=0 and POR=0. Request double OFF again, disable SLEEP, and confirm the actual outputs, autonomous control, FET CONTROL and Alarm Enable.
+8. Use the enabled and cleared **Alarm Status latches INITCOMP/FULLSCAN** to wait for a real new measurement. The bits with the same names in Raw Status are short pulses and cannot be polled as latched events. While waiting, alternate with reading Battery Status to detect POR.
+9. Each round, first check status and audit all configured DM, CRC, LDO, I2C address, FET CONTROL and balancing state; clear FULLSCAN and wait for the next latch. Read Cell1, Cell5, Stack, TS, Safety, Alarm; check Battery Status again, and only then publish the snapshot.
 
-间接读会取回 32 字节缓冲区、checksum、length（读 `0x61` 放在末尾）；按器件返回的数据长度计算校验，检查范围和命令预期长度。读 length 会自动移窗，所以下一次操作总是重新选地址。写采用地址、缓冲数据、checksum/length 的顺序；length 最后提交。长度/校验失败均不采用部分数据。
+An indirect read fetches the 32-byte buffer, checksum and length (reading `0x61` comes last); the checksum is computed over the data length the device returns, and the range and the command's expected length are checked. Reading length auto-shifts the window, so the next operation always selects the address again. Writes go in the order address, buffer data, checksum/length; length is committed last. On any length/checksum failure, no partial data is used.
 
-| 配置 | 当前写入值/来源 |
+| Config | Current written value/source |
 |---|---|
-| FET Options `0x901E` | `0x40`：只允许 HOST_FETOFF；禁 HOST_FETON、FET_EN、SFET 体二极管覆盖、PWM 等 |
-| Vcell Mode `0x901B` | `2`，单字节 |
-| DA Config `0x9019` | `0x01C0`：TSMODE=电压输入，CCMODE=停用电流转换，标准 ADC 速度 |
-| Balancing Configuration `0x9020` | `0x03`：禁止均衡写命令，保留标准 1 ms 等待；实际均衡状态还必须为零 |
-| Default Alarm Mask `0x901C` | `0xC285`：标准来源加 FULLSCAN、INITCOMP、POR |
-| Enabled Protections A/B | 无显式 profile：`0x01/0x00`，这些使能位中仅 REGOUT；有完整电压/内部过温 profile：`0xC1/0x02` |
-| DSG FET Protections A `0x9026` | 有 profile：`0x81` = CUV(bit7) + OTINT(bit0)；无 profile：`0x00` |
-| CHG FET Protections A `0x9027` | 有 profile：`0x81` = COV(bit7) + OTINT(bit0)；无 profile：`0x00` |
-| Both FET Protections B `0x9028` | 两种模式均 `0x07`：保留默认 VREF(bit2)/VSS(bit1) 共用关断映射，并加 REGOUT(bit0)；此字节没有 OTINT 位 |
-| 电流、TS 温度保护 | 禁用：当前硬件无法提供这些量的真实保护判断 |
-| I2C Config、REGOUT Config、I2C Address | **只读核对，不修改** |
+| FET Options `0x901E` | `0x40`: only HOST_FETOFF allowed; HOST_FETON, FET_EN, SFET body diode override, PWM, etc. disabled |
+| Vcell Mode `0x901B` | `2`, single byte |
+| DA Config `0x9019` | `0x01C0`: TSMODE=voltage input, CCMODE=current conversion off, standard ADC speed |
+| Balancing Configuration `0x9020` | `0x03`: balancing write commands disabled, standard 1 ms wait kept; the actual balancing state must also be zero |
+| Default Alarm Mask `0x901C` | `0xC285`: standard sources plus FULLSCAN, INITCOMP, POR |
+| Enabled Protections A/B | No explicit profile: `0x01/0x00`, with only REGOUT among these enable bits; with a full voltage/internal over-temperature profile: `0xC1/0x02` |
+| DSG FET Protections A `0x9026` | With profile: `0x81` = CUV(bit7) + OTINT(bit0); without profile: `0x00` |
+| CHG FET Protections A `0x9027` | With profile: `0x81` = COV(bit7) + OTINT(bit0); without profile: `0x00` |
+| Both FET Protections B `0x9028` | `0x07` in both modes: keeps the default shared turn-off mapping for VREF(bit2)/VSS(bit1) and adds REGOUT(bit0); this byte has no OTINT bit |
+| Current and TS temperature protection | Disabled: the current hardware cannot provide real protection decisions for these quantities |
+| I2C Config, REGOUT Config, I2C Address | **Read-only check, not changed** |
 
-无 profile 的模式不依赖芯片默认 COV/CUV 阈值；它明确关闭未配置的保护项目，并一直要求外部禁止。即便配置了电压/内部过温项目，当前输出仍为 OFF。
+The no-profile mode does not depend on the chip's default COV/CUV thresholds; it explicitly turns off unconfigured protection items, and always requires the external inhibit. Even with the voltage/internal over-temperature items configured, the current outputs are still OFF.
 
-本轮纠正了把 Enabled Protections A/B 掩码直接复用到 FET 路由的实现错误。两组寄存器位定义不同；例如 OTINT 的使能在 `0x9025.bit1`，关断路由却分别在 `0x9026.bit0`、`0x9027.bit0`，而 `0x9028.bit1` 是 VSS。VREF/VSS 在这里保留的是默认关断路由，不据此宣称已完整验证诊断功能。
+This round fixed an implementation error that reused the Enabled Protections A/B masks directly for FET routing. The two register groups have different bit definitions; for example, the OTINT enable is at `0x9025.bit1`, but its turn-off routing is at `0x9026.bit0` and `0x9027.bit0`, while `0x9028.bit1` is VSS. What VREF/VSS keep here is the default turn-off routing; this is not grounds for claiming the diagnostic function is fully verified.
 
-显式 profile 的保护方向如下，仅表示该故障额外施加的保护关断条件：
+The protection directions of the explicit profile are below; they only show the extra protection turn-off condition that each fault applies:
 
-| 故障 | DSG 保护关断 | CHG 保护关断 |
+| Fault | DSG protection turn-off | CHG protection turn-off |
 |---|---|---|
-| CUV | 是 | 否 |
-| COV | 否 | 是 |
-| 内部 OTINT | 是 | 是 |
-| REGOUT | 是 | 是 |
-| VREF / VSS | 是 | 是 |
+| CUV | Yes | No |
+| COV | No | Yes |
+| Internal OTINT | Yes | Yes |
+| REGOUT | Yes | Yes |
+| VREF / VSS | Yes | Yes |
 
-CUV 的映射只向 DSG 增加保护关断，COV 的映射只向 CHG 增加保护关断。**方向未被该保护阻断的输出仍受全局 held OFF 和 permission 禁止约束；本交付没有批准恢复充电或任何放行。**
+The CUV mapping only adds a protection turn-off to DSG, and the COV mapping only adds one to CHG. **Outputs in a direction that this protection does not block are still bound by the global held OFF and the permission inhibit; this delivery does not approve resuming charging or any release.**
 
-## 给主线程的接口
+## Interface for the main work stream
 
-按本轮主线程提供的 CM3 约定：GPIO39/contact19 为 `WAKE_REQUEST_N`，GPIO41/contact22 为 `CHARGE_REQUEST`，GPIO40 保持 NC。这里仅记录交接约定；独立驱动不绑定这些引脚、不输出请求，也未修改主图、board profile 或主固件。
+Per the CM3 convention given by the main work stream this round: GPIO39/contact19 is `WAKE_REQUEST_N`, GPIO41/contact22 is `CHARGE_REQUEST`, and GPIO40 stays NC. This only records the handoff convention; the standalone driver does not bind these pins, does not output requests, and did not change the main schematic, board profile or main firmware.
 
-`I2c` 与 `Clock` 必须比 `Monitor` 活得更久；Monitor 禁止复制。I2C 适配器需要满足：
+`I2c` and `Clock` must outlive `Monitor`; Monitor cannot be copied. The I2C adapter must meet these requirements:
 
-- `start()`、`poll()`、`cancel()` 都及时返回。`start=false` 表示尚未执行任何总线操作；Pending 不能暗含阻塞等待。
-- 读取用 register pointer 后的 **repeated START**，最后一个字节 NACK 后 STOP。不能换成带 STOP 的另一种读法而仍使用这里的 CRC。
-- 支持最多 69 字节 TX、68 字节 RX。不能套用固定 32 字节 Wire 缓冲区后静默截断。
-- 完成计数对应传入缓冲区字节数，包含 CRC，**不包含地址/RW 和 ACK 位**。读写短计数都会报错。
-- 取消返回前，DMA/IRQ 等不得再访问旧缓冲区。Monitor 析构或显式重启时会取消自己仍持有的事务。
-- 此驱动独占该 BQ 的间接命令窗口；其他 I2C 器件可由适配器仲裁，但不能让另一个 BQ 客户端穿插写 `0x3E…0x61`。
+- `start()`, `poll()` and `cancel()` all return promptly. `start=false` means no bus operation has been done yet; Pending must not imply a blocking wait.
+- Reads use a **repeated START** after the register pointer, and STOP after NACK on the last byte. It cannot be swapped for another read style that uses STOP while still using the CRC here.
+- Supports up to 69 bytes TX and 68 bytes RX. It must not use a fixed 32-byte Wire buffer and silently truncate.
+- The completion count is the number of bytes in the passed buffer, including CRC, **not including address/RW and ACK bits**. Short counts on read or write both report errors.
+- Before cancel returns, DMA/IRQ and the like must no longer access the old buffer. When Monitor is destroyed or explicitly restarted, it cancels any transaction it still holds.
+- This driver owns this BQ's indirect command window exclusively; other I2C devices can be arbitrated by the adapter, but another BQ client must not interleave writes to `0x3E…0x61`.
 
-每次 `tick()` 最多调用一次适配器 start 或 poll；超时时可改为一次 cancel，没有等待硬件的循环。默认参数在主机测试中按 1 ms tick 驱动；建议平台集成先保持这一调度间隔并测量真实耗时。调用更慢可能达到帧超时，不能直接宣称已验证实时性能。
+Each `tick()` calls adapter start or poll at most once; on timeout it can call cancel once instead; there is no loop that waits on hardware. Default parameters are driven at a 1 ms tick in host tests; for platform integration we suggest keeping this scheduling interval first and measuring the real run time. Slower calls may hit frame timeouts; real-time performance cannot simply be claimed as verified.
 
 ```cpp
-// adapter 与 clock 由平台实现；此代码未接入当前 top_v2_main.cpp。
+// adapter and clock are implemented by the platform; this code is not connected to the current top_v2_main.cpp.
 bq76905::Monitor monitor(adapter, clock);
 bq76905::Options options;
-options.startup_crc = bq76905::CrcMode::Disabled; // 必须对应实际器件/现有运行状态
-// 外部禁止已有效，硬件唤醒时序结束后：
+options.startup_crc = bq76905::CrcMode::Disabled; // must match the actual device/existing running state
+// With the external inhibit already active, after the hardware wake timing ends:
 bool accepted = monitor.beginAfterWake(options);
 
-// 调度器每次迭代：
+// Each scheduler iteration:
 monitor.tick();
 auto diagnostic = monitor.diagnostics();
 auto frame = monitor.snapshot();
-// 仅 frame.fresh / 各 Reading.available 成立时使用数值。
-// 不可用的 current_ma / pack_temperature_mc 在 JSON 中必须输出 null。
-// diagnostic.configuration_verified 不能作为充电许可。
+// Use the values only when frame.fresh / each Reading.available is true.
+// Unavailable current_ma / pack_temperature_mc must be output as null in JSON.
+// diagnostic.configuration_verified cannot be used as charge permission.
 
-// 已知芯片复位、掉电或进入 SHUTDOWN 时立即调用：
+// Call immediately on a known chip reset, power loss or entry into SHUTDOWN:
 monitor.notifyResetOrPowerLoss();
 ```
 
-默认时间参数：单事务 100 ms、首次响应窗口 2000 ms、模式确认 1000 ms、完整初始化 15000 ms、启动事件/单轮采集 1500 ms、轮询间隔 5 ms、两轮间最小间隔 250 ms、数据最长有效年龄 3000 ms。它们是显式软件截止时间，未作为真实电源链的安全响应时间验证。时钟使用单调 `uint32_t` 毫秒并处理回绕；不会用墙钟。
+Default time parameters: single transaction 100 ms, first response window 2000 ms, mode confirmation 1000 ms, full initialization 15000 ms, startup event/single-round acquisition 1500 ms, poll interval 5 ms, minimum interval between rounds 250 ms, maximum data age 3000 ms. These are explicit software deadlines and have not been verified as safety response times of the real power chain. The clock uses monotonic `uint32_t` milliseconds and handles wraparound; wall-clock time is never used.
 
-错误会锁存 Fault，使配置和 profile 校验标志失效、快照不可用、generation 改变；不会自动重试配置或恢复许可。修复原因并重新完成外部唤醒/禁止条件后，显式 `beginAfterWake()` 开始新代次。POR 被观察到后立即失效；CRC 随 POR 退回不同 OTP 默认时可能先表现为 CRC/通信错误，同样失效。主机无法在未采到状态的瞬间知道物理 POR，外部默认禁止不能依靠这个轮询窗口。
+Errors latch Fault, which invalidates the config and profile verification flags, makes the snapshot unavailable and changes generation; it does not automatically retry configuration or restore permission. After fixing the cause and completing the external wake/inhibit conditions again, an explicit `beginAfterWake()` starts a new generation. Data is invalidated as soon as POR is observed; when CRC falls back to a different OTP default with POR, this may first show up as a CRC/communication error, and is invalidated the same way. The host cannot know about a physical POR in the moment before it reads the status, so the external default inhibit cannot rely on this polling window.
 
-如果故障发生在 CFG 内，芯片可能仍停在 CONFIG_UPDATE。为避免把部分配置应用到运行态，驱动不会在故障时盲发 EXIT_CFGUPDATE；再次 begin 也拒绝接管已经处于 CFG 的芯片。此时必须由集成方在外部禁止有效时执行已验证的 BQ 复位/恢复流程，再重新初始化。仅重启 MCU 或再发唤醒脉冲不保证清除 BQ 的 CFG 状态。当前 API 不发 RESET、SHUTDOWN 或解封命令。
+If the fault happens inside CFG, the chip may still be stuck in CONFIG_UPDATE. To avoid applying a partial config to the running state, the driver does not blindly send EXIT_CFGUPDATE on a fault; a later begin also refuses to take over a chip that is already in CFG. In this case the integrator must run a verified BQ reset/recovery flow while the external inhibit is active, then reinitialize. Rebooting only the MCU or sending another wake pulse is not guaranteed to clear the BQ's CFG state. The current API does not send RESET, SHUTDOWN or unseal commands.
 
-`fets_off_observed` 是最后观察值，不是物理输出反馈或硬接线保证。通信故障时驱动不能保证再发一条 OFF 命令会被芯片执行；集成方必须保持独立的禁止电路。故障/过期后的 `status_available=false`，不可将旧 status 数字当作当前状态。
+`fets_off_observed` is the last observed value, not physical output feedback or a hard-wired guarantee. On a communication fault, the driver cannot guarantee that another OFF command would be carried out by the chip; the integrator must keep a separate inhibit circuit. After a fault/expiry `status_available=false`; old status numbers must not be taken as the current state.
 
-## 数据有效性与 CRC
+## Data validity and CRC
 
-- 下节取物理 Cell1，上节取物理 Cell5。上节只有在下节测量有效且至少 2000 mV 时才可能有效；下节低于 2 V 时上节返回不可用原因 `LowerCellBelow2V`。
-- 电芯非正值或超过 5500 mV、Stack 非正值或超过两节的 11000 mV 均不可用。Cell1+Cell5 与 Stack 的差值还需满足显式 `stack_agreement_mv`（默认 250 mV）才能标记成对有效。这个容差是顺序采样的诊断参数，不能代替保护阈值或校准。
-- 读取寄存器不是原子 ADC 快照；`read_span_ms` 记录软件读取跨度，可能跨越转换更新。通信与状态通过不证明采样同时发生，也不证明线束无开路。
-- TS 返回原始有符号 ADC 码和名义微伏数，按 1.1962 V × 5/3 ÷ 32768 换算；只接受名义 0–1.8 V 区间。没有热敏电阻换算，不是电池温度。
-- SRP/SRN 接 RAW B−，电流永远 `available=false`、原因为 `NoCurrentShunt`；不读电流命令，不把原始零当 0 A。
-- `snapshot()` 在调用时再次计算过期状态，即便调度器暂停，也不会通过 getter 把超龄值标成 fresh。集成方缓存下来的旧副本仍必须检查年龄/generation。
-- CRC 明确由 `Options.startup_crc` 选择，并以 DM 位核对。标准未定制器件启动默认关闭；已有运行状态或定制 OTP 必须按实际选择。不会自动探测切换、修改 CRC 位或把 CRC 错误降级为无 CRC。
-- CRC8 多项式 0x07，初值 0；每个数据字节分别校验。第一写字节含写地址/寄存器，第一读字节含 repeated START 前后地址和寄存器。实现完整事务结束后验证；任一 CRC 失败丢弃整帧。适配器可在硬件支持时提前中止错误 CRC，当前接口不要求逐字节提前 NACK 能力。
+- The lower cell is physical Cell1 and the upper cell is physical Cell5. The upper cell can only be valid when the lower cell measurement is valid and at least 2000 mV; when the lower cell is below 2 V, the upper cell returns the unavailable reason `LowerCellBelow2V`.
+- A cell value that is non-positive or above 5500 mV, or a Stack that is non-positive or above the two-cell 11000 mV, is unavailable. The difference between Cell1+Cell5 and Stack must also meet the explicit `stack_agreement_mv` (default 250 mV) before the pair is marked valid. This tolerance is a diagnostic parameter for sequential sampling and cannot replace protection thresholds or calibration.
+- Reading registers is not an atomic ADC snapshot; `read_span_ms` records the software read span, which may cross a conversion update. Passing communication and status checks does not prove that the samples happened at the same time, or that the harness has no open circuit.
+- TS returns the raw signed ADC code and nominal microvolts, converted as 1.1962 V × 5/3 ÷ 32768; only the nominal 0–1.8 V range is accepted. There is no thermistor conversion; it is not battery temperature.
+- SRP/SRN connect to RAW B−, so current is always `available=false` with reason `NoCurrentShunt`; the current command is not read, and a raw zero is not taken as 0 A.
+- `snapshot()` recomputes the expired state when called, so even if the scheduler pauses, the getter never marks over-age values as fresh. Old copies cached by the integrator must still check age/generation.
+- CRC is chosen explicitly by `Options.startup_crc` and checked against the DM bit. A standard non-customized device starts with it off by default; an existing running state or custom OTP must be selected to match reality. It does not auto-detect and switch, change the CRC bit, or downgrade a CRC error to no CRC.
+- CRC8 polynomial 0x07, initial value 0; each data byte is checked separately. The first write byte includes the write address/register; the first read byte includes the address and register before and after the repeated START. The implementation verifies after the full transaction ends; any CRC failure discards the whole frame. The adapter may abort on a wrong CRC early when the hardware supports it; the current interface does not require byte-by-byte early NACK.
 
-## 显式保护参数与拒绝放行
+## Explicit protection parameters and refusing release
 
-`ProtectionProfile.requested=false` 是默认。若设为 true，下列参数必须全部显式提供并合法，缺一个即在总线访问前拒绝：
+`ProtectionProfile.requested=false` is the default. If it is set to true, all of the parameters below must be given explicitly and be valid; if any one is missing, it is refused before any bus access:
 
-| 参数 | 单位/约束 | DM 地址 |
+| Parameter | Unit/constraint | DM address |
 |---|---|---|
-| `cuv_mv` / `cov_mv` | mV；驱动限制 CUV ≥2000，COV>CUV，均≤5500 | `0x902E` / `0x9032`，各 I2 |
-| `cuv_delay_scans` / `cov_delay_scans` | 1–255 次 ADSCAN，不能当毫秒 | `0x9030` / `0x9034` |
-| `cuv_recovery_code` / `cov_recovery_code` | 0=无自动恢复；1/2/3=50/100/200 mV，恢复窗口不得交叠 | `0x9031` / `0x9035` |
-| `die_ot_c` / `die_ot_recovery_c` | 25–150 °C 的内部芯片温度，恢复必须更低 | `0x904C` / `0x904E` |
-| `die_ot_delay_scans` | 1–255 次内部温度测量 | `0x904D` |
+| `cuv_mv` / `cov_mv` | mV; the driver limits CUV ≥2000, COV>CUV, both ≤5500 | `0x902E` / `0x9032`, each I2 |
+| `cuv_delay_scans` / `cov_delay_scans` | 1–255 ADSCANs, not milliseconds | `0x9030` / `0x9034` |
+| `cuv_recovery_code` / `cov_recovery_code` | 0=no auto recovery; 1/2/3=50/100/200 mV; recovery windows must not overlap | `0x9031` / `0x9035` |
+| `die_ot_c` / `die_ot_recovery_c` | Internal chip temperature of 25–150 °C; recovery must be lower | `0x904C` / `0x904E` |
+| `die_ot_delay_scans` | 1–255 internal temperature measurements | `0x904D` |
 
-它只是一组经过读回的电压/内部芯片过温配置。测试中的 2800/4200 mV 等数字是测试输入，**未批准用于 GNB 电池充电**。
+It is only a set of voltage/internal chip over-temperature settings that have been read back. Numbers such as 2800/4200 mV in the tests are test inputs, **not approved for charging the GNB battery**.
 
-`requestPermission({charge, discharge})` 没有总线或 GPIO 副作用，并按当前证据返回：未初始化、数据过期、电芯无效、保护故障、缺 profile，或 `SystemProtectionUnqualified`。两项都 false 返回 `HeldOff`。即便 profile 全部写入读回并且电压正常，也返回 `SystemProtectionUnqualified`，`inhibitRequired()` 始终 true。
+`requestPermission({charge, discharge})` has no bus or GPIO side effects, and returns based on the current evidence: not initialized, data expired, cells invalid, protection fault, missing profile, or `SystemProtectionUnqualified`. Both false returns `HeldOff`. Even if the profile is fully written and read back and the voltages are normal, it returns `SystemProtectionUnqualified`, and `inhibitRequired()` is always true.
 
-仍未具备整机完整保护放行所需的电池温度与电流保护信息、具体电池认可的全部阈值、保护/充电模块和实际 CHG/DSG 许可电路的联合验证。没有一个用户可勾选的“已确认”布尔值能绕过这些缺项。要实现真正的电源放行，主线程需单独完成并审查系统保护逻辑；本驱动当前 API 不提供开启出口。
+Full protection release for the whole system still lacks: battery temperature and current protection information, all thresholds approved for the specific battery, and joint verification of the protection/charging module and the actual CHG/DSG permission circuit. No user-checkable "confirmed" boolean can bypass these gaps. To implement a real power release, the main work stream must separately complete and review the system protection logic; this driver's current API provides no way to enable it.
 
-待集成工作明确限于：平台非阻塞 I2C/时钟适配器、外部唤醒/默认禁止控制、reset 通知、快照与 null 语义序列化。后续实物测试仍需核实实际 OTP/CRC/LDO、68 字节读取和取消行为、采样误差、总线超时、掉电/复位及保护电路动作。本交付没有宣称这些已通过。
+The remaining integration work is explicitly limited to: platform non-blocking I2C/clock adapter, external wake/default inhibit control, reset notification, and serialization of snapshots with null semantics. Later hardware tests still need to verify the actual OTP/CRC/LDO, 68-byte reads and cancel behavior, sampling error, bus timeouts, power loss/reset and protection circuit action. This delivery does not claim that these have passed.

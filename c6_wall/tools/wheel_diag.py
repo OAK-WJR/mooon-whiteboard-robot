@@ -65,12 +65,12 @@ def main():
         r.cmd("enable")
         time.sleep(1)
     report = {"fw": s["fw"], "gains": s["gains"], "steps": []}
-    print("静止保持 5 s ...", flush=True)
+    print("Holding still for 5 s ...", flush=True)
     hold = record(r, 5)
     for i in range(3):
         u = [x["w"][i][1] for x in hold]
         e = [x["w"][i][0] for x in hold]
-        print(f"  轮{i + 1}: 输出 均值 {st.mean(u):+.3f} 标准差 {st.pstdev(u):.3f}  反转 {flips(u):3d}  误差标准差 {st.pstdev(e):.1f} 计数  积分 {hold[-1]['w'][i][3]:+.3f}", flush=True)
+        print(f"  wheel{i + 1}: output mean {st.mean(u):+.3f} std dev {st.pstdev(u):.3f}  reversals {flips(u):3d}  error std dev {st.pstdev(e):.1f} counts  integral {hold[-1]['w'][i][3]:+.3f}", flush=True)
     report["hold"] = [{"u_mean": st.mean([x['w'][i][1] for x in hold]), "u_sd": st.pstdev([x['w'][i][1] for x in hold]),
                        "flips": flips([x['w'][i][1] for x in hold])} for i in range(3)]
     steps = [("turn", {"deg": 10, "rate": 0.5}), ("turn", {"deg": -10, "rate": 0.5}),
@@ -90,17 +90,17 @@ def main():
             settle = next((k * 0.04 for k, v in enumerate(ea) if all(abs(w) <= 2 for w in ea[k:])), 9.9)
             agg[i]["rms"].append(rms); agg[i]["peak"].append(peak); agg[i]["settle"].append(settle)
             agg[i]["umax"].append(max(abs(v) for v in u)); agg[i]["flips_after"].append(flips(ua))
-            line += f"  轮{i + 1} 误差RMS {rms:5.1f} 峰值 {peak:4.0f} 稳定 {settle:.2f}s |u|max {max(abs(v) for v in u):.2f} 停后反转 {flips(ua)}"
+            line += f"  wheel{i + 1} error RMS {rms:5.1f} peak {peak:4.0f} settle {settle:.2f}s |u|max {max(abs(v) for v in u):.2f} reversals after stop {flips(ua)}"
         print(line, flush=True)
         report["steps"].append({"op": op, "kw": kw, "dur": dur, "rows": rows, "after": after})
     s = r.status()
     bad1 = [w[5] for w in s["w"]]
-    print("汇总（三个轮子对比）:")
+    print("Summary (three wheels compared):")
     for i in range(3):
         a = agg[i]
-        print(f"  轮{i + 1}: 跟踪误差RMS 平均 {st.mean(a['rms']):5.1f}  峰值 最大 {max(a['peak']):4.0f}  "
-              f"稳定时间 平均 {st.mean(a['settle']):.2f}s  最大输出 {max(a['umax']):.2f}  停后反转 合计 {sum(a['flips_after'])}  "
-              f"编码器错码 +{bad1[i] - bad0[i]}")
+        print(f"  wheel{i + 1}: tracking error RMS mean {st.mean(a['rms']):5.1f}  peak max {max(a['peak']):4.0f}  "
+              f"settling time mean {st.mean(a['settle']):.2f}s  max output {max(a['umax']):.2f}  reversals after stop total {sum(a['flips_after'])}  "
+              f"encoder bad codes +{bad1[i] - bad0[i]}")
     report["summary"] = {i: {k: (st.mean(v) if k in ('rms', 'settle') else (max(v) if k in ('peak', 'umax') else sum(v))) for k, v in agg[i].items()} for i in range(3)}
     path = os.path.join(ROOT, "logs", time.strftime("wheeldiag-%m%d-%H%M%S.json"))
     json.dump(report, open(path, "w"))

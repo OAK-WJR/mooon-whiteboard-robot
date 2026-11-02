@@ -1,29 +1,29 @@
-# 系统辨识与未知负载补偿
+# System identification and unknown-load compensation
 
-后续实现：[有界鲁棒控制 C++ 核心与验证](ROBUST_CONTROL.md)已经完成，直接接入 MuJoCo 测试。60 组预定范围内独立样本通过，平均位置误差降低 52.8%；另保留 30 组宽范围压力测试，其中有失速下滑，不能称为全工况可靠。完整控制需要独立车体位姿反馈，当前实物没有该信号，尚未刷机。[英文回放与素材](portfolio/robust.html)。
+Follow-up implementation: [bounded robust control C++ core and verification](ROBUST_CONTROL.md) is done and connects directly to MuJoCo tests. 60 independent samples within the preset range passed, and mean position error dropped by 52.8%; 30 wide-range stress tests are also kept, some of which stall and slide down, so it cannot be called reliable under all conditions. Full control needs independent body pose feedback; the current hardware has no such signal, and it has not been flashed yet. [English replay and materials](portfolio/robust.html).
 
-2026-09-21。对象是正在使用的 Waveshare ESP32-C6-LCD-1.47 + 转接板 + 底板，不能把未来 top_board_v2 的传感器、供电和电机规格当成当前实物。
+2026-09-21. The subject is the Waveshare ESP32-C6-LCD-1.47 + adapter board + base board in use now; the sensors, power supply and motor specs of the future top_board_v2 must not be taken as the current hardware.
 
-建议采用**实测电机前馈 + 轮速反馈 + 有界扰动补偿 + 独立车体运动反馈**。系统辨识负责建立基准模型；在线补偿处理变化。它们不能代替轮胎与板面的附着力。以下控制架构是研究建议，尚未刷入小车。
+Recommended: **measured motor feedforward + wheel-speed feedback + bounded disturbance compensation + independent body motion feedback**. System identification builds the baseline model; online compensation handles changes. They cannot replace the grip between the tires and the board surface. The control architecture below is a research recommendation and has not been flashed to the robot.
 
-仿真实现已完成：见 [交互控制台](sim/README.md)、[MuJoCo 接触动力学](sim/physics/README.md) 与 [开源参考及工况响应](sim/physics/RESEARCH.md)。已有 28 个浏览器内核场景、12 个 MuJoCo 工况 × 2 个控制器，并保留补偿无效、下滑和反馈故障结果。英文截图和视频位于 `portfolio/`。ESO 并非每个工况都更好；这批结果尚未成为实物带载验证，也未烧录。
+The simulation implementation is done: see the [interactive console](sim/README.md), [MuJoCo contact dynamics](sim/physics/README.md) and [open-source references and per-condition responses](sim/physics/RESEARCH.md). There are 28 in-browser engine scenarios and 12 MuJoCo conditions × 2 controllers, and the results where compensation failed, the robot slid down, or feedback faulted are kept. English screenshots and videos are in `portfolio/`. ESO is not better in every condition; these results are not yet real-hardware loaded verification, and have not been flashed.
 
-## 当前程序与数据说明了什么
+## What the current program and data show
 
-- 现有控制周期为 10ms，USB 状态约 50ms 一帧，轮速已经过系数 0.4 的一阶滤波。历史约 0.9s、140/170/200 PWM 的单点测试只能提供短时稳态依据，不能证明加减速模型成立。原始日志审计见 `reports/sysid-historical-audit.json`。
-- 之前三轮架空闭环跟踪通过，但这不验证整车方向、带载能力、板上摩擦或驻坡。电机2在 +9500 counts/s 时约 200 PWM 中有 95 PWM 来自积分补偿，说明原前馈在这个工作点明显偏低（`reports/speed-range-final.json`）。积分本来就在补偿一部分误差；不能把已有 PI 描述成完全没有补偿。
-- `Wheel::update()` 在目标为零时清掉积分和输出；停止时 FI/BI 均为 LOW。当前是滑行停止，没有位置保持。持续大输出而无编码器运动会触发 `NO_ENCODER`，反向反馈也可能触发方向保护。这些逻辑不能直接当成竖直墙面的驻坡控制。
-- 当前程序没有电流、电压、IMU 或独立位移数据，`voltage` 明确是 null。普通 LCD-1.47 的厂商资源表没有列出 IMU；不要与带 QMI8658A 的 **Touch** 型号混淆。[Waveshare 原板说明](https://docs.waveshare.com/ESP32-C6-LCD-1.47)
+- The current control period is 10ms, USB status is about one frame per 50ms, and wheel speed already goes through a first-order filter with coefficient 0.4. The historical single-point tests of about 0.9s at 140/170/200 PWM only give a short-term steady-state basis and cannot prove that an acceleration/deceleration model holds. The raw log audit is in `reports/sysid-historical-audit.json`.
+- The earlier three-wheel suspended closed-loop tracking passed, but this does not verify whole-robot direction, load capacity, friction on the board or slope hold. On motor 2 at +9500 counts/s, 95 of about 200 PWM came from integral compensation, which shows the original feedforward is clearly too low at this operating point (`reports/speed-range-final.json`). The integral was already compensating part of the error; the existing PI must not be described as having no compensation at all.
+- `Wheel::update()` clears the integral and output when the target is zero; when stopped, FI/BI are both LOW. It currently coasts to a stop, with no position hold. Sustained large output with no encoder motion triggers `NO_ENCODER`, and reversed feedback may also trigger direction protection. This logic cannot be used directly as slope-hold control on a vertical wall.
+- The current program has no current, voltage, IMU or independent displacement data; `voltage` is explicitly null. The vendor resource table for the regular LCD-1.47 lists no IMU; do not confuse it with the **Touch** model, which has a QMI8658A. [Waveshare board documentation](https://docs.waveshare.com/ESP32-C6-LCD-1.47)
 
-## 可执行的辨识工具
+## Runnable identification tool
 
-`scripts/c6_drive_sysid.py` 的 `plan`、`audit`、`analyze` 都只读文件，不打开串口。`collect` 会转电机，要求小车离开白板、机架固定、三个轮子架空，并接通电机电源。不要同时操作驾驶台。
+`plan`, `audit` and `analyze` in `scripts/c6_drive_sysid.py` only read files and do not open the serial port. `collect` spins the motors: it requires the robot to be off the whiteboard, the frame fixed, all three wheels suspended, and motor power connected. Do not use the driving page at the same time.
 
 ```sh
 .venv/bin/python scripts/c6_drive_sysid.py plan
 .venv/bin/python c6_drive/tests/test_sysid.py
 
-# 仅在上述物理条件已经确认后执行；报告路径须尚不存在。
+# Run only after the physical conditions above are confirmed; the report path must not exist yet.
 .venv/bin/python scripts/c6_drive_sysid.py collect --suspended \
   --report c6_drive/reports/sysid-new.json
 
@@ -31,57 +31,57 @@
   c6_drive/reports/sysid-new.json --report c6_drive/reports/sysid-model.json --plot
 ```
 
-每个电机正反转分别采集两种不同的多档输入：一组估计模型，一组独立验证。PWM 仅在 120–200/255 之间变化，从 140 开始；单次序列约 10 秒，轮间与反向前均验证停转。USB 陈旧、编码器异常、其他轮意外运动、控制权冲突均中止；固件原有保护继续工作。工具没有写入或保存 PID 参数的命令。
+For each motor, forward and reverse each collect two different multi-step inputs: one set to estimate the model, one set for independent validation. PWM only varies between 120–200/255, starting from 140; one sequence is about 10 seconds, and standstill is verified between wheels and before reversing. Stale USB, encoder anomalies, unexpected motion of other wheels and control-ownership conflicts all abort; the firmware's existing protections keep working. The tool has no command to write or save PID parameters.
 
-拟合的是运动区间内的有效模型：`tau * dv/dt + v = K * PWM(t-delay) + bias`。只用训练数据估计参数，再从验证段的首个实测速度开始向前模拟，不用后续实测速度不断修正预测。包含 PWM 范围、采样间隔、编码器质量、独立预测 RMSE 和 R²；不合格数据直接拒绝。
+What is fitted is an effective model within the motion range: `tau * dv/dt + v = K * PWM(t-delay) + bias`. Parameters are estimated only from training data, then simulated forward from the first measured speed of the validation segment, without correcting the prediction with later measured speeds. The output includes PWM range, sample interval, encoder quality, independent prediction RMSE and R²; data that fails is rejected outright.
 
-本工具暂定的工程筛选线是独立验证 R² ≥ 0.9、RMSE ≤ 验证速度跨度的 10%，且时间常数至少覆盖两帧。**这不是稳定性证明。** 拟合包含传感器滤波和输入时间对齐误差；约 50ms 的数据不足以可靠分离很快的机械、电气和通信动态。运动摩擦截距不是静止起转阈值，也不能外推到零速驻坡。若模型不过关，先增加同步采样或按工作区间分段，不能直接套公式算 PID。[WPILib 的诊断与低惯量限制](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/viewing-diagnostics.html)、[独立估计与验证数据](https://www.mathworks.com/help/ident/select-data-for-estimation.html)
+The tool's provisional engineering screening line is independent-validation R² ≥ 0.9, RMSE ≤ 10% of the validation speed span, and a time constant covering at least two frames. **This is not a proof of stability.** The fit includes sensor filtering and input time-alignment errors; data at about 50ms is not enough to reliably separate fast mechanical, electrical and communication dynamics. The motion friction intercept is not the static breakaway threshold, and it cannot be extrapolated to zero-speed slope hold. If the model does not pass, first add synchronized sampling or split it by operating range; do not plug it straight into formulas to compute PID. [WPILib diagnostics and low-inertia limits](https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/viewing-diagnostics.html), [independent estimation and validation data](https://www.mathworks.com/help/ident/select-data-for-estimation.html)
 
-## 未知条件分别怎么补偿
+## How to compensate each unknown condition
 
-本轮实测已完成（`reports/sysid-suspended-03.json`）：三轮正反转各一组训练、一组独立验证，共 12 段，停止输出及编码器停转均已确认，六组原 PID 参数保持不变。电机1本轮有正常反馈；此前第一次实际激励因电机电源未接而中止，用户随后确认接通供电，不能把该无反馈记录当成电机故障。
+This round of measurements is done (`reports/sysid-suspended-03.json`): one training set and one independent validation set for each of the three wheels in forward and reverse, 12 segments in total; zero output and encoder standstill were both confirmed at stop, and the six sets of original PID parameters were unchanged. Motor 1 had normal feedback this round; the first real excitation before this was aborted because motor power was not connected, and the user then confirmed the power was connected, so that no-feedback record must not be taken as a motor fault.
 
-| 电机 | 正转/反转有效时间常数 | 正转/反转独立验证 R² |
+| Motor | Forward/reverse effective time constant | Forward/reverse independent validation R² |
 |---|---|---|
 | 1 | 0.278 / 0.278 s | 0.940 / 0.945 |
 | 2 | 0.328 / 0.328 s | 0.931 / 0.943 |
 | 3 | 0.302 / 0.278 s | 0.928 / 0.930 |
 
-原始采样约 51ms，独立验证 RMSE 为 234–335 counts/s。六个模型通过上述**初步运动区间筛选**，但曲线仍有系统性偏差，不表示模型精确或已完成控制器设计。零延迟最优点表示本次采样无法分离额外延迟，不能解释为实物无延迟。本次输入为 120–200 PWM，未完成低速起步、重力、带载或板面滑移辨识。[模型参数](reports/sysid-model-03.json)、[独立预测与实测对比](reports/sysid-model-03.png)
+The raw sample interval is about 51ms, and independent-validation RMSE is 234–335 counts/s. The six models pass the **preliminary motion-range screening** above, but the curves still show systematic bias; this does not mean the models are accurate or that controller design is done. A zero-delay optimum means this sampling could not separate extra delay; it must not be read as the hardware having no delay. The input this time was 120–200 PWM; low-speed start, gravity, loaded or board-surface slip identification has not been done. [Model parameters](reports/sysid-model-03.json), [independent prediction vs. measurement](reports/sysid-model-03.png)
 
-| 变化 | 可用方法 | 当前缺口或限制 |
+| Change | Usable method | Current gap or limit |
 |---|---|---|
-| 擦布压力、载荷变化使轮速下降 | 正反转前馈 + PI；模型合格后试用 DOB/ESO 扰动观测器 | 先辨识并做受控带载实验；PWM 有余量才补得动 |
-| 电池掉压、接线压降 | 测 VMOT，按电压归一化前馈；保留限流 | 当前无电压/电流测量，PWM 不能冒充电压或扭矩 |
-| 板面变化导致轮胎打滑 | 比较编码器与独立车体速度，降低加速度/牵引需求，冻结错误学习 | 单靠三个编码器不能唯一辨识整体滑移 |
-| 竖直重力、车身转向后受力方向变化 | 姿态/板面坐标 + 重力前馈 + 位置保持；在线估计剩余负载 | 当前无车体位置/姿态闭环，松键会撤掉输出 |
-| 磁吸不足、轮子没有压实、板面不适合磁吸 | 检查接触、附着与负载；有执行器及传感器时才可调压紧力 | 固定磁铁不能靠改 PWM 自动增大吸力 |
+| Eraser pressure or load changes lower wheel speed | Forward/reverse feedforward + PI; once the model passes, try a DOB/ESO disturbance observer | First identify and run controlled load experiments; it can only compensate if PWM has headroom |
+| Battery voltage sag, wiring voltage drop | Measure VMOT, normalize feedforward by voltage; keep current limiting | No voltage/current measurement now; PWM cannot stand in for voltage or torque |
+| Board surface changes cause tire slip | Compare encoders with independent body speed, lower acceleration/traction demand, freeze bad learning | Three encoders alone cannot uniquely identify overall slip |
+| Vertical gravity; force direction changes after the body turns | Attitude/board coordinates + gravity feedforward + position hold; estimate the remaining load online | No body position/attitude closed loop now; releasing the key removes output |
+| Weak magnetic attraction, wheels not pressed firmly, board not suited to magnets | Check contact, adhesion and load; pressing force can only be tuned with actuators and sensors | Fixed magnets cannot get stronger attraction by changing PWM |
 
-**建议第一步保留已知行为的 PI，修正前馈，再试带限幅的 ESO/DOB，而不是让所有 PID 参数持续自动漂移。** 扰动观测器通过输入与实测响应估计模型之外的合成影响，不要求预先称出每种负载。MathWorks 有 PID 加 ESO 的直流电机示例；补偿效果仍受模型近似影响，不能承诺消除任意负载。[直流电机 ESO 示例](https://www.mathworks.com/help/slcontrol/ug/apply-extended-state-observer-for-disturbance-rejection.html)、[扰动补偿器定义与限制](https://www.mathworks.com/help/slcontrol/ug/disturbancecompensator.html)
+**Suggested first step: keep the PI whose behavior is known, fix the feedforward, then try a limited ESO/DOB, instead of letting all PID parameters drift automatically all the time.** A disturbance observer estimates the combined effect outside the model from the input and the measured response, and does not require weighing each kind of load in advance. MathWorks has a DC motor example of PID plus ESO; the compensation is still affected by the model approximation, and it cannot promise to remove arbitrary loads. [DC motor ESO example](https://www.mathworks.com/help/slcontrol/ug/apply-extended-state-observer-for-disturbance-rejection.html), [disturbance compensator definition and limits](https://www.mathworks.com/help/slcontrol/ug/disturbancecompensator.html)
 
-具体实现建议（本项目设计推导，未部署）：
+Specific implementation suggestions (derived for this project's design, not deployed):
 
-1. 每轮用辨识结果建立离散的速度模型，正反转分开。观测器输入必须是最终限幅、斜率限制后的实际 PWM，而不是尚未执行的请求值。
-2. 增加缓慢变化的扰动状态，估计额外阻力折合的 PWM；输出用 `前馈 + 反馈 - 估计扰动`。观测器与 PI 的积分协同设计，避免两路快速积分重复补偿。
-3. 根据实测延迟、噪声、100Hz 控制周期选观测带宽；不直接照抄示例的增益。限制补偿幅度和变化速率。持续饱和、反馈异常、已识别打滑时不继续学习增益，并明确显示“补偿不足/反馈无效”。
-4. 先在固定负载夹具中比较原 PI 与候选控制器：稳态误差、负载突变后的恢复、过冲、占空比余量、电流和温升。未经这些检查，不把架空表现当作贴板能力。
+1. Build a discrete speed model for each wheel from the identification results, with forward and reverse kept separate. The observer input must be the actual PWM after final limiting and slew-rate limiting, not a requested value that has not been applied yet.
+2. Add a slowly changing disturbance state that estimates the extra resistance as an equivalent PWM; output `feedforward + feedback - estimated disturbance`. Design the observer together with the PI integral, so that two fast integrators do not compensate the same thing twice.
+3. Choose the observer bandwidth from the measured delay, noise and the 100Hz control period; do not copy the example's gains directly. Limit the compensation size and rate of change. During sustained saturation, feedback anomalies or detected slip, stop learning gains, and clearly show "insufficient compensation/invalid feedback".
+4. First compare the original PI with candidate controllers on a fixed-load fixture: steady-state error, recovery after a sudden load change, overshoot, duty-cycle headroom, current and temperature rise. Without these checks, suspended performance is not taken as on-board capability.
 
-RLS（递推最小二乘）适合之后缓慢更新增益或摩擦参数，但持续匀速不一定提供足够激励，打滑数据也可能被学成错误电机参数。因此只在数据合格、未饱和、无滑移证据的窗口更新，并对参数施加上下界；不会在墙上自动执行大幅探索。遗忘因子不能解决不可观测性。[MathWorks recursiveLS](https://www.mathworks.com/help/ident/ref/recursivels-system-object.html)、[RLS 收敛中的持续激励假设](https://arxiv.org/abs/2003.07334)
+RLS (recursive least squares) suits slowly updating gains or friction parameters later, but constant-speed running may not give enough excitation, and slip data may also be learned as wrong motor parameters. So it only updates in windows where the data passes, is not saturated and shows no evidence of slip, and parameters get upper and lower bounds; large exploration is never run automatically on the wall. A forgetting factor cannot fix unobservability. [MathWorks recursiveLS](https://www.mathworks.com/help/ident/ref/recursivels-system-object.html), [persistent excitation assumption in RLS convergence](https://arxiv.org/abs/2003.07334)
 
-## 为何需要车体反馈，以及先用什么
+## Why body feedback is needed, and what to use first
 
-“轮子按目标转动，但整车往下滑”时，轮速误差可能接近零。轮速控制器看不到这类车体位移误差。轮子转速不能完全观测轮胎滑移，这是已有移动机器人研究明确讨论的限制。[CMU 研究，§5.2.1](https://www.ri.cmu.edu/pub_files/pub4/kelly_alonzo_2006_1/kelly_alonzo_2006_1.pdf)
+When "the wheels turn as commanded but the whole robot slides down", wheel-speed error can be close to zero. The wheel-speed controller cannot see this kind of body displacement error. Wheel speed cannot fully observe tire slip; existing mobile robot research discusses this limit explicitly. [CMU research, §5.2.1](https://www.ri.cmu.edu/pub_files/pub4/kelly_alonzo_2006_1/kelly_alonzo_2006_1.pdf)
 
-建议先用**固定外部摄像头 + 车身 AprilTag**获取白板平面内的 x、y 和角度，作为调试真值，再决定是否增加板载传感器。需要相机标定、标记尺寸、板面坐标和时间戳，并检查遮挡、延迟及定位质量。这是本项目的测试方案；AprilTag 提供标记检测和位姿估计能力，并不自动完成我们的小车闭环。[AprilTag 官方实现](https://github.com/AprilRobotics/apriltag)
+We suggest first using a **fixed external camera + an AprilTag on the body** to get x, y and angle in the whiteboard plane as debugging ground truth, and then deciding whether to add onboard sensors. This needs camera calibration, tag size, board coordinates and timestamps, and checks of occlusion, delay and localization quality. This is this project's test plan; AprilTag provides tag detection and pose estimation, and does not close our robot's loop by itself. [Official AprilTag implementation](https://github.com/AprilRobotics/apriltag)
 
-最终不依赖外部摄像头时，可评估朝向板面的光学位移传感器和 IMU。光滑白板、粉尘、距离及光照兼容性必须实测；不能保证普通光流模块在任意白板上可靠。IMU 可辅助重力方向和姿态，不能单独长期测准匀速下滑。光学里程计配合惯导的研究可作为依据，但其地表实验不等于白板适配认证。[CMU 光学位移研究](https://publications.ri.cmu.edu/outdoor-downward-facing-optical-flow-odometry-with-commodity-sensors)
+For a final version that does not rely on an external camera, an optical displacement sensor facing the board and an IMU can be evaluated. Compatibility with glossy whiteboards, dust, distance and lighting must be measured; a regular optical flow module is not guaranteed to be reliable on every whiteboard. An IMU can help with gravity direction and attitude, but cannot by itself measure constant-speed sliding accurately over long periods. Research on optical odometry with inertial navigation can serve as a basis, but its ground experiments are not certification for whiteboards. [CMU optical displacement research](https://publications.ri.cmu.edu/outdoor-downward-facing-optical-flow-odometry-with-commodity-sensors)
 
-有了独立位姿，外环才能比较“期望上移”和“实际下滑”，再生成三轮目标；底层观测器处理每轮的负载误差。先验证物理轮号、旋向和整车坐标，再使用当前三轮运动学矩阵。
+With independent pose, the outer loop can compare "expected upward motion" with "actual sliding down" and then generate the three wheel targets; the low-level observer handles each wheel's load error. First verify the physical wheel numbers, rotation directions and whole-robot coordinates, then use the current three-wheel kinematics matrix.
 
-## 驻坡与附着的边界
+## Limits of slope hold and adhesion
 
-竖直板上需要同时满足：向上的可用牵引力覆盖重量、各轮接触不失稳、电机/驱动/供电具备持续输出余量。`sum(mu_i * N_i) >= mg` 只是不考虑方向分配的粗略必要条件，不能当作三全向轮的充分条件；还要考虑滚子方向、法向力分配、重心和实际扭矩。
+On a vertical board, all of these must hold at once: the available upward traction covers the weight, each wheel's contact stays stable, and the motors/drivers/power supply have headroom for sustained output. `sum(mu_i * N_i) >= mg` is only a rough necessary condition that ignores how force is split by direction, and cannot be treated as a sufficient condition for three omni wheels; roller direction, normal force distribution, center of gravity and actual torque must also be considered.
 
-松键后若希望停在墙上，应进入单独的 HOLD 状态，保存位置目标并继续提供有界承重输出，而不是沿用当前清积分的零速分支。但高输出零速、掉线、编码器故障、过热等状态必须与机械防坠一起设计；不能为了驻坡删除现有保护，也不能把“断电停止”说成“不会下滑”。主动短路制动也不能被当成确定的静态承重能力。当前没有启用 HOLD。
+If the robot should stay on the wall after the key is released, it should enter a separate HOLD state, save the position target and keep providing bounded load-bearing output, instead of reusing the current zero-speed branch that clears the integral. But high output at zero speed, disconnects, encoder faults, overheating and similar states must be designed together with mechanical fall protection; existing protections must not be removed for slope hold, and "stops when power is cut" must not be described as "will not slide down". Active short-circuit braking also cannot be treated as a definite static load-bearing capacity. HOLD is not enabled now.
 
-本次研究顺序遵循项目要求：先查询本地 `hyperresearch search`，返回未初始化知识库；随后使用内置联网，查阅以上原厂文档和原始研究，没有调用外部付费搜索 API。
+The research order this time followed the project requirements: first a local `hyperresearch search` query, which returned an uninitialized knowledge base; then the built-in web access was used to read the vendor documents and original research above, without calling an external paid search API.

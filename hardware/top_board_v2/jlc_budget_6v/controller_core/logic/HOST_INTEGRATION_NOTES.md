@@ -1,25 +1,25 @@
-# C6 / CH343G 上位机接入待办（2026-09，已取代）
+# C6 / CH343G host integration to-dos (2026-09, superseded)
 
-> **已被取代（2026-10-29）。** CH343G 已从板上移除，上位机的 `ch343g` 分支随之删除（`--usb-kind ch343g` 现在直接报错）。当前 KISS 板走 C6 原生 USB Serial/JTAG，使用 `--usb-kind c6usb`，见[固件说明](FIRMWARE.md)。
+> **Superseded (2026-10-29).** The CH343G has been removed from the board, and the host's `ch343g` branch was deleted with it (`--usb-kind ch343g` now errors out directly). The current KISS board uses the C6's native USB Serial/JTAG with `--usb-kind c6usb`; see the [firmware notes](FIRMWARE.md).
 
-**此为接入前的检查记录。以下代码位置和缺项描述只作历史依据：当时据此实现的 `ch343g` 分支曾完成离线测试，但从未做实物检查，并已于 2026-10-29 删除。**
+**This is the check record from before integration. The code locations and gap descriptions below are only a historical basis: the `ch343g` branch implemented from them at the time passed offline tests but was never checked on hardware, and was deleted on 2026-10-29.**
 
-2026-09-08，只读代码与厂家资料复核。当前原理图的 USB 桥已连到 C6，但新板固件身份和主机命令尚未适配；没有打开串口、运行 ROM 恢复或烧录。
+2026-09-08, read-only review of the code and manufacturer material. The current schematic's USB bridge is connected to the C6, but the new board's firmware identity and host commands have not been adapted; no serial port was opened, no ROM recovery was run, and nothing was flashed.
 
-## 现有实现与新板不一致之处
+## Where the existing implementation does not match the new board
 
-- [pcb_control.py](../../../../../scripts/pcb_control.py) 的 `usb_chip("ch343p")` 返回 `esp32s3`。该选项属于旧 Pico 方案，不能只因 VID/PID 相同就用于新 C6。
-- [robot_control.py](../../../../../scripts/robot_control.py) 的 `USB_PROFILES` 将 `ch343p` 绑定 `top_board_v2_pico_review`。当前只接受原生 USB、旧 R3/CP2102N 和旧 Pico/CH343P；尚无这版 C6/CH343G 身份。
-- 旧 R3 固件的 GPIO 分配不等于[本版引脚表](c6_pin_plan.json)。需要单独的固件配置、状态身份和主机校验，不能通过把新板伪装成旧 R3 或 Pico 来绕过检查。
+- `usb_chip("ch343p")` in [pcb_control.py](../../../../../scripts/pcb_control.py) returns `esp32s3`. This option belongs to the old Pico plan, and cannot be used for the new C6 just because the VID/PID are the same.
+- `USB_PROFILES` in [robot_control.py](../../../../../scripts/robot_control.py) binds `ch343p` to `top_board_v2_pico_review`. It currently only accepts native USB, the old R3/CP2102N and the old Pico/CH343P; there is no identity for this C6/CH343G version yet.
+- The old R3 firmware's GPIO assignment is not the same as [this version's pin table](c6_pin_plan.json). It needs separate firmware config, status identity and host checks; the checks must not be bypassed by disguising the new board as the old R3 or Pico.
 
-## 已核实的外部接口事实
+## Verified external interface facts
 
-WCH 官方驱动 V2.2 将 `1A86:55D3` 列为 CH343 家族，并进一步读取芯片类型来区分 G/P、J、K 等。**这个 VID/PID 不能证明后端是 C6，也不能证明是本项目的 PCB。** 后续仍须显式选择本地串口、保留设备身份锚点、指定 C6 ROM，并核对新应用身份。[WCH 官方驱动](https://github.com/WCHSoftGroup/ch343ser_linux/blob/main/driver/ch343.c)，`ch343_configure` 与 `ch343_ids`。
+WCH's official driver V2.2 lists `1A86:55D3` as the CH343 family, and further reads the chip type to tell G/P, J, K and so on apart. **This VID/PID cannot prove that the backend is a C6, nor that it is this project's PCB.** Later work must still explicitly select the local serial port, keep the device identity anchor, specify the C6 ROM, and check the new app identity. [WCH official driver](https://github.com/WCHSoftGroup/ch343ser_linux/blob/main/driver/ch343.c), `ch343_configure` and `ch343_ids`.
 
-项目 [requirements-control.txt](../../../../../scripts/requirements-control.txt) 锁定 esptool 5.3.0。该版本 `ClassicReset` 先保持 EN 复位 100ms，然后释放 EN、继续保持 BOOT 至 `reset_delay`；当前电路的有限模拟使用随后 50ms。主机布尔 DTR/RTS 是有效低的控制语义，不能把 `True` 直接当作原理图中的高电平。[Espressif 5.3.0 reset.py](https://github.com/espressif/esptool/blob/v5.3.0/esptool/reset.py)、[C6 自动下载说明](https://docs.espressif.com/projects/esptool/en/latest/esp32c6/advanced-topics/boot-mode-selection.html)。
+The project's [requirements-control.txt](../../../../../scripts/requirements-control.txt) pins esptool 5.3.0. In that version, `ClassicReset` first holds EN in reset for 100ms, then releases EN and keeps holding BOOT until `reset_delay`; the limited simulation of the current circuit uses 50ms after that. The host's boolean DTR/RTS are active-low control semantics; `True` cannot be taken directly as a high level in the schematic. [Espressif 5.3.0 reset.py](https://github.com/espressif/esptool/blob/v5.3.0/esptool/reset.py), [C6 auto download notes](https://docs.espressif.com/projects/esptool/en/latest/esp32c6/advanced-topics/boot-mode-selection.html).
 
-esptool 支持 `ESPTOOL_CFGFILE` 与自定义复位序列。现有 `robot_control.py` 对 UART 恢复建立临时空配置，避免用户全局配置替换策略。新分支应保留这种隔离，并明确固定与本版电路匹配的复位/退出 ROM 时序；不能只改 `--chip` 就宣布兼容。[Espressif 配置文件说明](https://docs.espressif.com/projects/esptool/en/latest/esp32/esptool/configuration-file.html)。
+esptool supports `ESPTOOL_CFGFILE` and custom reset sequences. The existing `robot_control.py` creates a temporary empty config for UART recovery, so that the user's global config cannot replace the policy. The new branch should keep this isolation and explicitly pin the reset/ROM-exit timing that matches this circuit version; changing only `--chip` and declaring compatibility is not enough. [Espressif config file notes](https://docs.espressif.com/projects/esptool/en/latest/esp32/esptool/configuration-file.html).
 
-## 完成条件
+## Completion conditions
 
-后续实现需一并检查新固件引脚和身份、CH343G 选项、C6 ROM 命令、复位时序、重启后同一设备的新启动标识、错误板型拒绝和复位后零输出。离线测试可以核对命令构造、模拟串口交互和状态校验；操作系统驱动的真实 DTR/RTS 时延、枚举、插拔和恢复仍需实板验证。保持当前运动禁用状态，直至新供电与整机验收完成。
+The later implementation must check all of these together: the new firmware pins and identity, the CH343G option, C6 ROM commands, reset timing, a new boot ID on the same device after restart, rejection of wrong board types, and zero output after reset. Offline tests can check command construction, simulated serial interaction and status validation; the OS driver's real DTR/RTS delays, enumeration, plugging/unplugging and recovery still need real-board verification. Keep motion disabled as it is now until the new power supply and whole-robot acceptance are done.

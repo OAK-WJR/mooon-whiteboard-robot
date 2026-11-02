@@ -1,62 +1,62 @@
-# Pico 三路电压诊断：已接入固件，尚未实测
+# Pico three-rail voltage diagnostics: in the firmware, not yet measured
 
-2026-09-08：主循环现在实例化项目内的 ESP-IDF 5.5.4 I²C 后端，运行
-INA3221 初始化、单次采样和状态输出。此功能仍属于审查固件：没有刷写、
-连接真实总线或取得实际电压。当前主原理图是十四页；整板布局布线仍未完成。
+2026-09-08: the main loop now creates the project's ESP-IDF 5.5.4 I²C backend and runs
+INA3221 initialization, single-shot sampling and status output. This feature is still review firmware: it has not been flashed
+or connected to a real bus, and no actual voltages have been read. The current main schematic has fourteen pages; full-board layout and routing are still not done.
 
-## 实际连接和行为
+## Actual connections and behavior
 
-| INA 通道 | 原理图采样点 | 状态字段 |
+| INA channel | Schematic sense point | Status field |
 | --- | --- | --- |
-| 1 | PS2 输出 RAW_LOGIC_5V | `raw_logic_5v_mv` |
-| 2 | Pico 实体触点40的工厂 USB VBUS | `usb_vbus_mv` |
-| 3 | 电机电源开关 U30 后的 VMOT | `motor_voltage_mv` |
+| 1 | PS2 output RAW_LOGIC_5V | `raw_logic_5v_mv` |
+| 2 | Factory USB VBUS at Pico physical contact 40 | `usb_vbus_mv` |
+| 3 | VMOT after motor power switch U30 | `motor_voltage_mv` |
 
-地址固定为0x40，GPIO1/2、100kHz、外部上拉。没有扫描其他地址。[BQ电芯监测](PICO_CELL_RUNTIME.md)现已共用此总线，
-执行 GPIO39 有限唤醒及只读监测配置；GPIO41 充电请求和 GPIO42 电源循环仍禁用。
-没有电流分流电阻，因此 `motor_current_ma` 始终为空；3.3V 也没有对应测量通道。
+The address is fixed at 0x40, GPIO1/2, 100kHz, external pull-ups. No other addresses are scanned. [BQ cell monitoring](PICO_CELL_RUNTIME.md) now shares this bus,
+running a limited GPIO39 wake and a read-only monitoring config; the GPIO41 charge request and GPIO42 power cycling are still disabled.
+There is no current shunt resistor, so `motor_current_ma` is always empty; 3.3V has no measurement channel either.
 
-安全 GPIO、UART、无线初始化和任务看门狗成功后，主任务才请求启动独立 I²C
-工作任务。初始化失败、NACK、总线错误、短读、配置变化或超时会锁住本次诊断，
-清除读数并请求清理总线；不自动扫描、重试或输出恢复时钟。重启、GPIO 故障及
-看门狗失效同样立即撤销读数。清理在工作任务完成，清理失败单独显示；USB
-重启处理不会等待它。此处的“立即”指控制任务的逻辑撤销，不是物理清理时延保证。
+The main task requests startup of the separate I²C worker task only after safe GPIO, UART, wireless init and the task watchdog succeed.
+Init failure, NACK, bus error, short read, config change or timeout locks this diagnostic run,
+clears the readings and requests a bus cleanup; it does not auto-scan, retry or output recovery clocks. Reboot, GPIO faults and
+watchdog failure likewise revoke the readings immediately. Cleanup finishes in the worker task, and a cleanup failure is shown separately; USB
+reboot handling does not wait for it. "Immediately" here means logical revocation by the control task, not a guaranteed physical cleanup delay.
 
-工作任务等待上限由原传输层控制；服务另设150ms启动观察期限。每轮主循环最多
-进行一次非阻塞 I²C 提交或轮询，并在任务看门狗复位和外部看门狗进度脉冲之前执行。
-使用64位单调 `esp_timer`，不把32位 `micros()` 当作永不回绕的时间。
+The worker task's wait limit is controlled by the original transport layer; the service also sets a 150ms startup observation deadline. Each main loop iteration does at most
+one non-blocking I²C submit or poll, and does it before the task watchdog reset and the external watchdog progress pulse.
+It uses the 64-bit monotonic `esp_timer`, and does not treat the 32-bit `micros()` as a time that never wraps.
 
-每次先校验芯片身份及配置，丢弃旧转换完成位，再触发三个通道的单次转换。
-确认新转换完成、三个寄存器读完及最终配置一致，才发布一整组。约每40ms请求
-下一次采样；请求期间上一组被清除，所以短暂 `sampling`/空值是预期行为。
-BQ 长报文现在在 INA 采集组之间推进。仅在 BQ 实际事务及取消清理均结束后
-启动 INA，避免排队等待 BQ 而消耗 INA 的4ms传输/5ms操作预算。
+Each time, it first verifies the chip identity and config, discards the old conversion-ready bit, then triggers a single-shot conversion on all three channels.
+Only after confirming the new conversion is done, all three registers are read, and the final config matches, does it publish a full group. About every 40ms it requests
+the next sample; the previous group is cleared during the request, so a brief `sampling`/null value is expected behavior.
+Long BQ messages now advance between INA acquisition groups. The INA starts only after both the actual BQ transaction and the cancel cleanup have ended,
+to avoid using up the INA's 4ms transfer/5ms operation budget while queued behind the BQ.
 
-## USB、Wi-Fi、BLE 共用的状态
+## Status shared by USB, Wi-Fi and BLE
 
-新增 `rail_monitor` 对象包含：
+The new `rail_monitor` object contains:
 
-| 字段 | 含义 |
+| Field | Meaning |
 | --- | --- |
-| `state` | `not_started`、`starting`、`initializing`、`sampling`、`ready`、`expired`、`fault` 或 `stopped` |
-| `error` | `none` 或具体失败原因，例如 `nack`、`transfer_timeout`、`configuration_changed` |
-| `bus` | 工作任务状态；`cleanup_fault` 表示清理未成功 |
-| `seq` | 当前完整采样组编号；没有有效采样时为 `null` |
-| `age_us` | **生成报文时**，从触发请求开始经过的微秒数，必须小于50000 |
-| `span_us` | 触发请求至观察到转换完成的保守采集区间；不是三个通道同时采样 |
+| `state` | `not_started`, `starting`, `initializing`, `sampling`, `ready`, `expired`, `fault` or `stopped` |
+| `error` | `none` or the specific failure reason, such as `nack`, `transfer_timeout`, `configuration_changed` |
+| `bus` | Worker task state; `cleanup_fault` means cleanup did not succeed |
+| `seq` | Number of the current complete sample group; `null` when there is no valid sample |
+| `age_us` | Microseconds elapsed since the trigger request **when the message is built**; must be under 50000 |
+| `span_us` | Conservative acquisition window from the trigger request to the observed conversion done; the three channels are not sampled at the same time |
 
-仅 `ready` 且总线可用、无故障时输出三路整数毫伏值。全部是8mV的整数倍，范围
-0–26000mV；零只有通过完整转换流程才有效。丢失、过期、停止或出错时，三路值
-和采样元数据全部为 `null`，不会用零或上一组读数替代。
+Integer millivolt values for the three rails are output only in `ready` with the bus available and no fault. All are integer multiples of 8mV, in the range
+0–26000mV; zero is valid only after the full conversion flow. When lost, expired, stopped or in error, all three values
+and the sample metadata are `null`; zero or the previous group's readings are never used instead.
 
-`age_us` **不包含报文传输和电脑端排队时间**。尤其 BLE 分片可能使整包到达时
-已经超过50ms；主机通过结构检查也不代表收包时仍然新鲜。现有状态命令用于诊断，
-不依据这些读数批准运动、充电或切换电源。实际电压存在也不证明 USB 能持续带载。
+`age_us` **does not include message transmission and computer-side queueing time**. BLE fragmentation in particular can mean the whole message arrives
+after more than 50ms; the host passing the structure check also does not mean the data is still fresh when received. The existing status command is for diagnostics;
+these readings are not used to approve motion, charging or power switching. A real voltage being present also does not prove USB can carry a sustained load.
 
-Pico 的 JSON 负载上限为1792字节，含转义/HMAC/换行的线路缓冲为2304字节；
-旧 R3/原生配置不变。使用对应更新后的 `scripts/robot_control.py` 解析。
+The Pico's JSON payload limit is 1792 bytes, and the line buffer including escaping/HMAC/newline is 2304 bytes;
+the old R3/native configs are unchanged. Parse with the matching updated `scripts/robot_control.py`.
 
-## 验证范围和剩余工作
+## Verification scope and remaining work
 
 ```sh
 python3 -B control_tests/verify_pico_rails.py --build
@@ -64,13 +64,13 @@ python3 -B control_tests/verify_pico_profile.py
 python3 -B -m unittest discover -s control_tests -p 'test_pico_host.py'
 ```
 
-新增18个运行时场景执行真实主循环、INA 驱动、诊断服务和序列化；仅替换工作任务、
-设备与 SDK 边界。覆盖三路映射、整组更新、过期、时间回绕、缺席/NACK、短读、
-超时、芯片配置复位、非法电压、GPIO/看门狗故障、USB重启及清理失败。
-公开配置构建还检查实际应用链接保留项目后端，禁止以强制链接替代运行时接入证据。
+18 new runtime scenarios run the real main loop, INA driver, diagnostic service and serialization; only the worker task,
+device and SDK boundaries are replaced. They cover the three-rail mapping, whole-group updates, expiry, time wraparound, absent device/NACK, short read,
+timeout, chip config reset, invalid voltage, GPIO/watchdog faults, USB reboot and cleanup failure.
+The public config build also checks that the actual application link keeps the project backend; forced linking is not allowed as a substitute for evidence of runtime integration.
 
-这些测试不能证明实际电压精度、I²C 电气时序、无线负载下的实时性或整机稳定性。
-BQ唤醒与监测已接入；电池专属保护门限、许可与恢复事务、供电动态验证、
-完整布局布线和实板测试仍未完成。当前软件检查点见
-[PICO_CELL_RUNTIME_VERIFICATION.json](PICO_CELL_RUNTIME_VERIFICATION.json)。
-INA 标定、输入误差与掉电漏电预算也未完成；现有 MOS 瞬态仿真的失败记录仍保留。
+These tests cannot prove actual voltage accuracy, I²C electrical timing, real-time behavior under wireless load or whole-robot stability.
+BQ wake and monitoring are integrated; battery-specific protection thresholds, permission and recovery transactions, power dynamics verification,
+full layout and routing, and real-board tests are still not done. For the current software checkpoint, see
+[PICO_CELL_RUNTIME_VERIFICATION.json](PICO_CELL_RUNTIME_VERIFICATION.json).
+INA calibration, input error and power-off leakage budgets are also not done; the existing failure record of the MOS transient simulation is still kept.

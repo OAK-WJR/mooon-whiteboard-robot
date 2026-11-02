@@ -26,7 +26,7 @@ try{
   assert.equal(await js(`${q}?.dataset.loaded`),'true','Recorded results did not load');
   for(let n=0;n<100;n++){if(await js(`${heavy}?.dataset.loaded==='true'`))break;await wait(100);}
   assert.equal(await js(`${heavy}?.dataset.loaded`),'true','Heavy-load results did not load');
-  assert((await js(`${heavy}.querySelector('[data-observation]').textContent`)).includes(path==='sim'?'尚未称重':'weight not measured'));
+  assert((await js(`${heavy}.querySelector('[data-observation]').textContent`)).includes('weight not measured'));
   for(let n=0;n<100;n++){if(await js(`${heavy}.querySelector('[data-startup-results]')?.dataset.loaded==='true'`))break;await wait(100);}
   assert.equal(await js(`${heavy}.querySelector('[data-startup-results]')?.dataset.loaded`),'true','Startup experiment did not load');
   assert((await js(`${heavy}.querySelector('[data-startup-results]').textContent`)).includes('30'));

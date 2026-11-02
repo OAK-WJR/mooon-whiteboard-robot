@@ -1,36 +1,36 @@
-# 顶部 USB 接口的手工布线检查
+# Hand-routing check of the top USB interface
 
-USB 阶段新增 **67 段线、14 个过孔和一块背面地铜**，调整 U2、C1、C2、C3 的位置；当时整板为 **170 段线、38 个过孔、123 项未连接**，没有增加元件。该版已保存在[复位布线前检查点](../archive/reset_before_control/README.md)。此后继续完成了[复位与串口局部布线](RESET_ROUTING_REVIEW.md)，当前状态以[主板说明](README.md)为准；五片成品成本仍未达标。
+The USB stage added **67 trace segments, 14 vias and one back-side ground pour**, and adjusted the positions of U2, C1, C2 and C3; at that time the whole board had **170 trace segments, 38 vias, 123 unconnected items**, with no components added. That version is saved in the [checkpoint before reset routing](../archive/reset_before_control/README.md). After this, the [local routing of reset and serial](RESET_ROUTING_REVIEW.md) was done; the current state follows the [main board notes](README.md); the cost of the five finished boards still does not meet the target.
 
-[当前 PCB](top_board_v2_logic.kicad_pcb) · [USB 局部放大](preview/usb_interface_detail.png) · [整板预览](preview/placement.png) · [USB 阶段原生检查报告](../archive/reset_before_control/top_board_v2_logic.verification.json)
+[Current PCB](top_board_v2_logic.kicad_pcb) · [USB close-up](preview/usb_interface_detail.png) · [Full-board preview](preview/placement.png) · [Native check report of the USB stage](../archive/reset_before_control/top_board_v2_logic.verification.json)
 
-## 接线与布局
+## Wiring and layout
 
-U2 转到 90°、移近 Type-C 接口，两条数据线分别穿过它的 1/6 和 3/4 焊盘，再到 CH343G。两组正反插数据触点都接入：A6/B6 为 D+，A7/B7 为 D−。镜像触点交叉使用一个背层跨接；CC1、CC2 各保留独立的 5.1kΩ 下拉。ST 的布板说明要求防护器件靠近干扰入口，并缩短信号、VBUS 和地回路；这些是布局依据，不是整板 ESD 合格证明。[ST USBLC6-2 §2.3](https://www.st.com/resource/en/datasheet/usblc6-2.pdf)。
+U2 was turned to 90° and moved close to the Type-C connector; the two data lines pass through its pads 1/6 and 3/4 respectively, then go to the CH343G. The data contacts for both plug orientations are connected: A6/B6 are D+, A7/B7 are D−. The mirrored contacts cross over with one back-layer jumper; CC1 and CC2 each keep a separate 5.1kΩ pull-down. ST's layout notes ask for the protection device to be near the point where interference enters, and for short signal, VBUS and ground return paths; these are the layout basis, not proof that the whole board passes ESD. [ST USBLC6-2 §2.3](https://www.st.com/resource/en/datasheet/usblc6-2.pdf).
 
-C1、C2、C3 分别靠近 CH343G 的 VDD5、V3、VIO 引脚，仍使用原有三颗 100nF。定位孔与 Type-C 原始封装全部保留，VBUS 绕开两个定位孔。USB 地铜与已有 U5 地铜连通；U4 的地铜和全板供电分配仍未接完整。WCH 手册要求上述三路去耦靠近对应引脚，并将 CH343 定义为 USB 全速设备。[WCH v2.0 §7.1](https://files.waveshare.com/wiki/ESP32-S3-LCD-1.3/CH343DS1_EN.pdf)。
+C1, C2 and C3 sit near the CH343G's VDD5, V3 and VIO pins respectively, still using the original three 100nF capacitors. The locating holes and the original Type-C footprint are all kept, and VBUS routes around the two locating holes. The USB ground pour connects with the existing U5 ground pour; U4's ground pour and the full-board power distribution are still not fully connected. The WCH manual asks for these three decoupling capacitors to be near their pins, and defines the CH343 as a USB full-speed device. [WCH v2.0 §7.1](https://files.waveshare.com/wiki/ESP32-S3-LCD-1.3/CH343DS1_EN.pdf).
 
-所有新铜线按明确坐标手动安排，没有自动寻路，方向为 30° 的整数倍。0.2mm 数据线宽只是当前几何参数；没有取得可据以确认 90Ω 差分阻抗的制造叠层，也没有完成信号完整性或眼图验证。
+All new copper was placed by hand using explicit coordinates, with no autorouting, in directions that are multiples of 30°. The 0.2mm data trace width is only the current geometric parameter; no manufacturing stackup was obtained that could confirm 90Ω differential impedance, and no signal integrity or eye diagram verification was done.
 
-## 实际完成的检查
+## Checks actually done
 
-- KiCad 原生连通图核对 **21 组局部连接**，包括原来的两个电源区、USB 数据、CC、VBUS 和去耦。两种插入方向的触点均与对应 CH343G 数据脚连通。
-- 全部 **246 个物理引脚的网络**与现有 XML 网表一致。原来的 **127 个走线/过孔记录**逐字保留；19 个对接触点、Type-C 完整封装和定位孔、模组及板框未变。
-- 原生 DRC 剩余 **123 项未连接和一处原有 M2/PWR1 装配边界重叠**，没有新增短路、铜间距、定位孔边距或装配边界问题。
-- 临时副本分别断开 CH343G 前的 D+、D− 最后一段线，原生连通图均检出两组 Type-C 触点到该输入的断开，DRC 未连接项均变为 124。这是 CAD 断线对照，不是拔线实测。
-- `.kicad_dru` 保持相同。原 85 字节工程文件只含元数据，新工程显式保存了默认参数；通过原生 SaveBoard 展开临时旧版本后，确认两版 PCB 设计参数、规则级别及网络类别相同，没有新增 DRC 排除。
-- [上下板配准](bottom_alignment.json)重新计算，19 个对应点最大名义偏差仍约 0.00103mm；[天线二维投影](antenna_projection.json)未变，原有制造公差和射频限制仍在。
+- The KiCad native connectivity graph checks **21 local connection groups**, including the two original power areas, USB data, CC, VBUS and decoupling. The contacts for both plug orientations connect to the matching CH343G data pins.
+- The nets of all **246 physical pins** match the existing XML netlist. The original **127 trace/via records** are kept verbatim; the 19 mating contacts, the full Type-C footprint and locating holes, the module and the board outline are unchanged.
+- Native DRC leaves **123 unconnected items and one original M2/PWR1 assembly boundary overlap**, with no new short, copper clearance, locating hole clearance or assembly boundary problems.
+- Temporary copies each break the last segment of D+ or D− before the CH343G; the native connectivity graph detected the break from both sets of Type-C contacts to that input, and DRC unconnected items became 124 in each. This is a CAD open-circuit control, not a real unplugging test.
+- `.kicad_dru` stays the same. The original 85-byte project file only had metadata, and the new project saves the default parameters explicitly; after a temporary old version was expanded through native SaveBoard, it was confirmed that both versions have the same PCB design parameters, rule severities and net classes, and no new DRC exclusions were added.
+- The [top/bottom board registration](bottom_alignment.json) was recomputed, and the max nominal deviation of the 19 matching points is still about 0.00103mm; the [2D antenna projection](antenna_projection.json) is unchanged, and the existing manufacturing tolerance and RF limits remain.
 
-## 尚未完成
+## Not yet done
 
-USB 阶段之后，UART 和自动复位到主控的局部走线已继续完成；后续[主控供电阶段](MCU_SUPPLY_REVIEW.md)已接通 MAIN_3V3 与主控地，USB 电源到 D1、供电输入和 VMOT 分配仍未完成。当前检查不证明 USB 枚举、下载、复位、故障恢复或 Wi-Fi/BLE 已在实板工作。USB 浪涌、挂起电流、回灌、ADC 掉电、电源动态、射频净空、成品报价和 JLCEDA 往返导入仍未完成。
+After the USB stage, the local traces of UART and auto reset to the controller were completed; the later [controller power stage](MCU_SUPPLY_REVIEW.md) connected MAIN_3V3 and the controller ground; USB power to D1, the power input and VMOT distribution are still not done. The current checks do not prove that USB enumeration, download, reset, fault recovery or Wi-Fi/BLE work on a real board. USB inrush, suspend current, back-feed, ADC power-off, power dynamics, RF clearance, the finished-board quote and the JLCEDA round-trip import are still not done.
 
-上一版保存在 [USB 布线前检查点](../archive/usb_before_interface/README.md)。[版本记录](verification/usb_layout_revision.json)验证 123 个固件及原理图源文件未变，没有重跑或重新归属旧固件测试。ADC 条件模型继续绑定保存的旧 PCB，并未因本轮布局而重新验证。
+The previous version is saved in the [checkpoint before USB routing](../archive/usb_before_interface/README.md). The [version record](verification/usb_layout_revision.json) verifies that 123 firmware and schematic source files did not change; old firmware tests were not re-run or re-attributed. The ADC condition model stays bound to the saved old PCB and was not re-verified because of this round's layout.
 
-从 `controller_core` 重现保存的 USB 阶段铜连接检查；当前完整局部铜检查命令见[复位布线说明](RESET_ROUTING_REVIEW.md)：
+Reproduce the saved USB-stage copper connection check from `controller_core`; for the current full local copper check command, see the [reset routing notes](RESET_ROUTING_REVIEW.md):
 
 ```sh
 python3 verify_usb_interface.py --board archive/reset_before_control/top_board_v2_logic.kicad_pcb --baseline archive/usb_before_interface/top_board_v2_logic.kicad_pcb
 ```
 
-`route_usb_interface.py` 是本轮明确坐标方案，只接受上一版 103 段线的基底；不得直接重新添加到当前板。上述检查不访问实物串口。
+`route_usb_interface.py` is this round's explicit coordinate plan and only accepts the previous 103-segment base; it must not be applied again directly to the current board. The checks above do not access a real serial port.

@@ -1,16 +1,16 @@
 import {Simulation,modelsFrom,defaults,presets,variants,labels,DT,R,wheelMap} from './core.mjs';
 const $=id=>document.getElementById(id),colors={legacy:'#d89568',model:'#76a9ed',eso:'#70dbb3'};
-const statusText={RUNNING:'运行中',SIMULATED_HOLD:'位置闭环',SATURATED:'输出饱和',SLIP_DETECTED:'检测到滑移',
-  POSITION_FEEDBACK_LOST:'位置反馈丢失',ENCODER_INVALID:'编码器失效',FELL_OFF_BOARD:'跌出板面 · 轨迹终止',OUTPUT_OFF:'驱动力已撤除'};
-const notes={load:'目标 5200 counts/s；3 秒加入阻力，7 秒撤除。虚线为目标轮速。',
-  mismatch:'真实仿真对象的增益为基准的 75%、响应时间为 140%；控制器不知道这些变化。',
-  saturation:'默认供电比例 75%、额外阻力 145 PWM。补偿有上限，动力不足时仍会失速。',
-  encoder:'第 5 秒模拟编码器失效。三组输出均归零，不继续使用无效反馈。',
-  wall:'第 1–3 秒上行，随后松键。候选组使用模拟位置反馈保持位置；现有 PI 组松键滑行。',
-  slip:'第 4 秒摩擦降至设定值的 12%。吸附牵引不足时，算法也无法阻止下滑。',
-  camera:'第 4 秒停止位置测量；候选组反馈超时后撤掉输出，随后可能下滑。这不是实物防坠方案。',
-  lateral:'水平面、无重力切向分量。先右移，再左移；默认关闭外部位置反馈，观察三轮响应差导致的偏移。可切换三轮同步加速。',
-  manual:'点击开始，然后使用 WASD / Q、E。WASD 按白板坐标移动，松键可比较驻坡与滑行。'};
+const statusText={RUNNING:'Running',SIMULATED_HOLD:'Position closed-loop',SATURATED:'Output saturated',SLIP_DETECTED:'Slip detected',
+  POSITION_FEEDBACK_LOST:'Position feedback lost',ENCODER_INVALID:'Encoder failed',FELL_OFF_BOARD:'Fell off the board · track ended',OUTPUT_OFF:'Drive force removed'};
+const notes={load:'Target 5200 counts/s; resistance added at 3 s and removed at 7 s. The dashed line is the target wheel speed.',
+  mismatch:'The simulated plant has 75% of the baseline gain and 140% of the response time; the controllers do not know about these changes.',
+  saturation:'Default supply ratio 75%, extra resistance 145 PWM. Compensation is capped, so with too little power the wheels still stall.',
+  encoder:'Encoder failure simulated at 5 s. All three groups set output to zero and stop using the invalid feedback.',
+  wall:'Climb from 1–3 s, then release the keys. The candidate groups hold position with simulated position feedback; the existing PI group coasts after release.',
+  slip:'At 4 s friction drops to 12% of the set value. When adhesion traction is too low, the algorithms cannot stop the slide either.',
+  camera:'Position measurement stops at 4 s; the candidate groups remove output after the feedback times out and may then slide down. This is not a fall-prevention design for the real robot.',
+  lateral:'Level surface, no tangential gravity component. Move right, then left; external position feedback is off by default, to show the drift caused by response differences between the three wheels. Three-wheel synchronized acceleration can be toggled.',
+  manual:'Click Start, then use WASD / Q, E. WASD moves in whiteboard coordinates; release the keys to compare holding on the slope with coasting.'};
 let models,gains,sims={},traces={},options={...defaults},running=false,accumulator=0,lastTime=0;
 const keys=new Set();
 function refreshValues(){
@@ -28,13 +28,13 @@ function reset(){
   running=false;accumulator=0;keys.clear();paintKeys();options=readOptions();
   sims=Object.fromEntries(variants.map(v=>[v,new Simulation(models,gains,v,options)]));
   traces=Object.fromEntries(variants.map(v=>[v,[]]));
-  $('run').textContent='开始仿真';$('scenarioNote').textContent=notes[options.preset];
+  $('run').textContent='Start simulation';$('scenarioNote').textContent=notes[options.preset];
   $('benchSettings').hidden=options.mode!=='bench';$('wallSettings').hidden=options.mode!=='wall';
   $('keys').hidden=options.preset!=='manual';
-  $('stageTitle').textContent=options.mode==='bench'?'轮速响应':options.preset==='lateral'?'左右往返 · 三轮协同响应':'白板上的车体运动（假设模型）';
-  $('plotTitle').textContent=options.mode==='bench'?'电机 PWM':options.preset==='lateral'?'横向偏移 · m':'车体高度 · m';
-  $('errorLabel').textContent=options.mode==='bench'?'ESO · 轮速误差':options.preset==='lateral'?'ESO · 横向偏移':'ESO · 位置误差';
-  $('metricHead').textContent=options.mode==='bench'?'3–5秒平均误差':options.preset==='lateral'?'最大横向偏移 / 航向差':'当前位置误差';
+  $('stageTitle').textContent=options.mode==='bench'?'Wheel-speed response':options.preset==='lateral'?'Left-right round trip · coordinated three-wheel response':'Robot motion on the whiteboard (assumed model)';
+  $('plotTitle').textContent=options.mode==='bench'?'Motor PWM':options.preset==='lateral'?'Lateral drift · m':'Body height · m';
+  $('errorLabel').textContent=options.mode==='bench'?'ESO · wheel-speed error':options.preset==='lateral'?'ESO · lateral drift':'ESO · position error';
+  $('metricHead').textContent=options.mode==='bench'?'Mean error 3–5 s':options.preset==='lateral'?'Max lateral drift / heading difference':'Current position error';
   draw();
 }
 function presetChanged(){
@@ -42,7 +42,7 @@ function presetChanged(){
   for(const id of ['load','mass','normal','mu','force','speed','voltage'])$(id).value=o[id];
   $('camera').checked=o.camera;$('hold').checked=o.hold;$('sync').checked=o.sync;refreshValues();reset();
 }
-function pause(){running=false;keys.clear();paintKeys();$('run').textContent='继续仿真';draw();}
+function pause(){running=false;keys.clear();paintKeys();$('run').textContent='Resume simulation';draw();}
 function paintKeys(){document.querySelectorAll('[data-key]').forEach(b=>b.classList.toggle('active',keys.has(b.dataset.key)));}
 function command(){
   let x=(keys.has('d')-keys.has('a'))*options.speed,y=(keys.has('w')-keys.has('s'))*options.speed;
@@ -82,7 +82,7 @@ function graph(id,curves,{range=null,unit='',target=null}={}){
     c.strokeStyle=curve.color;c.lineWidth=1.6;c.setLineDash(curve.dash??[]);c.beginPath();let first=true;
     for(const [t,y] of curve.data){if(t<begin)continue;if(first){c.moveTo(X(t),Y(y));first=false;}else c.lineTo(X(t),Y(y));}c.stroke();
   }c.restore();c.setLineDash([]);
-  if(!all.length){c.fillStyle='#6b849b';c.textAlign='center';c.fillText('开始实验后显示曲线',w/2,h/2);}
+  if(!all.length){c.fillStyle='#6b849b';c.textAlign='center';c.fillText('Curves appear after the experiment starts',w/2,h/2);}
 }
 function board(){
   const [c,w,h]=context('stage'),scale=Math.min((w-90)/1.4,(h-38)/1.3),cx=w/2,cy=h-18-.60*scale;
@@ -91,8 +91,8 @@ function board(){
   c.strokeStyle='#293847';c.lineWidth=1;
   for(let x=-.6;x<=.61;x+=.2){c.beginPath();c.moveTo(X(x),Y(-.6));c.lineTo(X(x),Y(.65));c.stroke();}
   for(let y=-.6;y<=.65;y+=.2){c.beginPath();c.moveTo(X(-.7),Y(y));c.lineTo(X(.7),Y(y));c.stroke();}
-  c.fillStyle='#7990a5';c.font='10px system-ui';c.textAlign='left';c.fillText(options.preset==='lateral'?'水平面 · 网格 20cm':'↑ 竖直板面 · 网格 20cm',12,12);
-  if(options.preset!=='lateral'){c.fillStyle='#c38768';c.fillText('↓ 重力',12,32);}
+  c.fillStyle='#7990a5';c.font='10px system-ui';c.textAlign='left';c.fillText(options.preset==='lateral'?'Level surface · grid 20cm':'↑ Vertical board · grid 20cm',12,12);
+  if(options.preset!=='lateral'){c.fillStyle='#c38768';c.fillText('↓ Gravity',12,32);}
   c.setLineDash([5,4]);c.strokeStyle='#8f535e';c.beginPath();c.moveTo(X(-.7),Y(-.6));c.lineTo(X(.7),Y(-.6));c.stroke();c.setLineDash([]);
   for(const v of variants){
     const data=traces[v],f=data.at(-1),pose=f?.pose??[0,0,Math.PI/2],color=colors[v];
@@ -114,23 +114,23 @@ function draw(){
   graph('plot',curves(options.mode==='bench'?f=>f.pwm[motor]:f=>f.pose[1]),{range:options.mode==='bench'?[-260,260]:null,unit:options.mode==='bench'?'PWM':'m'});
   const observer=[{color:colors.eso,data:traces.eso.map(f=>[f.t,f.compensation[motor]])}];
   if(options.mode==='bench')observer.push({color:'#70859a',dash:[4,4],data:traces.eso.map(f=>[f.t,f.load*options.direction])});
-  graph('observerPlot',observer,{unit:options.mode==='bench'?'PWM · 虚线为已知注入值':'PWM 等效值 · 无实测扭矩'});
+  graph('observerPlot',observer,{unit:options.mode==='bench'?'PWM · dashed line is the known injected value':'PWM equivalent · no measured torque'});
   $('time').innerHTML=`${(frame?.t??0).toFixed(2)} <em>s</em>`;
   $('comp').innerHTML=`${(frame?.compensation[motor]??0).toFixed(1)} <em>PWM</em>`;
   const err=frame?(options.mode==='bench'?Math.abs(frame.targets[motor]-frame.speed[motor]):options.preset==='lateral'?1000*Math.abs(frame.pose[1]):1000*Math.hypot(frame.pose[0]-frame.goal[0],frame.pose[1]-frame.goal[1])):null;
   $('error').innerHTML=err===null?'—':`${err.toFixed(options.mode==='bench'?0:1)} <em>${options.mode==='bench'?'counts/s':'mm'}</em>`;
-  $('state').textContent=frame?(running?'运行 · ':'暂停 · ')+(statusText[frame.status]??frame.status):'准备就绪';
+  $('state').textContent=frame?(running?'Running · ':'Paused · ')+(statusText[frame.status]??frame.status):'Ready';
   $('results').innerHTML=variants.map(v=>{
     const data=traces[v],f=data.at(-1),window=data.filter(f=>f.t>=3&&f.t<5);
     const mae=window.length?window.reduce((a,f)=>a+Math.abs(f.speed[motor]-f.targets[motor]),0)/window.length:null;
     const value=options.mode==='bench'?(mae===null?'—':mae.toFixed(0)+' counts/s'):options.preset==='lateral'?
       (f?`${(1000*Math.max(...data.map(f=>Math.abs(f.pose[1])))).toFixed(1)} mm / ${(Math.max(...data.map(f=>Math.abs(f.pose[2]-f.goal[2])))*180/Math.PI).toFixed(1)}°`:'—'):
       (f?(1000*Math.hypot(f.pose[0]-f.goal[0],f.pose[1]-f.goal[1])).toFixed(1)+' mm':'—');
-    return `<tr><td style="color:${colors[v]}">${labels[v]}</td><td>${f?statusText[f.status]:'待开始'}</td><td>${data.length?Math.max(...data.flatMap(f=>f.pwm.map(Math.abs))):'—'}</td><td>${value}</td></tr>`;
+    return `<tr><td style="color:${colors[v]}">${labels[v]}</td><td>${f?statusText[f.status]:'Not started'}</td><td>${data.length?Math.max(...data.flatMap(f=>f.pwm.map(Math.abs))):'—'}</td><td>${value}</td></tr>`;
   }).join('');
-  $('summary').textContent=options.mode==='bench'?'比较蓝线与绿线可单独观察 ESO 的作用；两组 PI 与前馈相同。红线为原轮速算法。误差指标只统计加入负载后的 3–5 秒。':options.preset==='lateral'?
-    `这是水平面左右往返；三轮同步加速${options.sync?'已启用':'已关闭'}，候选组位置反馈${options.camera?'已启用':'已关闭'}。表中显示整段轨迹的最大横向偏移和航向差，均为假设模型结果。`:
-    '蓝、绿组额外使用模拟位置反馈和可选 HOLD，红组只有原轮速算法。驻坡差异不能全部归功于 ESO；跌出板面后终止该组轨迹。';
+  $('summary').textContent=options.mode==='bench'?'Compare the blue and green lines to see the effect of ESO alone; both groups share the same PI and feedforward. The red line is the original wheel-speed algorithm. The error metric only counts 3–5 s after the load is added.':options.preset==='lateral'?
+    `This is a left-right round trip on a level surface; three-wheel synchronized acceleration is ${options.sync?'on':'off'}, candidate position feedback is ${options.camera?'on':'off'}. The table shows the maximum lateral drift and heading difference over the whole track; all are results of the assumed model.`:
+    'The blue and green groups also use simulated position feedback and optional HOLD; the red group has only the original wheel-speed algorithm. Differences in holding on the slope cannot all be credited to ESO; a group track ends once it falls off the board.';
 }
 function animate(now){
   const elapsed=Math.min(.1,(now-lastTime)/1000||0);lastTime=now;
@@ -140,13 +140,13 @@ function animate(now){
 async function init(){
   try{
     const [m,g]=await Promise.all([fetch('../reports/sysid-model-03.json'),fetch('../calibration.json')]);
-    if(!m.ok||!g.ok)throw Error('模型文件读取失败');models=modelsFrom(await m.json());gains=(await g.json()).gains;
+    if(!m.ok||!g.ok)throw Error('Failed to read the model files');models=modelsFrom(await m.json());gains=(await g.json()).gains;
     $('preset').onchange=presetChanged;
     for(const id of ['motor','direction','load','mass','normal','mu','force','speed','voltage','camera','hold','sync'])
       $(id).addEventListener('input',()=>{refreshValues();reset();});
     $('reset').onclick=reset;
-    $('run').onclick=()=>{if(running)pause();else{if(sims.eso.stopped||sims.eso.t>=10&&options.preset!=='manual')reset();running=true;$('run').textContent='暂停';}};
-    $('off').onclick=()=>{keys.clear();paintKeys();variants.forEach(v=>sims[v].stop());running=true;$('run').textContent='暂停';};
+    $('run').onclick=()=>{if(running)pause();else{if(sims.eso.stopped||sims.eso.t>=10&&options.preset!=='manual')reset();running=true;$('run').textContent='Pause';}};
+    $('off').onclick=()=>{keys.clear();paintKeys();variants.forEach(v=>sims[v].stop());running=true;$('run').textContent='Pause';};
     $('export').onclick=()=>{
       const data={schema:'wbb-browser-simulation-1',options,simulation_only:true,model_source:'sysid-model-03.json',traces};
       const url=URL.createObjectURL(new Blob([JSON.stringify(data)],{type:'application/json'}));
@@ -166,6 +166,6 @@ async function init(){
       b.onpointerup=b.onpointercancel=b.onlostpointercapture=()=>{keys.delete(b.dataset.key);paintKeys();};
     });
     new ResizeObserver(draw).observe($('stage'));refreshValues();reset();requestAnimationFrame(animate);
-  }catch(e){$('state').textContent='无法加载';$('summary').textContent=e.message;$('run').disabled=true;}
+  }catch(e){$('state').textContent='Failed to load';$('summary').textContent=e.message;$('run').disabled=true;}
 }
 init();

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""USB 串口 <-> UDP 桥 —— 让 whiteboard_app.py 直接走 USB 串口跑导航 (无需 WiFi)。
+"""USB serial <-> UDP bridge - lets whiteboard_app.py run navigation directly over USB serial (no WiFi needed).
 
-把通过 USB 连接的 ESP32 (esp32 主固件) 伪装成一台「WiFi 机器人」给上位机:
-  · 读固件的位姿 JSON 流 (串口发 `j` 开启) -> 转发到 127.0.0.1:8889 (上位机收, 自动学到本机)
-  · 监听 UDP 8888 收上位机命令 (goto/area/stop/...) -> 翻译成串口控制台命令写给固件
+Presents the USB-connected ESP32 (esp32 main firmware) to the host PC as a "WiFi robot":
+  · Reads the firmware's pose JSON stream (send `j` over serial to start it) -> forwards to 127.0.0.1:8889 (the host PC receives it and learns this machine automatically)
+  · Listens on UDP 8888 for host PC commands (goto/area/stop/...) -> translates them into serial console commands for the firmware
 
-用法 (两个终端):
+Usage (two terminals):
   python scripts/serial_bridge.py [/dev/cu.usbserial-0001]
-  python scripts/whiteboard_app.py     # 2D 图上左键点击 = 设目标并前往 (走 USB)
+  python scripts/whiteboard_app.py     # left-click on the 2D map = set target and go (over USB)
 """
 
 import sys, time, json, socket, threading
@@ -15,19 +15,19 @@ import serial
 
 PORT = sys.argv[1] if len(sys.argv) > 1 else "/dev/cu.usbserial-0001"
 BAUD = 115200
-APP_STATUS_ADDR = ("127.0.0.1", 8889)   # 上位机监听口
-CMD_LISTEN_PORT = 8888                   # 收上位机命令 (= 固件 UDP_LISTEN_PORT)
+APP_STATUS_ADDR = ("127.0.0.1", 8889)   # host PC listen port
+CMD_LISTEN_PORT = 8888                   # receives host PC commands (= firmware UDP_LISTEN_PORT)
 
 def open_serial():
     s = serial.Serial(PORT, BAUD, timeout=0.1, dsrdtr=True)
     s.dtr = False; s.rts = True; time.sleep(0.1); s.rts = False
     time.sleep(2.0); s.reset_input_buffer()
-    s.write(b"j\n")            # 开启固件位姿 JSON 流
-    print(f"[bridge] 串口 {PORT} 已开, 已发 'j' 开启位姿流")
+    s.write(b"j\n")            # start the firmware pose JSON stream
+    print(f"[bridge] serial {PORT} open, sent 'j' to start the pose stream")
     return s
 
 def cmd_loop(ser):
-    """收上位机 UDP 命令 -> 翻译成串口命令"""
+    """Receive host PC UDP commands -> translate them into serial commands"""
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind(("0.0.0.0", CMD_LISTEN_PORT))
     while True:
@@ -58,12 +58,12 @@ def main():
     ser = open_serial()
     out = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     threading.Thread(target=cmd_loop, args=(ser,), daemon=True).start()
-    print(f"[bridge] 转发位姿 -> {APP_STATUS_ADDR}, 监听命令 :{CMD_LISTEN_PORT}")
+    print(f"[bridge] forwarding pose -> {APP_STATUS_ADDR}, listening for commands :{CMD_LISTEN_PORT}")
     while True:
         line = ser.readline().decode("utf-8", "ignore").strip()
         if line.startswith("{"):
             try:
-                json.loads(line)               # 校验是合法 JSON
+                json.loads(line)               # check it is valid JSON
                 out.sendto(line.encode(), APP_STATUS_ADDR)
             except Exception:
                 pass
@@ -72,4 +72,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n[bridge] 退出")
+        print("\n[bridge] exit")

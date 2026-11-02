@@ -1,193 +1,193 @@
-# WhiteBoardBot 项目总览报告
+# WhiteBoardBot project overview report
 
-汇总架构、硬件、软件、调参与运维要点。**无 ROS** —— ESP32 自主控制。
+A summary of the architecture, hardware, software, tuning and operations notes. **No ROS** — the ESP32 controls itself.
 
 ---
 
-## 1. 项目目标
+## 1. Project goal
 
-**WhiteBoardBot** 是一台基于 **ESP32** 的三轮全向轮（120° 布置）白板/桌面机器人。
-全部控制都在 ESP32 上完成，上位机只下发目标与位置校正：
+**WhiteBoardBot** is a whiteboard/desktop robot based on the **ESP32**, with three omni wheels (120° layout).
+All control runs on the ESP32; the host only sends targets and position corrections:
 
-| 层级 | 运行环境 | 职责 |
+| Layer | Runtime environment | Role |
 |------|----------|------|
-| 上位机 | Mac/PC（Python，WiFi UDP） | 发目标区域 / 位置校正、画轨迹、PID 调参 |
-| 机器人 | ESP32（Arduino + FreeRTOS） | 路径规划、前瞻循线、逆运动学、FF+PID、编码器里程计 |
+| Host | Mac/PC (Python, WiFi UDP) | Send target area / position corrections, draw the trajectory, PID tuning |
+| Robot | ESP32 (Arduino + FreeRTOS) | Path planning, lookahead path following, inverse kinematics, FF+PID, encoder odometry |
 
 ---
 
-## 2. 系统架构
+## 2. System architecture
 
 ```
 ┌─────────────────────────┐   WiFi UDP (JSON)   ┌──────────────────────────────┐
-│ 上位机 whiteboard_app.py │  ──── area/pos ───► │ ESP32 (env:esp32)            │
-│  目标区域 / 位置校正     │  ◄──── status ───── │  PathPlanner → Follower      │
-│  实时轨迹               │   :8888 / :8889     │  → Kinematics → FF/PID       │
-└─────────────────────────┘                     │  → RZ7899 ×3 → 3×N20         │
-                                                 │  编码器 → Odometry           │
-                                                 └──────────────────────────────┘
+│ Host whiteboard_app.py  │  ──── area/pos ───► │ ESP32 (env:esp32)            │
+│  target area /          │  ◄──── status ───── │  PathPlanner → Follower      │
+│  position correction    │   :8888 / :8889     │  → Kinematics → FF/PID       │
+│  live trajectory        │                     │  → RZ7899 ×3 → 3×N20         │
+└─────────────────────────┘                     │  encoders → Odometry         │
+                                                └──────────────────────────────┘
 ```
 
-**UDP 命令（JSON，端口 `UDP_LISTEN_PORT=8888`）**
+**UDP commands (JSON, port `UDP_LISTEN_PORT=8888`)**
 
-| `cmd` | 字段 | 说明 |
+| `cmd` | Fields | Description |
 |-------|------|------|
-| `area` | `x y w h spacing` | 规划 zigzag 覆盖路径 |
-| `start` / `stop` | — | 开始 / 停止执行 |
-| `pos` | `x y theta` | 视觉位置校正里程计 |
-| `set_speed` | `v` | 设最大线速度 |
+| `area` | `x y w h spacing` | Plan a zigzag coverage path |
+| `start` / `stop` | — | Start / stop execution |
+| `pos` | `x y theta` | Correct odometry with a vision position fix |
+| `set_speed` | `v` | Set the max linear speed |
 
-**状态回传（JSON，端口 `UDP_REPORT_PORT=8889`，10Hz）**：`state, x, y, theta, progress, wp, wp_total`。
+**Status report (JSON, port `UDP_REPORT_PORT=8889`, 10Hz)**: `state, x, y, theta, progress, wp, wp_total`.
 
-控制环与上位机的命令一一对应，串口控制台复用同一套 `RobotController::handleCommand` 逻辑。
+The control loop maps one-to-one to the host commands, and the serial console reuses the same `RobotController::handleCommand` logic.
 
 ---
 
-## 3. 固件（PlatformIO）
+## 3. Firmware (PlatformIO)
 
-### 3.1 构建环境（`platformio.ini`）
+### 3.1 Build environments (`platformio.ini`)
 
-| 环境 | 用途 |
+| Environment | Use |
 |------|------|
-| `esp32`（默认） | 主固件：自主控制 + WiFi UDP + 串口实时调参 |
-| `motor_test` | 单/三电机测试台；开环 / PID / 运动学，串口交互，配合 `pid_tuner.py` |
-| `native` | 桌面 `pio test -e native`，运动学 / PID / 里程计模拟 |
+| `esp32` (default) | Main firmware: autonomous control + WiFi UDP + live tuning over serial |
+| `motor_test` | Single/three-motor test bench; open loop / PID / kinematics, interactive over serial, works with `pid_tuner.py` |
+| `native` | Desktop `pio test -e native`, kinematics / PID / odometry simulation |
 
-### 3.2 主固件（`src/main.cpp`）
+### 3.2 Main firmware (`src/main.cpp`)
 
-- 双 FreeRTOS 任务：`controlTask`（Core1，50Hz 控制环）+ `commTask`（Core0，WiFi 收发）。
-- `loop()` 跑串口调参控制台：运行时改 PID / 速度 / 前瞻 / 容差，无需重新烧录（命令表见文件顶部注释或 README）。
-- 控制环：里程计更新 → 循线得机体速度 → 逆运动学 → 轮速 **FF+PID**；反馈用 `Odometry::getWheelVelocity()` 的直接轮速。
+- Two FreeRTOS tasks: `controlTask` (Core1, 50Hz control loop) + `commTask` (Core0, WiFi send/receive).
+- `loop()` runs the serial tuning console: change PID / speed / lookahead / tolerance at runtime without reflashing (see the comment at the top of the file or the README for the command table).
+- Control loop: odometry update → path following gives body velocity → inverse kinematics → wheel-speed **FF+PID**; feedback uses the direct wheel speed from `Odometry::getWheelVelocity()`.
 
-### 3.3 控制器与跟踪
+### 3.3 Controller and tracking
 
-- `RobotController`：状态机（idle/planning/ready/running/done）+ 命令分发 + 控制环 + 串口调参接口（`tunePid` / `setLookAhead` / `setGoalTolerance` / `setLinearGain` / `printParams` / `printTelemetry`）。
-- `TrajectoryFollower`：前瞻路径跟踪，`look_ahead_` / `goal_tol_` / `kp_linear_` 三个参数运行时可调（默认取 `config.h`）。
-- `PathPlanner`：矩形区域 zigzag 覆盖。
+- `RobotController`: state machine (idle/planning/ready/running/done) + command dispatch + control loop + serial tuning interface (`tunePid` / `setLookAhead` / `setGoalTolerance` / `setLinearGain` / `printParams` / `printTelemetry`).
+- `TrajectoryFollower`: lookahead path tracking; the three parameters `look_ahead_` / `goal_tol_` / `kp_linear_` can be tuned at runtime (defaults come from `config.h`).
+- `PathPlanner`: zigzag coverage of a rectangular area.
 
-### 3.4 里程计（`src/odometry.cpp`）
+### 3.4 Odometry (`src/odometry.cpp`)
 
-- 编码器差分 → 轮速，做 EMA 低通减小 PID 抖动；`reset()` 时轮速清零。
+- Encoder differences → wheel speed, with an EMA low-pass to reduce PID jitter; wheel speed is zeroed on `reset()`.
 
-### 3.5 PID（`src/pid_controller.*`）
+### 3.5 PID (`src/pid_controller.*`)
 
-- FF + PID，derivative-on-measurement，anti-windup（积分限幅），PWM slew rate 限制。
-- 全套运行时 getter/setter（`setKp/Ki/Kd/Kf` 等），供串口调参与 `pid_tuner.py`。
+- FF + PID, derivative-on-measurement, anti-windup (integral clamping), PWM slew rate limit.
+- A full set of runtime getters/setters (`setKp/Ki/Kd/Kf` etc.) for serial tuning and `pid_tuner.py`.
 
-### 3.6 电机驱动（`src/motor_driver.cpp`）
+### 3.6 Motor driver (`src/motor_driver.cpp`)
 
-- RZ7899-MS 双引脚：正转 FI=PWM/BI=LOW，反转相反，刹车双 LOW。
+- RZ7899-MS with two pins: forward FI=PWM/BI=LOW, reverse the opposite, brake both LOW.
 
-### 3.7 电机测试固件（`src/motor_test_main.cpp`）
+### 3.7 Motor test firmware (`src/motor_test_main.cpp`)
 
-- 串口命令：`0/1/2` 选电机、`+/-`、`f/r`、`s/a`、`p`、`z`、`c`（开环/PID）、`k`+`w/x/q/e/j/l`（运动学）。
-- 大写多字符命令 `P/I/D/F/L/G/R/S/V/A` 用于 PID 调参，PID 闭环时输出 `$tgt,act,pwm,FF,P,I,D` 帧供 `pid_tuner.py` 绘图。
+- Serial commands: `0/1/2` select motor, `+/-`, `f/r`, `s/a`, `p`, `z`, `c` (open loop/PID), `k`+`w/x/q/e/j/l` (kinematics).
+- Uppercase multi-character commands `P/I/D/F/L/G/R/S/V/A` are for PID tuning; in PID closed loop it outputs `$tgt,act,pwm,FF,P,I,D` frames for `pid_tuner.py` to plot.
 
 ---
 
-## 4. 硬件配置摘要（`include/config.h`）
+## 4. Hardware config summary (`include/config.h`)
 
-### 4.1 机械与编码器
+### 4.1 Mechanics and encoders
 
-- 全向轮直径 38 mm，轮心距底盘中心约 33.738 mm。
-- 编码器：`ENCODER_CPR = 700`（7 PPR × 1:100 减速）。
+- Omni wheel diameter 38 mm; wheel center about 33.738 mm from the chassis center.
+- Encoder: `ENCODER_CPR = 700` (7 PPR × 1:100 reduction).
 
-### 4.2 引脚分配（务必与实物一致）
+### 4.2 Pin assignment (must match the hardware)
 
-**RZ7899-MS 驱动（每颗单 H 桥，2 引脚 FI+BI）**
+**RZ7899-MS drivers (one H-bridge each, 2 pins FI+BI)**
 
-- M0：FI **32**，BI **33**
-- M1：FI **25**，BI **26**
-- M2：FI **27**，BI **14**
+- M0: FI **32**, BI **33**
+- M1: FI **25**, BI **26**
+- M2: FI **27**, BI **14**
 
-**编码器（AB 相）**
+**Encoders (A/B phases)**
 
-- M0：**34 / 35**
-- M1：**36 / 39**
-- M2：**19 / 18**
+- M0: **34 / 35**
+- M1: **36 / 39**
+- M2: **19 / 18**
 
-编码器方向修正 `ENCODER_DIR_M*`：M2 取反（`-1`）。
+Encoder direction correction `ENCODER_DIR_M*`: M2 is inverted (`-1`).
 
-**注意（排障记录）**
+**Note (troubleshooting log)**
 
-- **GPIO 12** 为 Flash 电压选择脚；邻近 **GPIO 14** 的杜邦线若误碰拉高 GPIO 12，会导致 Flash 工作在 1.8 V 模式、`esptool` 报 “Failed to communicate with the flash chip”。布线远离或给 GPIO 12 下拉。
-- 部分编码器脚（GPIO34/35/36/39）仅输入、无内部上拉；ESP32 errata 3.11 下 GPIO36/39 噪声可用 `adc_power_acquire()` 抑制。
+- **GPIO 12** is the Flash voltage select pin; if a jumper wire near **GPIO 14** accidentally touches it and pulls GPIO 12 high, the Flash runs in 1.8 V mode and `esptool` reports "Failed to communicate with the flash chip". Route wires away from it or add a pull-down on GPIO 12.
+- Some encoder pins (GPIO34/35/36/39) are input-only with no internal pull-up; per ESP32 errata 3.11, GPIO36/39 noise can be suppressed with `adc_power_acquire()`.
 
-### 4.3 RZ7899 / 供电要点
+### 4.3 RZ7899 / power notes
 
-- VM（电机电源）与逻辑供电独立；与 ESP32、电池负极 **共地**。
-- 损坏的驱动可能 VCC–GND 短路，与 ESP32 共地会烧稳压器——上电前用万用表蜂鸣档先测板子。
+- VM (motor power) is separate from the logic supply; **common ground** with the ESP32 and the battery negative.
+- A damaged driver may have a VCC–GND short, and sharing ground with the ESP32 will burn the regulator — check the board with a multimeter in continuity mode before power-up.
 
 ### 4.4 WiFi / UDP
 
-- `WIFI_SSID`、`WIFI_PASS` 在 `config.h`（已被 `.gitignore` 忽略）。
-- `UDP_LISTEN_PORT=8888`（收命令）、`UDP_REPORT_PORT=8889`（回状态）。ESP32 自动回复发命令的来源地址。
+- `WIFI_SSID` and `WIFI_PASS` are in `config.h` (ignored by `.gitignore`).
+- `UDP_LISTEN_PORT=8888` (receives commands), `UDP_REPORT_PORT=8889` (sends status). The ESP32 automatically replies to the source address that sent the command.
 
 ---
 
-## 5. 工具链与环境（本机）
+## 5. Toolchain and environment (this machine)
 
-- **Python venv**：用 Homebrew `python3.10` 创建，再 `pip install -r requirements.txt`（含 platformio + 上位机 GUI 依赖）。曾出现空 `pio` 脚本 / pip 损坏导致命令无输出，需重建 venv。
-- **ESP32 上传**：Intel Mac 上曾需 binutils 路径修正。
-- **串口**：`pio device monitor` 在部分环境下可能失败，可用 `pyserial` 或系统串口工具。
+- **Python venv**: create it with Homebrew `python3.10`, then `pip install -r requirements.txt` (includes platformio + host GUI dependencies). An empty `pio` script / broken pip once made commands print nothing, and the venv had to be rebuilt.
+- **ESP32 upload**: on an Intel Mac, a binutils path fix was once needed.
+- **Serial port**: `pio device monitor` may fail in some environments; use `pyserial` or a system serial tool instead.
 
 ---
 
-## 6. 已记录问题与结论（排障摘要）
+## 6. Recorded issues and conclusions (troubleshooting summary)
 
-| 现象 | 可能原因 | 处理方向 |
+| Symptom | Likely cause | What to do |
 |------|----------|----------|
-| 上传报 Flash 通信失败、Manufacturer `ff` | GPIO12 被拉高、接线干扰 | 检查 GPIO12/14，共地前测驱动板 |
-| 一连 GND ESP32 发烫 | 驱动 VCC–GND 短路 | 断电，蜂鸣档测 VCC/GND，更换模块 |
-| PWM 有输出、编码器始终 0 | VM/GND 未接、电机未转或编码器未供电 | 查驱动电源与编码器线 |
-| 运动抖动 | PID 过冲、轮速噪声 | 降 KP/KI、轮速 EMA、PWM slew；串口 `t` 看遥测实时调 |
+| Upload reports Flash communication failure, Manufacturer `ff` | GPIO12 pulled high, wiring interference | Check GPIO12/14; test the driver board before sharing ground |
+| ESP32 gets hot as soon as GND is connected | Driver VCC–GND short | Power off, test VCC/GND in continuity mode, replace the module |
+| PWM has output, encoder always 0 | VM/GND not connected, motor not turning, or encoder not powered | Check driver power and encoder wires |
+| Jittery motion | PID overshoot, wheel-speed noise | Lower KP/KI, wheel-speed EMA, PWM slew; use serial `t` to view telemetry and tune live |
 
 ---
 
-## 7. 常用命令速查
+## 7. Common commands
 
 ```bash
-# 主固件（自主控制 + 串口调参）
+# Main firmware (autonomous control + serial tuning)
 pio run -e esp32 -t upload && pio device monitor
 
-# 电机测试台（无线无关，串口调 PID）
+# Motor test bench (no wireless; tune PID over serial)
 pio run -e motor_test -t upload
 
-# Native 测试
+# Native tests
 pio test -e native
 
-# 上位机
-python scripts/whiteboard_app.py   # 控制面板
-python scripts/pid_tuner.py        # 单电机 PID 调参
+# Host
+python scripts/whiteboard_app.py   # control panel
+python scripts/pid_tuner.py        # single-motor PID tuning
 ```
 
 ---
 
-## 8. 目录结构（核心）
+## 8. Directory structure (core)
 
 ```
 WhiteBoardBot/
-├── include/config.example.h  # 硬件 + PID + WiFi（复制为 config.h）
+├── include/config.example.h  # hardware + PID + WiFi (copy to config.h)
 ├── platformio.ini            # esp32 / motor_test / native
 ├── src/
-│   ├── main.cpp              # 主固件 + 串口调参控制台
-│   ├── robot_controller.*    # 状态机 + 控制环 + 调参接口
-│   ├── path_planner.*        # zigzag 覆盖
-│   ├── trajectory_follower.* # 前瞻循线（参数可调）
+│   ├── main.cpp              # main firmware + serial tuning console
+│   ├── robot_controller.*    # state machine + control loop + tuning interface
+│   ├── path_planner.*        # zigzag coverage
+│   ├── trajectory_follower.* # lookahead path following (tunable parameters)
 │   ├── kinematics.* odometry.* pid_controller.* motor_driver.* wifi_comm.*
-│   └── motor_test_main.cpp   # 电机测试台
+│   └── motor_test_main.cpp   # motor test bench
 ├── scripts/                  # whiteboard_app.py + pid_tuner.py
-└── test/test_all.cpp         # native 测试
+└── test/test_all.cpp         # native tests
 ```
 
 ---
 
-## 9. 安全与后续建议
+## 9. Safety and next steps
 
-- 不要把 `config.h` 中的 WiFi 密码提交到公开 Git。
-- 新驱动上电前蜂鸣档测 VCC–GND，避免烧 ESP32 稳压器。
-- 长期建议：用带板载 USB 的 ESP32-DevKitC，减少外接 CP2102 与 GPIO12 风险。
+- Do not commit the WiFi password in `config.h` to a public Git repository.
+- Before powering up a new driver, test VCC–GND in continuity mode, to avoid burning the ESP32 regulator.
+- Long-term suggestion: use an ESP32-DevKitC with onboard USB, to reduce the risks of the external CP2102 and GPIO12.
 
 ---
 
-*报告以仓库当前源文件为准；代码变更后请同步更新。*
+*This report follows the current source files in the repository; please update it when the code changes.*

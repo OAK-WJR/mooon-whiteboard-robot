@@ -29,14 +29,14 @@ float PIDController::compute(float target, float measured, float dt) {
 
     float error = target - measured;
 
-    // ---- 前馈 (Feedforward) ----
-    // 基于电机 速度→电压 线性模型: PWM ≈ Kf * target_speed
+    // ---- Feedforward ----
+    // Based on a linear motor speed→voltage model: PWM ≈ Kf * target_speed
     ff_term_ = kf_ * target;
 
-    // ---- P 项 ----
+    // ---- P term ----
     p_term_ = kp_ * error;
 
-    // ---- I 项 (anti-windup: 输出饱和时停止积分) ----
+    // ---- I term (anti-windup: stop integrating when the output saturates) ----
     float pre_output = ff_term_ + p_term_ + ki_ * integral_;
     bool saturated = (pre_output >= max_output_ && error > 0) ||
                      (pre_output <= min_output_ && error < 0);
@@ -51,13 +51,13 @@ float PIDController::compute(float target, float measured, float dt) {
       integral_ = i_term_ / ki_;
     }
 
-    // ---- D 项 (derivative on measurement, 避免 setpoint 突变尖峰) ----
+    // ---- D term (derivative on measurement, avoids spikes on setpoint jumps) ----
     if (first_run_) {
         d_term_ = 0.0f;
         prev_measured_ = measured;
         first_run_ = false;
     } else {
-        // d(measurement)/dt, 取负号因为 error 减小时 measured 增大
+        // d(measurement)/dt, negated because measured rises as error falls
         float d_measured = (measured - prev_measured_) / dt;
         d_term_ = -kd_ * d_measured;
         prev_measured_ = measured;
@@ -65,12 +65,12 @@ float PIDController::compute(float target, float measured, float dt) {
 
     prev_error_ = error;
 
-    // ---- 总输出 ----
+    // ---- Total output ----
     float output = ff_term_ + p_term_ + i_term_ + d_term_;
     output = clampf(output, min_output_, max_output_);
 
-    // PWM 变化率限制: 每个控制周期最多变化 max_slew_rate_ * dt
-    // 防止电机突然跳变
+    // PWM rate limit: at most max_slew_rate_ * dt change per control cycle
+    // Keeps the motor from jumping suddenly
     float max_delta = max_slew_rate_ * dt;
     float delta = output - last_output_;
     if (delta > max_delta) output = last_output_ + max_delta;

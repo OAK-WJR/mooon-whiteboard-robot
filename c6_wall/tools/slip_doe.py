@@ -66,7 +66,7 @@ def main():
                 H = None
                 rows = []
                 for k in range(args.repeats):
-                    for name, dx, dy in [("右", 15, 0), ("左", -15, 0), ("上", 0, 10), ("下", 0, -10)]:
+                    for name, dx, dy in [("R", 15, 0), ("L", -15, 0), ("U", 0, 10), ("D", 0, -10)]:
                         H, va = vision.measure(cam, n=7, H=H)
                         oa = odom_board(r.status())
                         r.cmd("move", x=dx / 100, y=dy / 100, speed=speed, accel=accel)
@@ -74,16 +74,16 @@ def main():
                         H, vb = vision.measure(cam, n=7, H=H)
                         ob = odom_board(r.status())
                         if min(vb["x"], w - vb["x"], vb["y"], h - vb["y"]) < EDGE_CM:
-                            raise SystemExit(f"车中心 ({vb['x']:.1f}, {vb['y']:.1f}) 离边缘不到 {EDGE_CM:g} cm，停止")
+                            raise SystemExit(f"Robot center ({vb['x']:.1f}, {vb['y']:.1f}) is less than {EDGE_CM:g} cm from the edge; stopping")
                         cam_d = (vb["x"] - va["x"], vb["y"] - va["y"], (vb["heading"] - va["heading"] + 180) % 360 - 180)
                         odo_d = (ob[0] - oa[0], ob[1] - oa[1], ob[2] - oa[2])
                         rows.append({"dir": name, "cam": cam_d, "odo": odo_d})
-                side = [q["cam"][0] / q["odo"][0] for q in rows if q["dir"] in "左右"]
-                sag = [-100 * (q["cam"][1] - q["odo"][1]) / abs(q["odo"][0]) for q in rows if q["dir"] in "左右"]
-                turn = [(q["cam"][2] - q["odo"][2]) / (q["odo"][0] / 100) for q in rows if q["dir"] in "左右"]
-                up = [q["cam"][1] / q["odo"][1] for q in rows if q["dir"] == "上"]
-                down = [q["cam"][1] / q["odo"][1] for q in rows if q["dir"] == "下"]
-                drift = [100 * (q["cam"][0] - q["odo"][0]) / abs(q["odo"][1]) for q in rows if q["dir"] in "上下"]
+                side = [q["cam"][0] / q["odo"][0] for q in rows if q["dir"] in "LR"]
+                sag = [-100 * (q["cam"][1] - q["odo"][1]) / abs(q["odo"][0]) for q in rows if q["dir"] in "LR"]
+                turn = [(q["cam"][2] - q["odo"][2]) / (q["odo"][0] / 100) for q in rows if q["dir"] in "LR"]
+                up = [q["cam"][1] / q["odo"][1] for q in rows if q["dir"] == "U"]
+                down = [q["cam"][1] / q["odo"][1] for q in rows if q["dir"] == "D"]
+                drift = [100 * (q["cam"][0] - q["odo"][0]) / abs(q["odo"][1]) for q in rows if q["dir"] in "UD"]
                 sd = lambda v: st.pstdev(v) if len(v) > 1 else float("nan")
                 res = {"speed": speed, "accel": accel, "rows": rows,
                        "side": (st.mean(side), sd(side)), "sag_cm_m": (st.mean(sag), sd(sag)),
@@ -92,10 +92,10 @@ def main():
                 # Unpredictable error per 10 cm of travel, cm: what a fixed model cannot remove.
                 res["noise_cm_per_10cm"] = 10 * math.sqrt(sd(side) ** 2 + (sd(sag) / 100) ** 2 + sd(up) ** 2 + sd(down) ** 2)
                 results.append(res)
-                print(f"速度 {speed * 100:4.0f} cm/s 加速度 {accel:.2f}: 横向 {res['side'][0]:.3f}±{res['side'][1]:.3f} "
-                      f"下沉 {res['sag_cm_m'][0]:5.1f}±{res['sag_cm_m'][1]:.1f} cm/m 转角 {res['turn_deg_m'][0]:+5.1f}±{res['turn_deg_m'][1]:.1f}°/m "
-                      f"上 {res['up'][0]:.3f}±{res['up'][1]:.3f} 下 {res['down'][0]:.3f}±{res['down'][1]:.3f} "
-                      f"→ 不可预测误差 {res['noise_cm_per_10cm']:.2f} cm/10cm")
+                print(f"speed {speed * 100:4.0f} cm/s accel {accel:.2f}: side {res['side'][0]:.3f}±{res['side'][1]:.3f} "
+                      f"sag {res['sag_cm_m'][0]:5.1f}±{res['sag_cm_m'][1]:.1f} cm/m turn {res['turn_deg_m'][0]:+5.1f}±{res['turn_deg_m'][1]:.1f}°/m "
+                      f"up {res['up'][0]:.3f}±{res['up'][1]:.3f} down {res['down'][0]:.3f}±{res['down'][1]:.3f} "
+                      f"→ unpredictable error {res['noise_cm_per_10cm']:.2f} cm/10cm")
     finally:
         r.cmd("slip", **{k: old[k] for k in ("up", "down", "side", "sag", "yaw", "up_side", "down_side") if k in old})
         r.cmd("stop")
@@ -105,7 +105,7 @@ def main():
         print("log:", path)
     if results:
         best = min(results, key=lambda q: q["noise_cm_per_10cm"])
-        print(f"最稳: {best['speed'] * 100:.0f} cm/s, 加速度 {best['accel']:.2f} m/s²（不可预测误差 {best['noise_cm_per_10cm']:.2f} cm/10cm）")
+        print(f"Most stable: {best['speed'] * 100:.0f} cm/s, accel {best['accel']:.2f} m/s² (unpredictable error {best['noise_cm_per_10cm']:.2f} cm/10cm)")
 
 
 if __name__ == "__main__":

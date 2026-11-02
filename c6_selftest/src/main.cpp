@@ -1,8 +1,8 @@
-// WhiteBoardBot 交互式硬件诊断 (ESP32-C6 + 转接板 + 驱动底板)
-// 串口命令逐点排查, 不用反复烧录。
+// WhiteBoardBot interactive hardware diagnostics (ESP32-C6 + adapter board + driver base board)
+// Check point by point with serial commands, without reflashing again and again.
 //
-// 引脚 (2026-07 实测配对):
-//   M0 头 -> 底板H2 -> 物理电机1 | M1 头 -> 底板H1 -> 物理电机3 | M2 头 -> 底板H3 -> 物理电机2
+// Pins (pairing measured 2026-07):
+//   M0 header -> base H2 -> physical motor 1 | M1 header -> base H1 -> physical motor 3 | M2 header -> base H3 -> physical motor 2
 #include <Arduino.h>
 #include "soc/gpio_reg.h"
 
@@ -113,20 +113,20 @@ void loop() {
 
 struct MotorPins { const char* label; uint8_t fi, bi, encA, encB; };
 static const MotorPins MOT[3] = {
-    {"M0 -> 底板H2 -> 物理电机1", 0, 1, 16, 17},
-    {"M1 -> 底板H1 -> 物理电机3", 2, 3, 18, 19},
-    {"M2 -> 底板H3 -> 物理电机2", 4, 5, 20, 23},
+    {"M0 -> base H2 -> physical motor 1", 0, 1, 16, 17},
+    {"M1 -> base H1 -> physical motor 3", 2, 3, 18, 19},
+    {"M2 -> base H3 -> physical motor 2", 4, 5, 20, 23},
 };
 
 static const int PWM_FREQ = 20000, PWM_RES = 8;
-volatile long encCount[3] = {0, 0, 0};          // AB 相四倍频带方向计数
-volatile unsigned long encEdges[3] = {0, 0, 0}; // 所有边沿
-volatile unsigned long encBad[3] = {0, 0, 0};   // 非法跳变 (A/B 同时变)
+volatile long encCount[3] = {0, 0, 0};          // A/B quadrature x4 count with direction
+volatile unsigned long encEdges[3] = {0, 0, 0}; // all edges
+volatile unsigned long encBad[3] = {0, 0, 0};   // invalid transitions (A and B change together)
 volatile uint8_t encPrev[3] = {0, 0, 0};
-static bool pwmMode = true;          // true=LEDC PWM, false=纯DC digitalWrite
-static int  duty = 64;               // 从低占空比开始，使用限流电源逐步测试
+static bool pwmMode = true;          // true=LEDC PWM, false=pure DC digitalWrite
+static int  duty = 64;               // start at a low duty cycle and test step by step with a current-limited supply
 
-// 索引 = (prev<<2)|now, 位序 A<<1|B。
+// Index = (prev<<2)|now, bit order A<<1|B.
 static const int8_t QT[16] = {0, 1, -1, 0,  -1, 0, 0, 1,  1, 0, 0, -1,  0, -1, 1, 0};
 static inline __attribute__((always_inline)) uint8_t readAB(int i) {
     uint32_t v = REG_READ(GPIO_IN_REG);
@@ -143,20 +143,20 @@ static void IRAM_ATTR encIsr(void* arg) {
 static void encZero() { for (int i = 0; i < 3; i++) { encCount[i] = 0; encEdges[i] = 0; encBad[i] = 0; } }
 static void stopAll();
 
-// 悬空检测: 只切换内部上拉/下拉并读回, 引脚始终是输入。
-//   下拉读0 且 上拉读1 -> 悬空 (编码器没供电或没接)
-//   两次都1 -> 被外部驱动为高      两次都0 -> 被外部拉低
+// Floating check: only switches internal pull-up/pull-down and reads back; the pin always stays an input.
+//   pull-down reads 0 and pull-up reads 1 -> floating (encoder not powered or not connected)
+//   both 1 -> driven high externally      both 0 -> pulled low externally
 static void floatTest() {
     stopAll();
-    Serial.println("\n--- 编码器线悬空检测 (仅输入, 切换内部上/下拉) ---");
+    Serial.println("\n--- Encoder wire floating check (input only, switching internal pull-up/down) ---");
     for (int i = 0; i < 3; i++) {
         Serial.printf("  %s\n", MOT[i].label);
         const uint8_t pins[2] = {MOT[i].encA, MOT[i].encB};
         for (int k = 0; k < 2; k++) {
             pinMode(pins[k], INPUT_PULLDOWN); delay(3); int rd = digitalRead(pins[k]);
             pinMode(pins[k], INPUT_PULLUP);   delay(3); int ru = digitalRead(pins[k]);
-            const char* v = (rd == 0 && ru == 1) ? "悬空 (无供电/未接)" : (rd == 1 && ru == 1) ? "外部驱动高" : (rd == 0 && ru == 0) ? "外部拉低" : "?";
-            Serial.printf("     ENC_%c=GPIO%-2d  下拉->%d 上拉->%d  %s\n", k ? 'B' : 'A', pins[k], rd, ru, v);
+            const char* v = (rd == 0 && ru == 1) ? "floating (no power/not connected)" : (rd == 1 && ru == 1) ? "driven high externally" : (rd == 0 && ru == 0) ? "pulled low externally" : "?";
+            Serial.printf("     ENC_%c=GPIO%-2d  pull-down->%d pull-up->%d  %s\n", k ? 'B' : 'A', pins[k], rd, ru, v);
         }
         encPrev[i] = readAB(i);
     }
@@ -172,7 +172,7 @@ static void useGpio(int i) {
     digitalWrite(MOT[i].fi, LOW); digitalWrite(MOT[i].bi, LOW);
 }
 
-static void drive(int i, int dir) {          // dir: +1 正 / -1 反 / 0 停
+static void drive(int i, int dir) {          // dir: +1 forward / -1 reverse / 0 stop
     if (pwmMode) {
         ledcWrite(MOT[i].fi, dir > 0 ? duty : 0);
         ledcWrite(MOT[i].bi, dir < 0 ? duty : 0);
@@ -184,58 +184,58 @@ static void drive(int i, int dir) {          // dir: +1 正 / -1 反 / 0 停
 static void stopAll() { for (int i = 0; i < 3; i++) drive(i, 0); }
 
 static void printPins() {
-    Serial.println("\n--- 引脚实时电平 ---");
-    Serial.printf("模式: %s   占空比: %d/255\n", pwmMode ? "PWM 20kHz" : "纯DC(digitalWrite)", duty);
+    Serial.println("\n--- Live pin levels ---");
+    Serial.printf("Mode: %s   Duty: %d/255\n", pwmMode ? "PWM 20kHz" : "pure DC (digitalWrite)", duty);
     for (int i = 0; i < 3; i++) {
         Serial.printf("  %s\n", MOT[i].label);
-        Serial.printf("     FI=GPIO%-2d  BI=GPIO%-2d  |  ENC_A=GPIO%-2d(%d)  ENC_B=GPIO%-2d(%d)  计数=%ld 边沿=%lu 非法=%lu\n",
+        Serial.printf("     FI=GPIO%-2d  BI=GPIO%-2d  |  ENC_A=GPIO%-2d(%d)  ENC_B=GPIO%-2d(%d)  count=%ld edges=%lu invalid=%lu\n",
                       MOT[i].fi, MOT[i].bi, MOT[i].encA, digitalRead(MOT[i].encA),
                       MOT[i].encB, digitalRead(MOT[i].encB), encCount[i], encEdges[i], encBad[i]);
     }
-    Serial.println("(编码器脚开了内部上拉: 悬空/无供电=1, 被霍尔拉低=0)");
+    Serial.println("(Encoder pins have internal pull-up on: floating/no power=1, pulled low by Hall=0)");
 }
 
-// 只读采样：静止霍尔输出为低是正常情况，不能据此判断短路。
-// 不得把连接着编码器输出的 GPIO 改成推挽输出。
+// Read-only sampling: a still Hall output being low is normal and does not mean a short.
+// Never switch a GPIO connected to an encoder output to push-pull output.
 static void shortTest() {
     stopAll();
-    Serial.println("\n--- 编码器只读检查（不能单独判定短路）---");
+    Serial.println("\n--- Encoder read-only check (cannot decide a short by itself) ---");
     printPins();
-    Serial.println("请在电机停止时手转各轮，观察 A/B 电平与计数变化。");
-    Serial.println("若始终不变，需断电后测通断，并区分供电、线束、传感器与 GPIO 故障。");
+    Serial.println("With the motors stopped, turn each wheel by hand and watch the A/B levels and counts change.");
+    Serial.println("If nothing ever changes, power off and test continuity, and tell apart power, harness, sensor and GPIO faults.");
 }
 
 static void help() {
-    Serial.println("\n======== 命令 ========");
-    Serial.println("  0f 0r 0s   电机0(物理1) 正转/反转/停     1f 1r 1s / 2f 2r 2s 同理");
-    Serial.println("  x          全部停");
-    Serial.println("  a          自动依次测3个电机(每向2秒)");
-    Serial.println("  p          打印引脚电平+编码器计数");
-    Serial.println("  e          清零编码器计数");
-    Serial.println("  w          切换 PWM / 纯DC 驱动模式");
-    Serial.println("  d <0-255>  设占空比 (如 d 200)");
-    Serial.println("  s          编码器只读检查（低电平不等于短路）");
-    Serial.println("  f          编码器线悬空检测 (切内部上/下拉, 仅输入)");
-    Serial.println("  h          帮助");
+    Serial.println("\n======== Commands ========");
+    Serial.println("  0f 0r 0s   motor 0 (physical 1) forward/reverse/stop     1f 1r 1s / 2f 2r 2s likewise");
+    Serial.println("  x          stop all");
+    Serial.println("  a          auto test the 3 motors in turn (2 s each direction)");
+    Serial.println("  p          print pin levels + encoder counts");
+    Serial.println("  e          zero encoder counts");
+    Serial.println("  w          switch PWM / pure DC drive mode");
+    Serial.println("  d <0-255>  set duty cycle (e.g. d 200)");
+    Serial.println("  s          encoder read-only check (low level does not mean a short)");
+    Serial.println("  f          encoder wire floating check (switch internal pull-up/down, input only)");
+    Serial.println("  h          help");
     Serial.println("======================");
 }
 
 static void autoTest() {
-    Serial.printf("\n### 自动测试: 每个电机 正转2秒 -> 停 -> 反转2秒 (duty=%d) ###\n", duty);
+    Serial.printf("\n### Auto test: each motor forward 2 s -> stop -> reverse 2 s (duty=%d) ###\n", duty);
     for (int i = 0; i < 3; i++) {
         Serial.printf("\n[%d] %s  (FI=GPIO%d BI=GPIO%d)\n", i, MOT[i].label, MOT[i].fi, MOT[i].bi);
         for (int dir = 1; dir >= -1; dir -= 2) {
             encCount[i] = 0; encEdges[i] = 0; encBad[i] = 0;
             drive(i, dir);
-            Serial.printf("    %s 驱动中", dir > 0 ? "正转" : "反转");
+            Serial.printf("    %s driving", dir > 0 ? "forward" : "reverse");
             for (int t = 0; t < 4; t++) { delay(500); Serial.print("."); }
             drive(i, 0);
             delay(300);
-            Serial.printf(" 计数=%ld 边沿=%lu 非法=%lu %s\n", encCount[i], encEdges[i], encBad[i],
-                          encEdges[i] > 10 ? "<-- 转了!" : "<-- 没动");
+            Serial.printf(" count=%ld edges=%lu invalid=%lu %s\n", encCount[i], encEdges[i], encBad[i],
+                          encEdges[i] > 10 ? "<-- turned!" : "<-- did not move");
         }
     }
-    Serial.println("\n### 结束 ###");
+    Serial.println("\n### Done ###");
     printPins();
 }
 
@@ -243,9 +243,9 @@ void setup() {
     Serial.begin(115200);
     delay(2000);
     Serial.println("\n\n==========================================");
-    Serial.println("  WhiteBoardBot 交互诊断 (ESP32-C6)");
+    Serial.println("  WhiteBoardBot interactive diagnostics (ESP32-C6)");
     Serial.println("==========================================");
-    Serial.printf("芯片 %s / Flash %luMB\n", ESP.getChipModel(),
+    Serial.printf("Chip %s / Flash %luMB\n", ESP.getChipModel(),
                   (unsigned long)(ESP.getFlashChipSize() / 1048576));
 
     for (int i = 0; i < 3; i++) {
@@ -262,8 +262,8 @@ void setup() {
 
     printPins();
     help();
-    Serial.println("\n提示: 若三个电机都不动, 先确认 XT30 电池已插且有电 —");
-    Serial.println("      编码器靠 3V3(USB就有电), 电机靠 BAT+(必须电池)。");
+    Serial.println("\nTip: if none of the three motors move, first check that the XT30 battery is plugged in and charged -");
+    Serial.println("      encoders run on 3V3 (powered by USB), motors run on BAT+ (battery required).");
     Serial.print("\n> ");
 }
 
@@ -276,32 +276,32 @@ void loop() {
             buf[len] = 0;
             String cmd = String(buf); cmd.trim(); len = 0;
 
-            if (cmd == "x") { stopAll(); Serial.println("全部停止"); }
+            if (cmd == "x") { stopAll(); Serial.println("All stopped"); }
             else if (cmd == "p") printPins();
             else if (cmd == "h" || cmd == "?") help();
             else if (cmd == "a") autoTest();
             else if (cmd == "s") shortTest();
             else if (cmd == "f") floatTest();
-            else if (cmd == "e") { encZero(); Serial.println("编码器已清零"); }
+            else if (cmd == "e") { encZero(); Serial.println("Encoders zeroed"); }
             else if (cmd == "w") {
                 stopAll(); pwmMode = !pwmMode;
                 for (int i = 0; i < 3; i++) pwmMode ? useLedc(i) : useGpio(i);
-                Serial.printf("驱动模式 -> %s\n", pwmMode ? "PWM 20kHz" : "纯DC");
+                Serial.printf("Drive mode -> %s\n", pwmMode ? "PWM 20kHz" : "pure DC");
             }
             else if (cmd.startsWith("d")) {
                 int v = cmd.substring(1).toInt();
-                if (v >= 0 && v <= 255) { duty = v; Serial.printf("占空比 = %d/255\n", duty); }
+                if (v >= 0 && v <= 255) { duty = v; Serial.printf("Duty = %d/255\n", duty); }
             }
             else if (cmd.length() == 2 && cmd[0] >= '0' && cmd[0] <= '2') {
                 int i = cmd[0] - '0';
                 char d = cmd[1];
                 encCount[i] = 0; encEdges[i] = 0; encBad[i] = 0;
                 drive(i, d == 'f' ? 1 : (d == 'r' ? -1 : 0));
-                Serial.printf("电机%d %s (FI=GPIO%d BI=GPIO%d, %s duty=%d)\n", i,
-                              d == 'f' ? "正转" : (d == 'r' ? "反转" : "停"),
+                Serial.printf("Motor %d %s (FI=GPIO%d BI=GPIO%d, %s duty=%d)\n", i,
+                              d == 'f' ? "forward" : (d == 'r' ? "reverse" : "stop"),
                               MOT[i].fi, MOT[i].bi, pwmMode ? "PWM" : "DC", duty);
             }
-            else Serial.printf("未知命令 '%s' (h=帮助)\n", cmd.c_str());
+            else Serial.printf("Unknown command '%s' (h=help)\n", cmd.c_str());
             Serial.print("> ");
         } else if (len < 30) buf[len++] = c;
     }

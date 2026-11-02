@@ -25,7 +25,7 @@ int PathPlanner::generateZigzag(float ax, float ay, float w, float h, float spac
 
 int PathPlanner::generateGoto(float x0, float y0, float x1, float y1) {
     count_ = 0;
-    // 起点与终点重合则无路径
+    // No path if the start and end points are the same
     float dx = x1 - x0, dy = y1 - y0;
     if (dx * dx + dy * dy < 1e-6f) return 0;
     path_[count_++] = {x0, y0};

@@ -1,13 +1,13 @@
 /**
- * WhiteBoardBot 三电机测试 (开环 / PID / 运动学)
+ * WhiteBoardBot three-motor test (open-loop / PID / kinematics)
  *
- * 串口命令:
- *   '0'~'2'  - 选择电机        'c' - 切换 开环/PID
- *   '+'/'-'  - 调整 PWM/速度    'k' - 切换 运动学模式
- *   'f'/'r'  - 正/反转          'w'/'x' - 前进/后退 (运动学)
- *   's'      - 停当前            'q'/'e' - 左移/右移 (运动学)
- *   'a'      - 停全部            'j'/'l' - 左转/右转 (运动学)
- *   'p'      - 状态  'z' - 清零
+ * Serial commands:
+ *   '0'~'2'  - select motor     'c' - toggle open-loop/PID
+ *   '+'/'-'  - adjust PWM/speed 'k' - toggle kinematics mode
+ *   'f'/'r'  - forward/reverse  'w'/'x' - forward/back (kinematics)
+ *   's'      - stop current     'q'/'e' - move left/right (kinematics)
+ *   'a'      - stop all         'j'/'l' - turn left/right (kinematics)
+ *   'p'      - status  'z' - zero
  */
 
 #ifdef MOTOR_TEST_MODE
@@ -27,7 +27,7 @@ static bool kin_mode = false;
 static float target_speed[3] = {0, 0, 0};
 static BodyVelocity body_cmd = {0, 0, 0};
 
-// 编码器计数 (volatile, ISR 里更新)
+// Encoder counts (volatile, updated in the ISR)
 static volatile long enc_count[3] = {0, 0, 0};
 static long prev_enc[3] = {0, 0, 0};
 static constexpr int8_t ENC_DIR_SIGN[3] = {
@@ -60,14 +60,14 @@ static long read_enc(int i) {
     return c * ENC_DIR_SIGN[i];
 }
 
-static int selected = 0;       // 当前选中的电机
+static int selected = 0;       // currently selected motor
 static int16_t pwm[3] = {0, 0, 0};
 
-// 行缓冲 (支持多字符 PID 命令)
+// Line buffer (supports multi-character PID commands)
 static char cmd_buf[32];
 static int cmd_len = 0;
 
-// PID 调参命令处理
+// PID tuning command handling
 static void handle_pid_command(const char* buf, int len) {
     char cmd = buf[0];
     float val = (len > 1) ? atof(buf + 1) : 0.0f;
@@ -103,7 +103,7 @@ static void handle_pid_command(const char* buf, int len) {
         Serial.println("OK RESET");
         break;
     case 'S':
-        // 设置选中电机的绝对目标速度 (m/s), 自动启用 PID 模式
+        // Set the absolute target speed of the selected motor (m/s), turns on PID mode automatically
         if (!pid_mode) {
             pid_mode = true;
             for (int i = 0; i < 3; i++) {
@@ -115,7 +115,7 @@ static void handle_pid_command(const char* buf, int len) {
         Serial.printf("OK M%d S=%.3f\n", selected, val);
         break;
     case 'V':
-        // 增量调速 (m/s), 自动启用 PID 模式
+        // Incremental speed change (m/s), turns on PID mode automatically
         if (!pid_mode) {
             pid_mode = true;
             for (int i = 0; i < 3; i++) {
@@ -127,7 +127,7 @@ static void handle_pid_command(const char* buf, int len) {
         Serial.printf("OK M%d V=%.3f (tgt=%.3f)\n", selected, val, target_speed[selected]);
         break;
     case 'A':
-        // 全部停止
+        // Stop all
         body_cmd = {0, 0, 0};
         for (int i = 0; i < 3; i++) {
             target_speed[i] = 0; pwm[i] = 0;
@@ -141,7 +141,7 @@ static void handle_pid_command(const char* buf, int len) {
     }
 }
 
-// 检查串口并处理 PID 命令 (在阻塞循环内调用)
+// Check serial and handle PID commands (called inside blocking loops)
 static void check_serial_pid() {
     while (Serial.available()) {
         char c = Serial.read();
@@ -174,7 +174,7 @@ static void print_status() {
         if (pid_mode) {
             float act = enc_to_speed(c - prev_enc[i], 0.02f);
             bool sign_match = (sign_i(pwm[i]) == 0) || (sign_f(act) == 0) || (sign_i(pwm[i]) == sign_f(act));
-            Serial.printf("  M%d: tgt=%.3f  act=%.3f  PWM=%4d  enc=%ld (%.1f圈)  [FF=%.0f P=%.0f I=%.0f D=%.0f]\n",
+            Serial.printf("  M%d: tgt=%.3f  act=%.3f  PWM=%4d  enc=%ld (%.1f rev)  [FF=%.0f P=%.0f I=%.0f D=%.0f]\n",
                           i, target_speed[i], act,
                           pwm[i], c, rev,
                           pid[i].getFFTerm(), pid[i].getPTerm(),
@@ -182,15 +182,15 @@ static void print_status() {
             Serial.printf("      sign(PWM/act): %d/%d  %s\n",
                           sign_i(pwm[i]), sign_f(act), sign_match ? "MATCH" : "MISMATCH");
         } else {
-            Serial.printf("  M%d: PWM=%4d  enc=%7ld  (%.2f圈)\n", i, pwm[i], c, rev);
+            Serial.printf("  M%d: PWM=%4d  enc=%7ld  (%.2f rev)\n", i, pwm[i], c, rev);
         }
     }
-    const char* mode = kin_mode ? "运动学" : (pid_mode ? "PID" : "开环");
+    const char* mode = kin_mode ? "kinematics" : (pid_mode ? "PID" : "open-loop");
     if (kin_mode)
-        Serial.printf("  模式: %s  Body: vx=%.2f vy=%.2f ω=%.1f\n",
+        Serial.printf("  Mode: %s  Body: vx=%.2f vy=%.2f ω=%.1f\n",
                       mode, body_cmd.vx, body_cmd.vy, body_cmd.omega);
     else
-        Serial.printf("  模式: %s  选中: M%d\n", mode, selected);
+        Serial.printf("  Mode: %s  Selected: M%d\n", mode, selected);
     Serial.println("──────────────────────────────────");
 }
 
@@ -198,11 +198,11 @@ void setup() {
     Serial.begin(115200);
     delay(500);
 
-    // (曾在此调 adc_power_acquire() 压 v1 板 GPIO36/39 的 Errata 3.11 噪声;
-    //  v2 板 ENC1 已挪到 GPIO22/23, 且该 API 在新 core 中已移除)
+    // (adc_power_acquire() used to be called here to suppress Errata 3.11 noise on v1 board GPIO36/39;
+    //  the v2 board moved ENC1 to GPIO22/23, and this API is gone in the new core)
 
     Serial.println("\n============================");
-    Serial.println("  三电机独立测试");
+    Serial.println("  Three-motor independent test");
     Serial.println("============================");
     Serial.printf("  M0: FI=%d BI=%d  ENC=%d/%d\n",
                   MOTOR0_FI_PIN, MOTOR0_BI_PIN, ENC0_A_PIN, ENC0_B_PIN);
@@ -215,7 +215,7 @@ void setup() {
     motor[1].begin(MOTOR1_FI_PIN, MOTOR1_BI_PIN, 2, 3, PWM_FREQUENCY, PWM_RESOLUTION);
     motor[2].begin(MOTOR2_FI_PIN, MOTOR2_BI_PIN, 4, 5, PWM_FREQUENCY, PWM_RESOLUTION);
 
-    // 编码器引脚 — 实测确认映射
+    // Encoder pins — mapping confirmed by measurement
     pinMode(ENC0_A_PIN, INPUT);        // GPIO34
     pinMode(ENC0_B_PIN, INPUT);        // GPIO35
     pinMode(ENC1_A_PIN, INPUT);        // GPIO36
@@ -225,7 +225,7 @@ void setup() {
 
     attachInterrupt(digitalPinToInterrupt(ENC0_A_PIN), enc0_a_isr, CHANGE);
     attachInterrupt(digitalPinToInterrupt(ENC0_B_PIN), enc0_b_isr, CHANGE);
-    // Enc1 (GPIO36/39): adc_power_acquire() 消除噪声后可用中断
+    // Enc1 (GPIO36/39): interrupts usable once adc_power_acquire() removes the noise
     attachInterrupt(digitalPinToInterrupt(ENC1_A_PIN), enc1_a_isr, CHANGE);
     attachInterrupt(digitalPinToInterrupt(ENC1_B_PIN), enc1_b_isr, CHANGE);
     attachInterrupt(digitalPinToInterrupt(ENC2_A_PIN), enc2_a_isr, CHANGE);
@@ -243,16 +243,16 @@ void setup() {
         pid[i].setIntegralLimit(pid_ilim[i]);
     }
 
-    Serial.println("\n命令: 0/1/2=选电机 +/-=调整 f/r=正反转 s/a=停 p=状态 z=清零 c=切换PID");
-    Serial.println("PID调参: P<v> I<v> D<v> F<v> L<v> G=查询 R=重置");
-    Serial.printf("当前: M%d 开环模式\n\n", selected);
+    Serial.println("\nCommands: 0/1/2=select motor +/-=adjust f/r=fwd/rev s/a=stop p=status z=zero c=toggle PID");
+    Serial.println("PID tuning: P<v> I<v> D<v> F<v> L<v> G=query R=reset");
+    Serial.printf("Current: M%d open-loop mode\n\n", selected);
 }
 
 void loop() {
-    // 串口读取: 大写字母开头缓冲到换行 (PID 命令), 其他立即执行
+    // Serial read: input starting with an uppercase letter is buffered until newline (PID command); others run right away
     while (Serial.available()) {
         char ch = Serial.read();
-        // 缓冲模式: 正在收集多字符 PID 命令
+        // Buffer mode: collecting a multi-character PID command
         if (cmd_len > 0) {
             if (ch == '\n' || ch == '\r') {
                 cmd_buf[cmd_len] = '\0';
@@ -263,26 +263,26 @@ void loop() {
             }
             continue;
         }
-        // 大写字母: 开始缓冲 PID 命令
+        // Uppercase letter: start buffering a PID command
         if (ch >= 'A' && ch <= 'Z') {
             cmd_buf[0] = ch;
             cmd_len = 1;
             continue;
         }
-        // 忽略换行
+        // Ignore newlines
         if (ch == '\n' || ch == '\r') continue;
-        // 其余: 立即执行单字符命令
+        // Others: run single-character commands right away
         char c = ch;
         switch (c) {
         case '0': case '1': case '2':
             selected = c - '0';
-            Serial.printf(">>> 选中 M%d (PWM=%d)\n", selected, pwm[selected]);
+            Serial.printf(">>> Selected M%d (PWM=%d)\n", selected, pwm[selected]);
             break;
 
         case '+':
             if (pid_mode) {
                 target_speed[selected] += 0.05f;
-                Serial.printf("M%d 目标=%.3f m/s\n", selected, target_speed[selected]);
+                Serial.printf("M%d target=%.3f m/s\n", selected, target_speed[selected]);
             } else {
                 pwm[selected] = constrain(pwm[selected] + 20, -255, 255);
                 motor[selected].setSpeed(pwm[selected]);
@@ -293,7 +293,7 @@ void loop() {
         case '-':
             if (pid_mode) {
                 target_speed[selected] -= 0.05f;
-                Serial.printf("M%d 目标=%.3f m/s\n", selected, target_speed[selected]);
+                Serial.printf("M%d target=%.3f m/s\n", selected, target_speed[selected]);
             } else {
                 pwm[selected] = constrain(pwm[selected] - 20, -255, 255);
                 motor[selected].setSpeed(pwm[selected]);
@@ -304,22 +304,22 @@ void loop() {
         case 'f':
             if (pid_mode) {
                 target_speed[selected] = 0.20f;
-                Serial.printf("M%d 目标=0.200 m/s\n", selected);
+                Serial.printf("M%d target=0.200 m/s\n", selected);
             } else {
                 pwm[selected] = 200;
                 motor[selected].setSpeed(200);
-                Serial.printf("M%d 正转 PWM=200\n", selected);
+                Serial.printf("M%d forward PWM=200\n", selected);
             }
             break;
 
         case 'r':
             if (pid_mode) {
                 target_speed[selected] = -0.20f;
-                Serial.printf("M%d 目标=-0.200 m/s\n", selected);
+                Serial.printf("M%d target=-0.200 m/s\n", selected);
             } else {
                 pwm[selected] = -200;
                 motor[selected].setSpeed(-200);
-                Serial.printf("M%d 反转 PWM=-200\n", selected);
+                Serial.printf("M%d reverse PWM=-200\n", selected);
             }
             break;
 
@@ -330,7 +330,7 @@ void loop() {
             }
             pwm[selected] = 0;
             motor[selected].stop();
-            Serial.printf("M%d 停止\n", selected);
+            Serial.printf("M%d stopped\n", selected);
             break;
 
         case 'a':
@@ -339,7 +339,7 @@ void loop() {
                 target_speed[i] = 0; pwm[i] = 0;
                 motor[i].stop(); pid[i].reset();
             }
-            Serial.println("全部停止");
+            Serial.println("All stopped");
             break;
 
         case 'c':
@@ -351,7 +351,7 @@ void loop() {
                 motor[i].stop(); pid[i].reset();
                 prev_enc[i] = read_enc(i);
             }
-            Serial.printf(">>> 切换到 %s 模式\n", pid_mode ? "PID闭环" : "开环");
+            Serial.printf(">>> Switched to %s mode\n", pid_mode ? "PID closed-loop" : "open-loop");
             break;
 
         case 'k':
@@ -364,9 +364,9 @@ void loop() {
                 prev_enc[i] = read_enc(i);
             }
             if (kin_mode)
-                Serial.println(">>> 运动学模式  w/x=前后 q/e=左右 j/l=旋转 a=停");
+                Serial.println(">>> Kinematics mode  w/x=fwd/back q/e=left/right j/l=rotate a=stop");
             else
-                Serial.println(">>> 退出运动学模式");
+                Serial.println(">>> Left kinematics mode");
             break;
 
         case 'w': case 'x': case 'q': case 'e': case 'j': case 'l':
@@ -393,11 +393,11 @@ void loop() {
             noInterrupts();
             enc_count[0] = enc_count[1] = enc_count[2] = 0;
             interrupts();
-            Serial.println("编码器已清零 - 手转一圈后按 p 查看计数");
+            Serial.println("Encoders zeroed - turn one revolution by hand, then press p to see counts");
             break;
 
         case 'g':
-            Serial.println("GPIO 轮询测试 (3秒, 转动电机轴)...");
+            Serial.println("GPIO polling test (3 s, turn the motor shaft)...");
             {
                 int changes[6] = {0,0,0,0,0,0};
                 uint8_t pins[6] = {ENC0_A_PIN, ENC0_B_PIN, ENC1_A_PIN, ENC1_B_PIN, ENC2_A_PIN, ENC2_B_PIN};
@@ -410,21 +410,21 @@ void loop() {
                         if (val != prev[i]) { changes[i]++; prev[i] = val; }
                     }
                 }
-                Serial.printf("  Enc0 A(GPIO%d): %d 次变化\n", ENC0_A_PIN, changes[0]);
-                Serial.printf("  Enc0 B(GPIO%d): %d 次变化\n", ENC0_B_PIN, changes[1]);
-                Serial.printf("  Enc1 A(GPIO%d): %d 次变化\n", ENC1_A_PIN, changes[2]);
-                Serial.printf("  Enc1 B(GPIO%d): %d 次变化\n", ENC1_B_PIN, changes[3]);
-                Serial.printf("  Enc2 A(GPIO%d): %d 次变化\n", ENC2_A_PIN, changes[4]);
-                Serial.printf("  Enc2 B(GPIO%d): %d 次变化\n", ENC2_B_PIN, changes[5]);
+                Serial.printf("  Enc0 A(GPIO%d): %d changes\n", ENC0_A_PIN, changes[0]);
+                Serial.printf("  Enc0 B(GPIO%d): %d changes\n", ENC0_B_PIN, changes[1]);
+                Serial.printf("  Enc1 A(GPIO%d): %d changes\n", ENC1_A_PIN, changes[2]);
+                Serial.printf("  Enc1 B(GPIO%d): %d changes\n", ENC1_B_PIN, changes[3]);
+                Serial.printf("  Enc2 A(GPIO%d): %d changes\n", ENC2_A_PIN, changes[4]);
+                Serial.printf("  Enc2 B(GPIO%d): %d changes\n", ENC2_B_PIN, changes[5]);
             }
             break;
 
         case 't':
-            Serial.println("全 GPIO 扫描 (5秒, 转动电机轴)...");
+            Serial.println("Full GPIO scan (5 s, turn the motor shaft)...");
             {
                 const uint8_t scan_pins[] = {
-                    36, 39, 34, 35, 32, 33, 25, 26, 27, 14, 12, 13,  // 左排
-                    23, 22, 21, 19, 18, 5, 17, 16, 4, 2, 15           // 右排
+                    36, 39, 34, 35, 32, 33, 25, 26, 27, 14, 12, 13,  // left row
+                    23, 22, 21, 19, 18, 5, 17, 16, 4, 2, 15           // right row
                 };
                 const int N = sizeof(scan_pins) / sizeof(scan_pins[0]);
                 int changes[25] = {0};
@@ -440,18 +440,18 @@ void loop() {
                         if (val != prev[i]) { changes[i]++; prev[i] = val; }
                     }
                 }
-                Serial.println("  --- 有信号的 GPIO ---");
+                Serial.println("  --- GPIOs with a signal ---");
                 for (int i = 0; i < N; i++) {
                     if (changes[i] > 5) {
-                        Serial.printf("  GPIO%d: %d 次变化\n", scan_pins[i], changes[i]);
+                        Serial.printf("  GPIO%d: %d changes\n", scan_pins[i], changes[i]);
                     }
                 }
-                Serial.println("  --- 完成 ---");
+                Serial.println("  --- Done ---");
             }
             break;
 
         case 'd':
-            // 全调试数据输出 (10秒) — GPIO + 编码器 + PID + 速度
+            // Full debug data output (10 s) — GPIO + encoder + PID + speed
             Serial.println("T,E0A,E0B,E1A,E1B,E2A,E2B,enc0,enc1,enc2,rev0,rev1,rev2,PWM0,PWM1,PWM2,FF0,P0,I0,D0,FF1,P1,I1,D1,FF2,P2,I2,D2,tgt0,tgt1,tgt2,act0,act1,act2");
             {
                 unsigned long start = millis();
@@ -492,7 +492,7 @@ void loop() {
                                   pid[2].getFFTerm(), pid[2].getPTerm(), pid[2].getITerm(), pid[2].getDTerm(),
                                   target_speed[0], target_speed[1], target_speed[2],
                                   act[0], act[1], act[2]);
-                    check_serial_pid();  // 允许调试流期间调参
+                    check_serial_pid();  // allow tuning during the debug stream
                     delayMicroseconds(500);
                 }
                 Serial.println("--- done ---");
@@ -500,7 +500,7 @@ void loop() {
             break;
 
         case 'v':
-            // 持续 GPIO 波形输出 (Serial Studio 格式, 按任意键停止)
+            // Continuous GPIO waveform output (Serial Studio format, press any key to stop)
             {
                 const uint8_t vp[] = {
                     36, 39, 34, 35, 32, 33, 25, 26, 27, 14, 12, 13,
@@ -510,7 +510,7 @@ void loop() {
                 const uint8_t input_pins[] = {36, 39, 34, 35, 12, 13, 23, 22, 21, 19, 18, 5, 17, 16, 4, 2, 15};
                 for (int i = 0; i < (int)(sizeof(input_pins)/sizeof(input_pins[0])); i++)
                     pinMode(input_pins[i], INPUT);
-                Serial.println("GPIO 波形输出中... 发送任意字符停止");
+                Serial.println("GPIO waveform output running... send any character to stop");
                 while (!Serial.available()) {
                     Serial.print('$');
                     for (int i = 0; i < NV; i++) {
@@ -520,18 +520,18 @@ void loop() {
                     Serial.println();
                     delayMicroseconds(500);
                 }
-                Serial.read();  // 消耗停止字符
-                Serial.println("GPIO 波形已停止");
+                Serial.read();  // consume the stop character
+                Serial.println("GPIO waveform stopped");
             }
             break;
 
         default:
-            Serial.printf("未知: '%c'  (0/1/2 +/- f/r s a p)\n", c);
+            Serial.printf("Unknown: '%c'  (0/1/2 +/- f/r s a p)\n", c);
             break;
         }
     }
 
-    // PID 控制循环 (20ms = 50Hz)
+    // PID control loop (20ms = 50Hz)
     static unsigned long pid_last = 0;
     static float act_speed[3] = {0, 0, 0};
     if (pid_mode && millis() - pid_last >= CONTROL_PERIOD_MS) {
@@ -541,7 +541,7 @@ void loop() {
         for (int i = 0; i < 3; i++) {
             long cur = read_enc(i);
             float raw_speed = enc_to_speed(cur - prev_enc[i], dt);
-            act_speed[i] = 0.6f * act_speed[i] + 0.4f * raw_speed;  // EMA 滤波
+            act_speed[i] = 0.6f * act_speed[i] + 0.4f * raw_speed;  // EMA filter
             prev_enc[i] = cur;
 
             if (target_speed[i] != 0.0f) {
@@ -551,14 +551,14 @@ void loop() {
             }
         }
 
-        // pid_tuner.py / Serial Studio 帧: $tgt,act,pwm,FF,P,I,D (选中电机)
+        // pid_tuner.py / Serial Studio frame: $tgt,act,pwm,FF,P,I,D (selected motor)
         Serial.printf("$%.4f,%.4f,%d,%.0f,%.0f,%.0f,%.0f\n",
                       target_speed[selected], act_speed[selected], pwm[selected],
                       pid[selected].getFFTerm(), pid[selected].getPTerm(),
                       pid[selected].getITerm(), pid[selected].getDTerm());
     }
 
-    // 开环模式: 每 500ms 打印状态
+    // Open-loop mode: print status every 500ms
     if (!pid_mode) {
         static unsigned long print_last = 0;
         bool any_active = false;

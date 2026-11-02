@@ -1,44 +1,44 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>WhiteBoardBot · 控制仿真台</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>WhiteBoardBot · Control Simulation Lab</title>
 <link rel="stylesheet" href="style.css"><link rel="stylesheet" href="../portfolio/encoder-results.css"></head><body>
-<header><div><div class="eyebrow">WHITEBOARD BOT / CONTROL LAB</div><h1>先在这里，把控制调明白。</h1><p>实测电机模型 · 可变负载 · 三组控制器同步对比</p></div><div class="offline"><i></i> 纯仿真 · 未连接小车</div></header>
-<p><a href="../portfolio/">英文作品集 · 截图 / 视频</a><a href="../portfolio/#physics">MuJoCo 三维物理仿真 · 12 个工况</a></p>
-<section id="latest-results" data-load-results data-language="zh"><h2>重载测试 · 正在加载已保存结果</h2><p><a href="http://127.0.0.1:8088/sim/#latest-results">Open local preview</a></p></section>
-<section id="encoder-results" data-encoder-results data-language="zh"><h2>最新编码器控制器 · 已保存结果</h2><p>正在加载结果。请通过 <a href="http://127.0.0.1:8088/sim/#latest-results">本地预览地址</a> 打开本页。</p></section>
-<h2 style="font-size:22px;margin:24px 0 12px">参数实验 · 旧版模型</h2>
-<p style="color:#aebed0;line-height:1.7">下面保留原来的交互实验。它使用旧版浏览器模型；本轮 C++ 候选控制器的结果在上方，不会因这里调整滑块而重新计算。</p>
-<div class="notice">电机模型来自架空辨识。整车重量、推力、摩擦与吸附力为可调假设；模拟位置传感器不代表实物已有。低速与驻坡属于模型外推。</div>
+<header><div><div class="eyebrow">WHITEBOARD BOT / CONTROL LAB</div><h1>Get the control right here first.</h1><p>Measured motor model · variable load · three controllers compared side by side</p></div><div class="offline"><i></i> Simulation only · not connected to the robot</div></header>
+<p><a href="../portfolio/">English portfolio · screenshots / videos</a><a href="../portfolio/#physics">MuJoCo 3D physics simulation · 12 cases</a></p>
+<section id="latest-results" data-load-results data-language="en"><h2>Heavy-load test · loading saved results</h2><p><a href="http://127.0.0.1:8088/sim/#latest-results">Open local preview</a></p></section>
+<section id="encoder-results" data-encoder-results data-language="en"><h2>Latest encoder controller · saved results</h2><p>Loading results. Open this page through the <a href="http://127.0.0.1:8088/sim/#latest-results">local preview address</a>.</p></section>
+<h2 style="font-size:22px;margin:24px 0 12px">Parameter experiments · old model</h2>
+<p style="color:#aebed0;line-height:1.7">The original interactive experiments are kept below. They use the old browser model; the results of this round's C++ candidate controllers are above and are not recomputed when you move the sliders here.</p>
+<div class="notice">The motor model comes from identification with the wheels off the ground. Robot weight, thrust, friction and adhesion are adjustable assumptions; the simulated position sensor does not mean the real robot has one. Low speed and holding on the slope are model extrapolations.</div>
 <main><aside class="card settings">
-<div class="section-top"><h2>实验设置</h2><span>01</span></div>
-<label>场景<select id="preset"><option value="load">轮速 · 负载突然增加</option><option value="mismatch">轮速 · 模型偏差</option><option value="saturation">轮速 · 动力不足</option><option value="encoder">轮速 · 编码器失效</option><option value="lateral">水平面 · 左右往返偏移</option><option value="wall">白板 · 上行后驻坡</option><option value="slip">白板 · 摩擦突然下降</option><option value="camera">白板 · 位置反馈丢失</option><option value="manual">白板 · WASD 手动驾驶</option></select></label>
-<div class="two"><label>查看电机<select id="motor"><option value="0">电机 1</option><option value="1">电机 2</option><option value="2">电机 3</option></select></label><label>辨识方向<select id="direction"><option value="1">正转</option><option value="-1">反转</option></select></label></div>
-<div id="benchSettings"><label>额外阻力 <output id="loadValue">35 PWM</output><input id="load" type="range" min="0" max="160" value="35" step="5"></label><small>3 秒加入，7 秒撤除。PWM 等效阻力，不是实测扭矩。</small></div>
+<div class="section-top"><h2>Experiment settings</h2><span>01</span></div>
+<label>Scenario<select id="preset"><option value="load">Wheel speed · sudden load increase</option><option value="mismatch">Wheel speed · model mismatch</option><option value="saturation">Wheel speed · insufficient power</option><option value="encoder">Wheel speed · encoder failure</option><option value="lateral">Level surface · left-right round-trip drift</option><option value="wall">Whiteboard · climb, then hold on slope</option><option value="slip">Whiteboard · sudden friction drop</option><option value="camera">Whiteboard · position feedback lost</option><option value="manual">Whiteboard · WASD manual driving</option></select></label>
+<div class="two"><label>Motor shown<select id="motor"><option value="0">Motor 1</option><option value="1">Motor 2</option><option value="2">Motor 3</option></select></label><label>Identification direction<select id="direction"><option value="1">Forward</option><option value="-1">Reverse</option></select></label></div>
+<div id="benchSettings"><label>Extra resistance <output id="loadValue">35 PWM</output><input id="load" type="range" min="0" max="160" value="35" step="5"></label><small>Added at 3 s, removed at 7 s. PWM-equivalent resistance, not measured torque.</small></div>
 <div id="wallSettings" hidden>
-<label>整车重量 <output id="massValue"></output><input id="mass" type="range" min="0.1" max="0.8" value="0.3" step="0.05"></label>
-<label>总压紧力 <output id="normalValue"></output><input id="normal" type="range" min="2" max="24" value="12" step="1"></label>
-<label>轮面摩擦系数 <output id="muValue"></output><input id="mu" type="range" min="0.05" max="1" value="0.65" step="0.05"></label>
-<label>每轮估计最大推力 <output id="forceValue"></output><input id="force" type="range" min="1" max="8" value="4" step="0.5"></label>
-<label>移动速度 <output id="speedValue"></output><input id="speed" type="range" min="0.04" max="0.3" value="0.18" step="0.02"></label>
-<label class="check"><input id="camera" type="checkbox" checked> 模拟独立位置反馈（20Hz / 80ms）</label>
-<label class="check"><input id="hold" type="checkbox" checked> 候选控制器启用位置保持</label>
-<label class="check"><input id="sync" type="checkbox" checked> 候选控制器三轮同步加速</label>
-<small>位置保持需要独立位置反馈；当前实物尚未实现。现有 PI 对照组保持原来的松键滑行行为。</small>
+<label>Robot weight <output id="massValue"></output><input id="mass" type="range" min="0.1" max="0.8" value="0.3" step="0.05"></label>
+<label>Total pressing force <output id="normalValue"></output><input id="normal" type="range" min="2" max="24" value="12" step="1"></label>
+<label>Wheel friction coefficient <output id="muValue"></output><input id="mu" type="range" min="0.05" max="1" value="0.65" step="0.05"></label>
+<label>Estimated max thrust per wheel <output id="forceValue"></output><input id="force" type="range" min="1" max="8" value="4" step="0.5"></label>
+<label>Drive speed <output id="speedValue"></output><input id="speed" type="range" min="0.04" max="0.3" value="0.18" step="0.02"></label>
+<label class="check"><input id="camera" type="checkbox" checked> Simulated independent position feedback (20Hz / 80ms)</label>
+<label class="check"><input id="hold" type="checkbox" checked> Candidate controllers use position hold</label>
+<label class="check"><input id="sync" type="checkbox" checked> Candidate controllers sync three-wheel acceleration</label>
+<small>Position hold needs independent position feedback, which the real robot does not have yet. The existing PI control group keeps its original coasting after key release.</small>
 </div>
-<label>供电比例 <output id="voltageValue"></output><input id="voltage" type="range" min="0.5" max="1.1" value="1" step="0.05"></label>
-<div class="actions"><button id="run" class="primary">开始仿真</button><button id="reset">重置</button></div>
-<button id="off" class="danger">撤掉驱动力 <kbd>Esc</kbd></button>
-<p class="fine">修改参数会重置实验。失焦会清空方向键并暂停；仿真不发送任何电机指令。</p>
+<label>Supply ratio <output id="voltageValue"></output><input id="voltage" type="range" min="0.5" max="1.1" value="1" step="0.05"></label>
+<div class="actions"><button id="run" class="primary">Start simulation</button><button id="reset">Reset</button></div>
+<button id="off" class="danger">Remove drive force <kbd>Esc</kbd></button>
+<p class="fine">Changing a parameter resets the experiment. Losing focus clears the direction keys and pauses; the simulation sends no motor commands.</p>
 </aside><section class="workspace">
-<div class="metrics"><div class="card"><small>仿真时间</small><strong id="time">0.00 <em>s</em></strong></div><div class="card"><small>ESO · 当前补偿</small><strong id="comp">0 <em>PWM</em></strong></div><div class="card"><small id="errorLabel">ESO · 轮速误差</small><strong id="error">—</strong></div></div>
-<div class="card stage"><div class="section-top"><h2 id="stageTitle">轮速响应</h2><span id="state">准备就绪</span></div>
-<div class="legend"><span class="legacy">现有 PI</span><span class="model">模型前馈 + PI</span><span class="eso">模型前馈 + PI + ESO</span></div>
-<canvas id="stage" aria-label="轮速曲线或三轮小车白板运动对比"></canvas>
-<p id="scenarioNote">给相同目标、施加相同负载，比较恢复过程。虚线表示目标轮速。</p>
-<div class="keys" id="keys" hidden><button data-key="q">Q ↶</button><button data-key="w">W ↑</button><button data-key="e">E ↷</button><button data-key="a">A ←</button><button data-key="s">S ↓</button><button data-key="d">D →</button><small>WASD 按白板坐标移动；松键后候选控制器可保持位置。</small></div>
+<div class="metrics"><div class="card"><small>Simulation time</small><strong id="time">0.00 <em>s</em></strong></div><div class="card"><small>ESO · current compensation</small><strong id="comp">0 <em>PWM</em></strong></div><div class="card"><small id="errorLabel">ESO · wheel-speed error</small><strong id="error">—</strong></div></div>
+<div class="card stage"><div class="section-top"><h2 id="stageTitle">Wheel-speed response</h2><span id="state">Ready</span></div>
+<div class="legend"><span class="legacy">Existing PI</span><span class="model">Model feedforward + PI</span><span class="eso">Model feedforward + PI + ESO</span></div>
+<canvas id="stage" aria-label="Wheel-speed curves or three-wheel robot motion on the whiteboard, compared"></canvas>
+<p id="scenarioNote">Same target, same load: compare the recovery. The dashed line is the target wheel speed.</p>
+<div class="keys" id="keys" hidden><button data-key="q">Q ↶</button><button data-key="w">W ↑</button><button data-key="e">E ↷</button><button data-key="a">A ←</button><button data-key="s">S ↓</button><button data-key="d">D →</button><small>WASD moves in whiteboard coordinates; after key release the candidate controllers can hold position.</small></div>
 </div>
-<div class="plots"><div class="card"><h2 id="plotTitle">电机 PWM</h2><canvas id="plot" aria-label="三种控制器的输出对比"></canvas></div><div class="card"><h2>ESO 估计的额外阻力</h2><canvas id="observerPlot" aria-label="扰动估计与注入负载对比"></canvas></div></div>
-<div class="card results"><div class="section-top"><h2>这次实验说明了什么</h2><button id="export">导出记录</button></div><div id="summary">模型已加载后，可开始仿真。蓝色和绿色使用相同 PI 参数，区别是 ESO 补偿。</div><table><thead><tr><th>控制器</th><th>状态</th><th>最大 PWM</th><th id="metricHead">负载窗口平均误差</th></tr></thead><tbody id="results"></tbody></table></div>
+<div class="plots"><div class="card"><h2 id="plotTitle">Motor PWM</h2><canvas id="plot" aria-label="Output of the three controllers, compared"></canvas></div><div class="card"><h2>Extra resistance estimated by ESO</h2><canvas id="observerPlot" aria-label="Disturbance estimate vs. injected load"></canvas></div></div>
+<div class="card results"><div class="section-top"><h2>What this experiment shows</h2><button id="export">Export record</button></div><div id="summary">Once the model is loaded, you can start the simulation. Blue and green use the same PI gains; the difference is ESO compensation.</div><table><thead><tr><th>Controller</th><th>Status</th><th>Max PWM</th><th id="metricHead">Mean error in load window</th></tr></thead><tbody id="results"></tbody></table></div>
 </section></main>
-<footer>模型：sysid-model-03 · 控制周期 100Hz · 同一仿真内核支持浏览器与批量验证 <a href="../SYSTEM_IDENTIFICATION.md">辨识与补偿说明</a></footer>
+<footer>Model: sysid-model-03 · control rate 100Hz · the same simulation core runs in the browser and in batch validation <a href="../SYSTEM_IDENTIFICATION.md">Identification and compensation notes</a></footer>
 <script type="module" src="app.mjs"></script><script type="module" src="../portfolio/encoder-results.mjs"></script></body></html>

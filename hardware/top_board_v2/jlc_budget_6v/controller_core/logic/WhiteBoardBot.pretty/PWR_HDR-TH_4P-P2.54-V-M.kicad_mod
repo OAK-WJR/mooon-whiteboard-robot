@@ -76,7 +76,7 @@
 			)
 		)
 	)
-	(property "Manufacturer" "XFCN(兴飞)"
+	(property "Manufacturer" "XFCN"
 		(at 0 0 180)
 		(layer "B.Fab")
 		(hide yes)

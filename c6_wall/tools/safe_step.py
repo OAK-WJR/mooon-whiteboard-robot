@@ -26,19 +26,19 @@ def guarded_step(r, cam, H, dx, dy, speed=0.04):
     tx, ty = a["x"] + dx, a["y"] + dy
     if not (MARGIN <= tx <= w - MARGIN and MARGIN <= ty <= h - MARGIN) and \
             (math.hypot(w / 2 - tx, h / 2 - ty) > math.hypot(w / 2 - a["x"], h / 2 - a["y"])):
-        return H, a, None, "目标离边框太近，不走"
+        return H, a, None, "Target too close to the frame; not moving"
     ack = r.cmd("move", x=dx / 100, y=dy / 100, speed=speed, accel=0.1)
     if not ack.get("ok"):
-        return H, a, None, f"move 被拒绝 {ack.get('error')}"
+        return H, a, None, f"move rejected {ack.get('error')}"
     wait_still(r)
     H, b = vision.measure(cam, n=11, H=H)
     mx, my = b["x"] - a["x"], b["y"] - a["y"]
     along = (mx * dx + my * dy) / max(1e-6, math.hypot(dx, dy))
     turn = (b["heading"] - a["heading"] + 180) % 360 - 180
     ratio = along / math.hypot(dx, dy)
-    msg = f"命令 ({dx:+.1f},{dy:+.1f}) cm  实测 ({mx:+.2f},{my:+.2f}) cm  比例 {ratio:.2f}  转 {turn:+.2f}°"
+    msg = f"command ({dx:+.1f},{dy:+.1f}) cm  measured ({mx:+.2f},{my:+.2f}) cm  ratio {ratio:.2f}  turn {turn:+.2f}°"
     bad = not (0.6 <= ratio <= 1.4) or abs(turn) > 3
-    return H, b, msg, ("失控，停下" if bad else None)
+    return H, b, msg, ("Out of control; stopping" if bad else None)
 
 
 def main():
@@ -60,7 +60,7 @@ def main():
                 ex, ey = gx - a["x"], gy - a["y"]
                 d = math.hypot(ex, ey)
                 if d < 0.5:
-                    print(f"到了: X {a['x']:.2f} Y {a['y']:.2f}")
+                    print(f"Arrived: X {a['x']:.2f} Y {a['y']:.2f}")
                     break
                 k = min(1.0, step / d)
                 H, b, msg, stop = guarded_step(r, cam, H, ex * k, ey * k)
@@ -73,7 +73,7 @@ def main():
             dist = float(sys.argv[2])
             H, b, msg, stop = guarded_step(r, cam, H, ux * dist, uy * dist)
             print(msg or "", stop or "")
-            print(f"现在: X {b['x']:.2f} Y {b['y']:.2f} cm  车头 {b['heading'] + cam.cfg['front_from_beacon_deg']:.2f}°")
+            print(f"Now: X {b['x']:.2f} Y {b['y']:.2f} cm  heading {b['heading'] + cam.cfg['front_from_beacon_deg']:.2f}°")
     finally:
         r.cmd("stop")
         cam.close()

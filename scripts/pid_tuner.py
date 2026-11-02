@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""WhiteBoardBot PID 实时调参面板 (PyQt5 + pyqtgraph)"""
+"""WhiteBoardBot live PID tuning panel (PyQt5 + pyqtgraph)"""
 
 import sys, time, struct
 import serial

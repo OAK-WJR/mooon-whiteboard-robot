@@ -2,40 +2,40 @@
 #define KINEMATICS_H
 
 /**
- * 三轮全向轮运动学 (120° 配置)
+ * Three-wheel omni wheel kinematics (120° layout)
  *
- * 轮子布局 (俯视):
- *        wheel1 (240°/后)
+ * Wheel layout (top view):
+ *        wheel1 (240°/rear)
  *        /    \
  *   wheel0    wheel2
  *   (120°)    (0°/360°)
  *
- * 正运动学: 轮速 -> 机体速度
- * 逆运动学: 机体速度 -> 轮速
+ * Forward kinematics: wheel speeds -> body velocity
+ * Inverse kinematics: body velocity -> wheel speeds
  */
 
 struct BodyVelocity {
-    float vx;    // m/s, 前进方向
-    float vy;    // m/s, 左方向
-    float omega; // rad/s, 逆时针为正
+    float vx;    // m/s, forward
+    float vy;    // m/s, left
+    float omega; // rad/s, counterclockwise positive
 };
 
 struct WheelVelocity {
-    float v[3];  // 三个轮的线速度 (m/s)
+    float v[3];  // linear speed of the three wheels (m/s)
 };
 
 class Kinematics {
 public:
     /**
-     * @param wheel_radius  轮半径 (m)
-     * @param robot_radius  轮心到底盘中心距离 (m)
+     * @param wheel_radius  wheel radius (m)
+     * @param robot_radius  distance from wheel center to chassis center (m)
      */
     Kinematics(float wheel_radius, float robot_radius);
 
-    /** 逆运动学: 机体速度 -> 轮线速度 */
+    /** Inverse kinematics: body velocity -> wheel linear speeds */
     WheelVelocity inverse(const BodyVelocity& body) const;
 
-    /** 正运动学: 轮线速度 -> 机体速度 */
+    /** Forward kinematics: wheel linear speeds -> body velocity */
     BodyVelocity forward(const WheelVelocity& wheels) const;
 
     float getWheelRadius() const { return wheel_radius_; }
@@ -45,7 +45,7 @@ private:
     float wheel_radius_;
     float robot_radius_;
 
-    // 逆运动学矩阵系数 (预计算)
+    // Inverse kinematics matrix coefficients (precomputed)
     float sin60_;
     float cos60_;
 };

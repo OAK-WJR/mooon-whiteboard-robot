@@ -103,14 +103,14 @@ def wait_still(r, timeout=30):
             time.sleep(0.5)
             return s
         time.sleep(0.1)
-    raise SystemExit("移动超时")
+    raise SystemExit("Move timed out")
 
 
 def goto(r, cam, x, y, tol=0.6):
     for _ in range(4):
         _, v = vision.measure(cam, n=7)
         dx, dy = x - v["x"], y - v["y"]
-        print(f"  在 ({v['x']:.1f}, {v['y']:.1f})，目标 ({x:.1f}, {y:.1f})")
+        print(f"  at ({v['x']:.1f}, {v['y']:.1f}), target ({x:.1f}, {y:.1f})")
         if math.hypot(dx, dy) < tol:
             return
         r.cmd("move", x=dx / 100, y=dy / 100, speed=0.06)
@@ -151,11 +151,11 @@ def main():
     soft = {"x0": hard["x0"] + args.margin, "x1": hard["x1"] - args.margin,
             "y0": hard["y0"] + args.margin, "y1": hard["y1"] - args.margin}
     width, height = soft["x1"] - soft["x0"], soft["y1"] - soft["y0"]
-    print(f"白板 {W:.1f} x {Hs:.1f} cm；车中心可走 {width:.1f} x {height:.1f} cm，起点 ({soft['x0']:.1f}, {soft['y0']:.1f})")
+    print(f"Whiteboard {W:.1f} x {Hs:.1f} cm; robot center can travel {width:.1f} x {height:.1f} cm, start ({soft['x0']:.1f}, {soft['y0']:.1f})")
 
     r.cmd("abort")  # a previous run may have left a paused path behind
     cam.text = "WhiteBoardBot: driving to the start corner"
-    print("1. 开到左下角起点")
+    print("1. Drive to the bottom-left start")
     goto(r, cam, soft["x0"], soft["y0"])
     square_up(r, cam)
     H, start = vision.measure(cam, n=9)
@@ -179,12 +179,12 @@ def main():
     ack = r.cmd("cover", width=width / 100, height=height / 100, eraser=eraser / 100, overlap=overlap,
                 speed=args.speed, vertical=0, sx=1, sy=1, mount=90)
     if not ack.get("ok"):
-        raise SystemExit(f"擦板设置被拒绝: {ack.get('error')}")
+        raise SystemExit(f"Erase settings rejected: {ack.get('error')}")
 
-    print("2. 开始整板")
+    print("2. Start the full board")
     ack = r.cmd("start")
     if not ack.get("ok"):
-        raise SystemExit(f"开始失败: {ack.get('error')}")
+        raise SystemExit(f"Start failed: {ack.get('error')}")
     track, t0, done_since, paused_out = [], time.time(), None, False
     while True:
         img, shot = cam.frame(with_time=True)
@@ -203,9 +203,9 @@ def main():
             if out and not paused_out:
                 r.cmd("pause")
                 paused_out = True
-                print(f"  ! 车中心 ({p['x']:.1f}, {p['y']:.1f}) 越出安全范围，已暂停")
+                print(f"  ! Robot center ({p['x']:.1f}, {p['y']:.1f}) left the safe area; paused")
         if s["mode"] != "active":
-            print("  ! 小车不在保持状态:", s["mode"], s["fault"])
+            print("  ! Robot is not holding:", s["mode"], s["fault"])
             break
         if paused_out and s["path"]["paused"]:
             break
@@ -214,15 +214,15 @@ def main():
             if time.time() - done_since > 1.0:
                 break
         if len(track) % 40 == 0 and track:
-            print(f"  {track[-1][0]:5.0f} s  进度 {100 * s['path']['done'] / max(0.001, s['path']['total']):3.0f}%  "
-                  f"位置 ({track[-1][1]:.1f}, {track[-1][2]:.1f})")
+            print(f"  {track[-1][0]:5.0f} s  progress {100 * s['path']['done'] / max(0.001, s['path']['total']):3.0f}%  "
+                  f"position ({track[-1][1]:.1f}, {track[-1][2]:.1f})")
 
     time.sleep(1.0)
     _, end = vision.measure(cam, n=9, H=H)
     err = math.hypot(end["x"] - start["x"], end["y"] - start["y"])
     turn = (end["heading"] - start["heading"] + 180) % 360 - 180
-    print(f"3. 结束：回原点误差 {err:.1f} cm（X {end['x'] - start['x']:+.1f}, Y {end['y'] - start['y']:+.1f}），车头 {turn:+.1f}°，"
-          f"用时 {time.time() - t0:.0f} s")
+    print(f"3. End: return-to-origin error {err:.1f} cm (X {end['x'] - start['x']:+.1f}, Y {end['y'] - start['y']:+.1f}), heading {turn:+.1f}°, "
+          f"time {time.time() - t0:.0f} s")
 
     cam.text = f"Back at start: error {err:.1f} cm, heading {turn:+.1f} deg"
     time.sleep(2.0)
@@ -247,17 +247,17 @@ def main():
               open(os.path.join(ROOT, "logs", f"board-{stamp}.json"), "w"))
     with open(os.path.join(ROOT, "logs", "runs.jsonl"), "a") as f:
         f.write(json.dumps({k: v for k, v in report.items() if k != "segments"}) + "\n")
-    print("录像:", video)
-    print("轨迹图:", os.path.join(ROOT, "logs", f"board-{stamp}.jpg"))
+    print("Video:", video)
+    print("Track image:", os.path.join(ROOT, "logs", f"board-{stamp}.jpg"))
     complete = not paused_out and report["segments"] and s["src"] != "path"
-    print(f"相机校正: 发送并采用 {fixed} 次" if not args.no_fix else "相机校正: 关闭（开环）")
+    print(f"Camera correction: sent and applied {fixed} times" if not args.no_fix else "Camera correction: off (open loop)")
     if args.learn and not args.no_fix:
-        print("开着相机校正时偏差已被实时消掉，不能用来学习补偿；要学习请加 --no-fix")
+        print("With camera correction on, the errors were removed in real time, so this run cannot be used to learn compensation; to learn, add --no-fix")
     elif args.learn and report.get("suggest") and not complete:
-        print("这一轮没有完整跑完，不用它更新补偿")
+        print("This run did not finish; not using it to update compensation")
     elif args.learn and report.get("suggest"):
         ack = r.cmd("slip", **report["suggest"])
-        print("已按整板轨迹更新补偿:" if ack.get("ok") else "补偿更新被拒绝:", report["suggest"], ack.get("error", ""))
+        print("Compensation updated from the full-board track:" if ack.get("ok") else "Compensation update rejected:", report["suggest"], ack.get("error", ""))
 
 
 def analyse(track, start, width, height, pitch, slip, gain=0.7):
@@ -315,8 +315,8 @@ def analyse(track, start, width, height, pitch, slip, gain=0.7):
         "down_side": lerp(slip.get("down_side", 0), slip.get("down_side", 0) + down_side),
     }
     worst = max(math.hypot(*g["end_err"]) for g in segs)
-    print(f"分段: 横线 {len(lane_s)} 条 横向比 {side_r:.3f} 下沉残差 {100 * sag_res:+.2f} cm/m 转角残差 {math.degrees(yaw_res):+.1f}°/m；"
-          f"换条 {len(up_s)} 次 上行比 {up_r:.3f} 右漂 {100 * up_side:+.2f} cm/m；回程下行比 {down_r:.3f}；拐点最大偏差 {worst:.1f} cm")
+    print(f"Segments: {len(lane_s)} horizontal lanes, side ratio {side_r:.3f} sag residual {100 * sag_res:+.2f} cm/m turn residual {math.degrees(yaw_res):+.1f}°/m; "
+          f"{len(up_s)} lane changes, up ratio {up_r:.3f} right drift {100 * up_side:+.2f} cm/m; return down ratio {down_r:.3f}; max corner deviation {worst:.1f} cm")
     return {"segments": segs, "worst_corner_cm": worst, "side_ratio": side_r, "sag_residual": sag_res,
             "yaw_residual": yaw_res, "up_ratio": up_r, "up_side": up_side, "down_ratio": down_r,
             "down_side": down_side, "suggest": suggest}

@@ -1,45 +1,45 @@
-# 顶部 PCB 的 USB／电池供电模式
+# USB/battery power modes of the top PCB
 
-本表检查当前顶部原理图和固件。**无线供电软件策略已实现；完整 USB 电源管理和实板验证尚未完成**。电机和外部电池不在本次范围，这里只使用顶部供电接口的条件。
+This table checks the current top schematic and firmware. **The wireless power software policy is implemented; full USB power management and real-board verification are not done**. The motors and the external battery are outside this scope; only the conditions of the top power interface are used here.
 
-2026-10-29 更新：当前板为 EasyEDA `top_board_v2_logic`，连接按 EasyEDA 网表核对。2026-09 KiCad 版的 CH343G 分析保留在文末，已被取代。下表的电路行为已按当前网表改写；逐行的电流、挂起和浪涌重新分析仍未完成。
+2026-10-29 update: the current board is EasyEDA `top_board_v2_logic`, and connections are checked against the EasyEDA netlist. The CH343G analysis of the 2026-09 KiCad version is kept at the end and is superseded. The circuit behavior in the table below has been rewritten for the current netlist; the row-by-row re-analysis of current, suspend and inrush is still not done.
 
-## 当前实际连接
+## Current actual connections
 
-- **逻辑电源**：USB 的 VBUS 经 D1、电池 VBAT 经 D2，汇合（二极管或）到 U4（3V3 降压）的输入。U4 的 EN 由 SW1 控制，SW1 关断时 3V3 关闭。
-- **电机电源**：U5 的 VIN 直接接 VBAT，EN 为 MOT_EN = GPIO0，R24 下拉。
-- **充电**：VBUS 同时供给 IP2326（U6，经 R37 和升压电感 L3），给 2S 电池充电，平衡抽头经 J3、R43 接 U6。充电不受 SW1 和固件控制。
-- **USB 检测**：VBUS 经 R52 1k／R10 2.2k 分压，再经 Q1（2N7002，栅极接 3V3）接 IO8，IO8 另有 R53 100k 上拉到 3V3。有 USB 时 IO8 为高；3V3 关闭时 Q1 截止，IO8 不被 VBUS 反灌。无 USB 时 R10 经 Q1 把 IO8 拉低：D1 反向漏电在 0.3mA 以内时，IO8 不超过约 0.72V，低于 C6 的 VIL 上限（0.25 × VDD ≈ 0.825V）。计算见[固件说明](FIRMWARE.md#io8-usb-供电检测)。
-- **USB 数据**：D+／D− 经 R51／R50 22Ω 接 GPIO13／12。没有桥接芯片、ACT# 或桥接器挂起状态，整个 C6 就是 USB 设备。
+- **Logic power**: USB VBUS through D1 and battery VBAT through D2 join (diode OR) at the input of U4 (3V3 buck). U4's EN is controlled by SW1; when SW1 is off, 3V3 is off.
+- **Motor power**: U5's VIN connects directly to VBAT; EN is MOT_EN = GPIO0, with the R24 pull-down.
+- **Charging**: VBUS also feeds the IP2326 (U6, through R37 and the boost inductor L3), which charges the 2S battery; the balance tap connects to U6 through J3 and R43. Charging is not controlled by SW1 or the firmware.
+- **USB detection**: VBUS goes through the R52 1k/R10 2.2k divider, then through Q1 (2N7002, gate to 3V3) to IO8, and IO8 also has the R53 100k pull-up to 3V3. With USB, IO8 is high; when 3V3 is off, Q1 is off and IO8 is not back-fed from VBUS. Without USB, R10 pulls IO8 low through Q1: with D1 reverse leakage within 0.3mA, IO8 stays at or below about 0.72V, under the C6's VIL limit (0.25 × VDD ≈ 0.825V). See the [firmware notes](FIRMWARE.md#io8-usb-power-detection) for the calculation.
+- **USB data**: D+/D− connect to GPIO13/12 through R51/R50 22Ω. There is no bridge chip, ACT# or bridge suspend state; the whole C6 is the USB device.
 
-`VBAT` 是接口名称，完整输入连接器和保护尚未落实，不能把标签当成保护功能。
+`VBAT` is an interface name; the full input connector and protection are not yet in place, so the label cannot be treated as a protection function.
 
-## 必须区分的状态
+## States that must be told apart
 
-| 输入／事件 | 当前电路或固件的行为 | 完成设计所需的证据 |
+| Input/event | Behavior of the current circuit or firmware | Evidence needed to complete the design |
 | --- | --- | --- |
-| 只接 USB（不接电池）、尚未枚举 | SW1 打开时 U4 经 D1 为主控与编码器供电。没有电池就没有 0.6A 充电电流；默认 USB 电源或 USB-A 线下 CC 门控（U8/Q2）把 IP2326 的 EN 拉低，根本不充电。IP2326 的 BAT 脚（U6.21/22）和 IO4 分压 R33 同在 VBAT 网上；不接电池时 IP2326 在 BAT 端输出什么电压未经验证。若它把 VBAT_SENSE 维持在 6.5–8.8V 达 1 秒，固件会当作合格电池并启动无线；否则停在 `waiting_voltage`，不初始化无线 | 真实 `bMaxPower`、枚举前电流及插入浪涌；实测不接电池时的 VBAT_SENSE 读数，以及无线是否启动 |
-| 只接 USB（不接电池）、已配置 | USB CDC 可用于控制；固件没有 USB 配置状态或电流测量 | 完整顶板及底板接口负载下的电流和 3.3V 最低值、IP2326 空载电流、诊断与复位可靠性；枚举不等于自动获得 500mA |
-| 只接 USB（不接电池）、电脑挂起 | 固件不接收挂起状态；主控、编码器和 IP2326 照常取电 | 整台设备（含 IP2326 空载电流）的挂起电流与恢复路径 |
-| SW1 关断、接 USB 充电 | 3V3 关闭，IP2326 照常充电；Q1 截止，IO8 没有电压 | 实板核对 IO8 和 3V3 上没有反灌电压 |
-| 只接电池 | D2/U4 供给主控。R10 经 Q1 把 IO8 拉低（D1 漏电在 0.3mA 以内时不超过约 0.72V），`charge="battery"` | 只接电池时 IO8 的实测电压（包括 D1 发热以后）；D1 反向漏电、USB 端口电压；无线与主控电源的负载瞬态 |
-| USB 和电池同时接入 | 两路由二极管按电压关系供给 U4，通常较高的电池路承担主控负载。只有 USB-C 电源声明 ≥1.5A 时 IP2326 才充电（CC 门控 U8/U9/Q2，阈值 0.65V）：约 0.6A 进入电池，5V 侧约 1.2A（最坏约 1.3A），在 1.5A 额度内；默认 USB 电源、USB-A 线和挂起的电脑都不会触发充电 | 两路电流方向、USB 地/供电扰动、插拔瞬态及是否触发复位；USB 电源能否在充电电流下保持 CDC 连接 |
-| 保持 USB、断开电池 | U4 输入从电池路转向 USB 路。只有在无线已尝试启动之后（`wireless_start_attempted=true`，包括 `init_failed`），且 VBAT_SENSE 离开 6.0–8.8V 或采样失效时，固件才撤销控制并自动复位；无线未启动时越界读数只让它停在 `waiting_voltage`。USB 仍在时 IP2326 的输出可能把 VBAT 维持在范围内，这时不会复位。检测与复位存在延时 | 切换期间 3.3V 波形、IP2326 不接电池时的输出、USB 取电额度；实测拔电池后 VBAT_SENSE 是否离开范围；同时收回不再有供电条件的运动许可 |
-| 保持电池、拔出 USB | 主控继续由电池供电；USB CDC 断开，USB 控制租约失效 | EN/BOOT 不出现非预期脉冲；USB 控制租约失效并停止相关运动；后续无线接管符合既有协议 |
-| 两路都断开或低压反复 | 电容放电、主控复位；两路采样可能异步掉电 | EN/BOOT、3.3V、采样脚及 ARM 的实测波形；没有误启动、锁死或采样引脚异常供电 |
+| USB only (no battery), not yet enumerated | With SW1 on, U4 powers the controller and encoders through D1. With no battery there is no 0.6A charge current; with default USB power or a USB-A cable, the CC gate (U8/Q2) pulls the IP2326's EN low, so it does not charge at all. The IP2326's BAT pins (U6.21/22) and the IO4 divider R33 are on the same VBAT net; what voltage the IP2326 puts out at BAT with no battery is not verified. If it holds VBAT_SENSE at 6.5–8.8V for 1 second, the firmware treats it as a qualified battery and starts wireless; otherwise it stays in `waiting_voltage` and does not init wireless | Real `bMaxPower`, current before enumeration and plug-in inrush; measured VBAT_SENSE reading with no battery, and whether wireless starts |
+| USB only (no battery), configured | USB CDC can be used for control; the firmware has no USB configuration state or current measurement | Current and 3.3V minimum under the full top board and base board interface load, IP2326 no-load current, diagnostics and reset reliability; enumeration does not automatically grant 500mA |
+| USB only (no battery), computer suspended | The firmware does not receive the suspend state; the controller, encoders and IP2326 keep drawing power as usual | Suspend current and resume path of the whole device (including IP2326 no-load current) |
+| SW1 off, USB connected for charging | 3V3 is off, and the IP2326 charges as usual; Q1 is off and IO8 has no voltage | Real-board check that there is no back-fed voltage on IO8 and 3V3 |
+| Battery only | D2/U4 power the controller. R10 pulls IO8 low through Q1 (at or below about 0.72V with D1 leakage within 0.3mA), `charge="battery"` | Measured IO8 voltage on battery alone (including after D1 heats up); D1 reverse leakage, USB port voltage; load transients of wireless and controller power |
+| USB and battery connected together | The two paths feed U4 through the diodes according to their voltages, and usually the higher battery path carries the controller load. The IP2326 charges only when the USB-C source advertises ≥1.5A (CC gate U8/U9/Q2, threshold 0.65V): about 0.6A into the battery, about 1.2A on the 5V side (about 1.3A worst case), within the 1.5A budget; default USB power, USB-A cables and a suspended computer never trigger charging | Current direction of both paths, USB ground/supply disturbance, plug/unplug transients and whether they trigger a reset; whether the USB source can keep the CDC connection under the charge current |
+| USB kept, battery disconnected | U4's input switches from the battery path to the USB path. Only after wireless has tried to start (`wireless_start_attempted=true`, including `init_failed`), and VBAT_SENSE leaves 6.0–8.8V or sampling fails, does the firmware revoke control and auto-reset; when wireless has not started, an out-of-range reading only keeps it in `waiting_voltage`. With USB still present, the IP2326 output may hold VBAT within range, and then it does not reset. Detection and reset have a delay | 3.3V waveform during the switch, IP2326 output with no battery, USB current budget; measure whether VBAT_SENSE leaves the range after the battery is pulled; also withdraw motion permission once the power conditions no longer hold |
+| Battery kept, USB unplugged | The controller keeps running on the battery; USB CDC disconnects, and the USB control lease becomes invalid | No unexpected EN/BOOT pulses; the USB control lease becomes invalid and related motion stops; a later wireless takeover follows the existing protocol |
+| Both disconnected, or repeated low voltage | Capacitors discharge and the controller resets; the two sensing channels may lose power asynchronously | Measured waveforms of EN/BOOT, 3.3V, the sensing pins and ARM; no false start, lockup or abnormal powering of the sensing pins |
 
-USB-IF 的更新将挂起电流限值列为 2.5mA；插入浪涌测试还需要规定的采样和电流积分，不能只检查一个电容的标称值。这些属于**整台 USB 设备**的要求，现在包括 C6、编码器和充电器。[USB-IF 电气一致性更新](https://compliance.usb.org/index.asp?UpdateFile=Electrical)。
+The USB-IF update lists the suspend current limit as 2.5mA; the plug-in inrush test also needs specified sampling and current integration, so checking one capacitor's nominal value is not enough. These are requirements for the **whole USB device**, which now includes the C6, the encoders and the charger. [USB-IF electrical compliance updates](https://compliance.usb.org/index.asp?UpdateFile=Electrical).
 
-## 软件修正和剩余硬件条件
+## Software fixes and remaining hardware conditions
 
-C6 的启动流程先提供原生 USB CDC 与 ADC，在连续有效电池读数满足条件后才调用 `transport.begin(...)`。读数失效或供电越界会先撤销控制，再请求软件复位，下一次启动重新判断供电。RTC 标记可在软件复位后通过 USB 读取。`rails` 报告 `usb_power`（IO8），以及 `charge`（`"external_power"` 或 `"battery"`）；IP2326 的充电状态没有接到 MCU。具体阈值、启动阻塞、失败行为及证据见[无线供电策略](WIRELESS_POWER.md)。
+The C6 startup flow first provides native USB CDC and the ADC, and only calls `transport.begin(...)` after consecutive valid battery readings meet the conditions. A failed reading or out-of-range power first revokes control, then requests a software reset, and the next boot judges the power again. The RTC marker can be read over USB after the software reset. `rails` reports `usb_power` (IO8) and `charge` (`"external_power"` or `"battery"`); the IP2326 charge status is not connected to the MCU. For the specific thresholds, startup blocking, failure behavior and evidence, see the [wireless power policy](WIRELESS_POWER.md).
 
-固件看不到 USB 配置、挂起状态或实际取电电流，也不能关闭充电器。无线策略不能证明 MCU、编码器和充电器负载满足枚举前或挂起电流；自动复位的检测和执行延时也不能代替插拔浪涌测量。电池供电时的 Wi-Fi/BLE 和 USB 自动恢复均保留，实际链路和电流仍需测试。
+The firmware cannot see the USB configuration, the suspend state or the actual current drawn, and cannot turn off the charger. The wireless policy cannot prove that the MCU, encoder and charger loads meet the pre-enumeration or suspend current limits; the detection and execution delay of the auto reset cannot replace plug/unplug inrush measurement either. Wi-Fi/BLE and USB auto recovery on battery power are both kept; the actual links and currents still need testing.
 
-本次无线软件更新没有改变供电电路或打开运动。输入保护和电源切换方案仍需定案；板上新增器件也必须计入五片顶部成品成本。
+This wireless software update did not change the power circuit or enable motion. The input protection and power switching plan still need to be decided; new parts on the board must also be counted in the cost of the five finished top boards.
 
-## 历史：2026-09 KiCad CH343G 版（已取代）
+## History: 2026-09 KiCad CH343G version (superseded)
 
-当时 USB 的 `VBUS_RAW` 经 D1、`VBAT_PROTECTED` 经 D2 进入 `LOGIC_VIN_OR`，再由 U4 降压为 `MAIN_3V3`。CH343 的 VDD5/VBUS 接 USB，VIO 接 `MAIN_3V3`，ACT# 未连接；U5 的 EN 由 GPIO14 控制，启动时先提供 UART0。WCH v2.0 §5.2、§5.4 说明 CH343 同时监测 V3/VIO 复位，其 ACT# 表示配置状态并在挂起时无效。因此当时的结论是不能用 ACT# 先打开它自己的 VIO，而且 ACT# 也不包含 `bMaxPower` 所声明的电流数值。[WCH 原厂手册](https://files.waveshare.com/wiki/ESP32-S3-LCD-1.3/CH343DS1_EN.pdf)。
+At that time, USB `VBUS_RAW` through D1 and `VBAT_PROTECTED` through D2 entered `LOGIC_VIN_OR`, and U4 then bucked it to `MAIN_3V3`. The CH343's VDD5/VBUS connected to USB, VIO to `MAIN_3V3`, and ACT# was not connected; U5's EN was controlled by GPIO14, and UART0 was provided first at boot. WCH v2.0 §5.2 and §5.4 say the CH343 monitors both V3/VIO for reset, and that its ACT# shows the configured state and is inactive during suspend. So the conclusion at that time was that ACT# could not be used to first turn on its own VIO, and that ACT# also does not carry the current value declared in `bMaxPower`. [WCH datasheet](https://files.waveshare.com/wiki/ESP32-S3-LCD-1.3/CH343DS1_EN.pdf).
 
-[网表／代码来源绑定](verification/usb_power_modes.json) · [DTR 启动偏置模拟](usb_startup_review/README.md)（均为 2026-09 KiCad 版）
+[Netlist/code source binding](verification/usb_power_modes.json) · [DTR startup bias simulation](usb_startup_review/README.md) (both for the 2026-09 KiCad version)

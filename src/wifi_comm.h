@@ -12,10 +12,10 @@ public:
     bool isConnected() const { return WiFi.status() == WL_CONNECTED; }
     IPAddress localIP() const { return WiFi.localIP(); }
 
-    // 接收 JSON 命令，返回 true 如果有新命令
+    // Receive a JSON command; returns true if there is a new command
     bool receive(JsonDocument& doc);
 
-    // 发送 JSON 状态到发送方
+    // Send JSON status to the sender
     void send(const JsonDocument& doc);
 
 private:
@@ -23,7 +23,7 @@ private:
     IPAddress remote_ip_;
     uint16_t remote_port_ = 0;
     bool has_remote_ = false;
-    bool active_ = false;   // 仅当 WiFi 连上且 UDP 已 begin 才收发 (USB 模式下为 false, 不碰 UDP)
+    bool active_ = false;   // only send/receive when WiFi is connected and UDP has begun (false in USB mode, UDP untouched)
 };
 
 #endif

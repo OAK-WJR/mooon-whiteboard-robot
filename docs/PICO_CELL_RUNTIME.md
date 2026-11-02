@@ -1,72 +1,72 @@
-# Pico 两节电芯监测与电脑端诊断
+# Pico two-cell monitoring and computer-side diagnostics
 
-2026-09-08：BQ76905 已接入实际主循环，与 INA3221 共用项目内 I²C 工作任务。
-GPIO39 执行一次开漏唤醒，随后检查芯片身份、配置读回并轮询两节电芯。
-这是离线验证的审查固件；未刷写、连接设备或取得真实读数。
-**运动、充电和电源循环仍被禁止，电池专属保护门限尚未获准。**
+2026-09-08: the BQ76905 is connected to the real main loop and shares the project's I²C worker task with the INA3221.
+GPIO39 does one open-drain wake, then the firmware checks the chip identity and config read-back and polls the two cells.
+This is review firmware verified offline; it has not been flashed or connected to a device, and no real readings have been taken.
+**Motion, charging and power cycling are still forbidden, and battery-specific protection thresholds are not yet approved.**
 
-## 启动与总线调度
+## Startup and bus scheduling
 
-GPIO/UART/无线/任务看门狗初始化成功且总线就绪后，GPIO39 拉低约100ms，
-释放后等待100ms，再启动固定地址0x08、默认非CRC型号的 BQ 检查。
-脉冲释放被拖延至150ms时报告超时；GPIO API 失败会停止诊断服务。
-这些时间是工程选值，必须实测隔离器、PhotoMOS、稳压器及 TS 的实际波形。
-`wake_requested` 仅表示软件请求，不是 TS 电压反馈。
+After GPIO/UART/wireless/task watchdog init succeeds and the bus is ready, GPIO39 is pulled low for about 100ms,
+then released, followed by a 100ms wait, and then the BQ check starts at the fixed address 0x08 for the default non-CRC model.
+If the pulse release is delayed to 150ms, a timeout is reported; a GPIO API failure stops the diagnostic service.
+These times are engineering choices; the actual waveforms of the isolator, PhotoMOS, regulator and TS must be measured.
+`wake_requested` only means a software request; it is not TS voltage feedback.
 
-依据保留的 [TI 技术手册](https://www.ti.com/lit/ug/sluuci8/sluuci8.pdf)
-及 [BQ76905 数据表](https://www.ti.com/lit/ds/symlink/bq76905.pdf)理解唤醒与配置流程；
-工程等待值不是厂商保证的整条隔离电路启动上限。没有错误后自动唤醒、
-切换CRC模式或重复不确定的配置写入。初始 Battery Status 只读事务的 NAK
-允许在2秒窗口内重试；后端不能区分地址与寄存器字节在哪一步收到 NAK。
+The wake and configuration flow is based on the kept [TI technical reference manual](https://www.ti.com/lit/ug/sluuci8/sluuci8.pdf)
+and the [BQ76905 datasheet](https://www.ti.com/lit/ds/symlink/bq76905.pdf);
+the engineering wait values are not a vendor-guaranteed startup limit for the whole isolation circuit. There is no automatic wake after an error,
+no switching of CRC mode, and no repeat of uncertain config writes. NAKs on the initial read-only Battery Status transaction
+may be retried within a 2-second window; the backend cannot tell whether the NAK came at the address byte or the register byte.
 
-每轮主循环最多推进一次 I²C 提交或轮询。已经开始的 INA 采集先完成；
-仅当 BQ 物理事务完成、取消后的缓冲区也已归还时，才开始下一组 INA 采样。
-BQ 配置及长报文在这些采集组之间推进，初始化期间也保留 INA 读数机会。
-没有扩大 INA 的4ms传输/5ms操作预算。7次延后轮询的假设备测试检查了交错，
-但不能证明真实无线负载下的调度余量或硬性响应时间。
+Each main loop iteration advances at most one I²C submit or poll. An INA acquisition that has already started finishes first;
+the next INA sample group starts only when the BQ physical transaction is done and the buffer has been returned after a cancel.
+BQ configuration and long messages advance between these acquisition groups, so INA readings still get a chance during initialization.
+The INA's 4ms transfer/5ms operation budget was not enlarged. A fake-device test with 7 deferred polls checked the interleaving,
+but cannot prove scheduling headroom or hard response times under real wireless load.
 
-## USB、Wi-Fi、BLE 诊断
+## USB, Wi-Fi and BLE diagnostics
 
-使用更新后的 `scripts/robot_control.py`。接入并核对实板后，USB 查询示例为：
+Use the updated `scripts/robot_control.py`. After connecting and checking the real board, a USB query example is:
 
 ```sh
 python3 scripts/robot_control.py --usb <PORT> --usb-kind ch343p cells
 ```
 
-`cells` 发送只读 `cell_status`，不申请运动控制权；无线仍需要正确的 profile 和 HMAC。
-正常 `status` 只增加 `cell_monitor`/`cell_error` 摘要，完整报告单独请求，保持原有
-1792字节 JSON 负载和2304字节线路缓冲上限。
+`cells` sends a read-only `cell_status` and does not request motion control; wireless still needs the correct profile and HMAC.
+Normal `status` only adds a `cell_monitor`/`cell_error` summary; the full report is requested separately, which keeps the existing
+1792-byte JSON payload and 2304-byte line buffer limits.
 
-| 报告字段 | 含义与限制 |
+| Report field | Meaning and limits |
 | --- | --- |
-| `cell_mv` | 下节/上节，对应 BQ 物理输入1和5；不是输入1和2 |
-| `stack_mv`, `cell_pair_valid`, `stack_consistent` | 总电压及有效性/250mV一致性筛选；不是测量精度保证 |
-| `seq`, `generation` | 采样序号与配置/失效代次，不能跨重启代替设备会话身份 |
-| `age_ms`, `read_span_ms` | 生成报文时自发布点的年龄、小于1500ms的读取跨度；不是同步ADC时间戳 |
-| `ts_counts`, `ts_nominal_uv` | TS 原始值及标称换算；**不是电池温度** |
-| `battery_current_ma`, `pack_temperature_mc` | 当前硬件没有相应测量，始终为 `null` |
-| `configuration_verified` | 指定的只读监测配置完成写入与读回 |
-| `voltage_profile_verified`, `system_protection_qualified` | 当前均为 `false`；不能据配置完成批准充放电 |
-| `fets_off_observed` | 新鲜状态里观察到 BQ 关断控制；不是整车无电的物理证明 |
+| `cell_mv` | Lower/upper cell, matching BQ physical inputs 1 and 5; not inputs 1 and 2 |
+| `stack_mv`, `cell_pair_valid`, `stack_consistent` | Total voltage and validity/250mV consistency screening; not a guarantee of measurement accuracy |
+| `seq`, `generation` | Sample sequence number and config/invalidation generation; cannot stand in for device session identity across reboots |
+| `age_ms`, `read_span_ms` | Age since the publish point when the message is built, and the read span, which is under 1500ms; not synchronized ADC timestamps |
+| `ts_counts`, `ts_nominal_uv` | TS raw value and nominal conversion; **not battery temperature** |
+| `battery_current_ma`, `pack_temperature_mc` | The current hardware has no such measurement; always `null` |
+| `configuration_verified` | The specified read-only monitoring config has been written and read back |
+| `voltage_profile_verified`, `system_protection_qualified` | Both currently `false`; a completed config cannot be used to approve charging or discharging |
+| `fets_off_observed` | BQ turn-off control observed in fresh status; not physical proof that the whole robot is unpowered |
 
-报告生成时样本年龄必须小于3000ms；传输及主机排队时间不在其中。
-整组过期、配置变化、POR、断线或重启后撤销读数与相关元数据，输出 `null`。
-新鲜状态也可能含无效的单节测量；下节不足2V时上节读数不被接受。
-主机严格检查类型、范围、状态、配置代次、设备身份及 HMAC，但通过解析不代表
-报文到达时仍新鲜。当前诊断不用于批准运动、充电或恢复供电。
+When the report is built, the sample age must be under 3000ms; transmission and host queueing time are not included.
+After the whole group expires, a config change, POR, a disconnect or a reboot, the readings and related metadata are revoked and output as `null`.
+A fresh status can still contain an invalid single-cell measurement; when the lower cell is below 2V, the upper cell reading is not accepted.
+The host strictly checks type, range, status, config generation, device identity and HMAC, but passing parsing does not mean
+the message was still fresh when it arrived. The current diagnostics are not used to approve motion, charging or restoring power.
 
-## 验证与仍需完成的工作
+## Verification and remaining work
 
-[本轮验证记录](PICO_CELL_RUNTIME_VERIFICATION.json)保存了实际命令、公开源码摘要及范围。
-14个新增主循环场景、74项 Pico 主机测试、27个 GPIO 场景、18组 BQ 驱动测试、
-共享传输层取消竞态检查以及 Pico/R3 公开配置构建通过。构建检查实际应用保留
-BQ、INA 与本项目后端符号，没有用强制链接代替接入证明。
+The [verification record for this round](PICO_CELL_RUNTIME_VERIFICATION.json) saves the actual commands, public source digests and scope.
+14 new main loop scenarios, 74 Pico host tests, 27 GPIO scenarios, 18 BQ driver test groups,
+the shared transport layer cancel race check, and the Pico/R3 public config builds pass. The build check confirms the actual application keeps
+the BQ, INA and this project's backend symbols; forced linking was not used in place of proof of integration.
 
-GNB8502S80A 的专属充电温区、正常低电压停机及保护配合仍待可靠规格与实测确认。
-当前使用未启用保护门限的监测配置，CHG/DSG 和外部请求保持关闭。
-如果中途配置失败，BQ 可能留在 CONFIG_UPDATE；单独 MCU reboot 或再唤醒不能保证
-恢复。已验证的 BQ 复位/恢复事务、充放电许可、电源动态、实物线序和最终 PCB
-仍需完成。已有 MOS 瞬态不收敛记录仍然失败，未被软件测试替代。
+The GNB8502S80A's specific charging temperature range, normal low-voltage shutdown and protection coordination still await reliable specs and measurement.
+The current monitoring config has no protection thresholds enabled, and CHG/DSG and external requests stay off.
+If configuration fails partway, the BQ may stay in CONFIG_UPDATE; an MCU reboot alone or another wake cannot guarantee
+recovery. A verified BQ reset/recovery transaction, charge/discharge permission, power dynamics, the real wire order and the final PCB
+are still to be done. The existing record of the MOS transient not converging still fails, and has not been replaced by software tests.
 
-此前 `PICO_I2C_BACKEND_VERIFICATION.json`、`PICO_RAIL_RUNTIME_VERIFICATION.json`
-和硬件 GPIO 检查点作为历史记录保留，其源码摘要不冒充当前文件摘要。
+The earlier `PICO_I2C_BACKEND_VERIFICATION.json`, `PICO_RAIL_RUNTIME_VERIFICATION.json`
+and hardware GPIO checkpoints are kept as historical records; their source digests do not pose as the current file digests.

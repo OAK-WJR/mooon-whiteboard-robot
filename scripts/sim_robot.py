@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""WhiteBoardBot 本地仿真机器人 —— 无硬件测试 whiteboard_app.py 的点到点导航 + 2D 可视化。
+"""WhiteBoardBot local simulated robot - tests whiteboard_app.py point-to-point navigation + 2D visualization without hardware.
 
-复刻固件的 UDP 协议: 监听 8888 收命令 (goto/area/pos/stop), 全向轮holonomic积分位姿,
-把状态 (state,x,y,theta,progress,wp,wp_total) 以 ~20Hz 发到 127.0.0.1:8889。
-whiteboard_app.py 收到后会自动学到本机 IP, 于是点地图就能驱动这个仿真机器人。
+Replicates the firmware UDP protocol: listens on 8888 for commands (goto/area/pos/stop), integrates the pose as a holonomic omni-wheel robot,
+and sends the state (state,x,y,theta,progress,wp,wp_total) at ~20Hz to 127.0.0.1:8889.
+whiteboard_app.py learns this machine's IP automatically when it receives it, so clicking the map drives this simulated robot.
 
-用法 (两个终端):
+Usage (two terminals):
   python scripts/sim_robot.py
-  python scripts/whiteboard_app.py      # 在 2D 图上左键点击 = 设目标并前往
+  python scripts/whiteboard_app.py      # left-click on the 2D map = set target and go
 """
 
 import socket, json, time, math
 
-LISTEN_PORT = 8888           # 收命令 (= 固件 UDP_LISTEN_PORT)
-REPORT_ADDR = ("127.0.0.1", 8889)   # 发状态到上位机
+LISTEN_PORT = 8888           # receives commands (= firmware UDP_LISTEN_PORT)
+REPORT_ADDR = ("127.0.0.1", 8889)   # sends state to the host PC
 MAX_SPEED   = 0.15           # m/s, = config MAX_LINEAR_SPEED
 GOAL_TOL    = 0.01           # m
 DT          = 0.05           # 20Hz
@@ -25,13 +25,13 @@ def main():
     tx = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
     x, y, theta = 0.0, 0.0, 0.0
-    path = []            # 航点列表 [(x,y), ...]
-    wp = 0               # 当前航点下标
+    path = []            # waypoint list [(x,y), ...]
+    wp = 0               # current waypoint index
     state = "idle"
-    print(f"[sim] 监听 :{LISTEN_PORT}, 发状态 -> {REPORT_ADDR}. 等待命令...")
+    print(f"[sim] listening :{LISTEN_PORT}, sending state -> {REPORT_ADDR}. Waiting for commands...")
 
     while True:
-        # --- 收命令 (尽量取干净) ---
+        # --- receive commands (drain as many as possible) ---
         try:
             while True:
                 data, _ = rx.recvfrom(2048)
@@ -46,10 +46,10 @@ def main():
                     print(f"[sim] goto {path[0]}")
                 elif c == "area":
                     path = zigzag(cmd); wp, state = 0, "running"
-                    print(f"[sim] area -> {len(path)} 航点")
+                    print(f"[sim] area -> {len(path)} waypoints")
                 elif c == "pos":
                     x, y, theta = float(cmd.get("x", 0)), float(cmd.get("y", 0)), float(cmd.get("theta", 0))
-                    print(f"[sim] pos 校正 -> ({x:.3f},{y:.3f},{theta:.2f})")
+                    print(f"[sim] pos correction -> ({x:.3f},{y:.3f},{theta:.2f})")
                 elif c in ("stop",):
                     path, state = [], "idle"
                 elif c == "start" and path:
@@ -59,7 +59,7 @@ def main():
         except socket.timeout:
             pass
 
-        # --- 运动积分: 朝当前航点全向移动 ---
+        # --- motion integration: move omnidirectionally toward the current waypoint ---
         if state == "running" and wp < len(path):
             tx_, ty_ = path[wp]
             dx, dy = tx_ - x, ty_ - y
@@ -72,9 +72,9 @@ def main():
                 step = min(MAX_SPEED * DT, dist)
                 x += step * dx / dist
                 y += step * dy / dist
-                theta = math.atan2(dy, dx)        # 朝向目标 (可视化用)
+                theta = math.atan2(dy, dx)        # face the target (for visualization)
 
-        # --- 发状态 ---
+        # --- send state ---
         total = len(path)
         status = {
             "state": state, "x": round(x, 4), "y": round(y, 4), "theta": round(theta, 4),
@@ -104,4 +104,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("\n[sim] 退出")
+        print("\n[sim] exit")

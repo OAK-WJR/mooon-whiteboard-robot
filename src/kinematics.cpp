@@ -13,7 +13,7 @@ Kinematics::Kinematics(float wheel_radius, float robot_radius)
     , cos60_(COS60) {}
 
 /**
- * 逆运动学 (body -> wheel)
+ * Inverse kinematics (body -> wheel)
  *
  * | v0 |   | -sin60   cos60   d |   | vx    |
  * | v1 | = |  0       -1      d | * | vy    |
@@ -28,7 +28,7 @@ WheelVelocity Kinematics::inverse(const BodyVelocity& body) const {
 }
 
 /**
- * 正运动学 (wheel -> body)
+ * Forward kinematics (wheel -> body)
  *
  * vx    = (sqrt(3)/3) * (v2 - v0)
  * vy    = (1/3) * (v0 + v2) - (2/3) * v1

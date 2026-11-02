@@ -11,7 +11,7 @@ public:
     void setPath(const Waypoint* path, int count);
     void setSpeed(float max_speed) { max_speed_ = max_speed; }
 
-    // 运行时可调参数 (串口调参用), 默认取 config.h 中的值
+    // Runtime-tunable parameters (for serial tuning), defaults from config.h
     void setLookAhead(float d)      { look_ahead_ = d; }
     void setGoalTolerance(float d)  { goal_tol_ = d; }
     void setLinearGain(float kp)    { kp_linear_ = kp; }
@@ -20,8 +20,8 @@ public:
     float getLinearGain() const     { return kp_linear_; }
     float getMaxSpeed() const       { return max_speed_; }
 
-    // 根据当前位置计算目标机体速度
-    // 返回 true 如果路径还没走完
+    // Compute the target body velocity from the current position
+    // Returns true if the path is not finished yet
     bool compute(float robot_x, float robot_y, float robot_theta,
                  BodyVelocity& out_vel);
 

@@ -22,26 +22,26 @@ float TrajectoryFollower::distTo(float x1, float y1, float x2, float y2) const {
 int TrajectoryFollower::findClosestSegment(float rx, float ry) const {
     int best = current_wp_;
     float best_dist = 1e9f;
-    // 只向前搜索，不回头
+    // Only search forward, never back
     for (int i = current_wp_; i < count_; i++) {
         float d = distTo(rx, ry, path_[i].x, path_[i].y);
         if (d < best_dist) {
             best_dist = d;
             best = i;
         }
-        // 如果距离开始增大，提前停止搜索
+        // Stop searching early once the distance starts to grow
         if (d > best_dist + 0.05f) break;
     }
     return best;
 }
 
 void TrajectoryFollower::getLookAheadPoint(float rx, float ry, float& lx, float& ly) const {
-    // 从当前最近点开始，沿路径前进 look_ahead_
+    // Starting from the current nearest point, advance look_ahead_ along the path
     float remaining = look_ahead_;
     int idx = findClosestSegment(rx, ry);
 
-    // 更新 current waypoint（非 const 需要 mutable 或者外部更新）
-    // 先定位到 look-ahead 点
+    // Update the current waypoint (non-const needs mutable or an outside update)
+    // First locate the look-ahead point
     float cx = path_[idx].x, cy = path_[idx].y;
 
     for (int i = idx; i < count_ - 1 && remaining > 0; i++) {
@@ -57,7 +57,7 @@ void TrajectoryFollower::getLookAheadPoint(float rx, float ry, float& lx, float&
         remaining -= seg_len;
     }
 
-    // 超过路径末端，返回最后一个点
+    // Past the end of the path, return the last point
     lx = path_[count_ - 1].x;
     ly = path_[count_ - 1].y;
 }
@@ -69,13 +69,13 @@ bool TrajectoryFollower::compute(float robot_x, float robot_y, float robot_theta
         return false;
     }
 
-    // 更新当前 waypoint
+    // Update the current waypoint
     while (current_wp_ < count_ - 1 &&
            distTo(robot_x, robot_y, path_[current_wp_].x, path_[current_wp_].y) < goal_tol_) {
         current_wp_++;
     }
 
-    // 到达终点
+    // Reached the end point
     if (current_wp_ >= count_ - 1 &&
         distTo(robot_x, robot_y, path_[count_ - 1].x, path_[count_ - 1].y) < goal_tol_) {
         out_vel = {0, 0, 0};
@@ -83,34 +83,34 @@ bool TrajectoryFollower::compute(float robot_x, float robot_y, float robot_theta
         return false;
     }
 
-    // Look-ahead 目标点
+    // Look-ahead target point
     float lx, ly;
     getLookAheadPoint(robot_x, robot_y, lx, ly);
 
-    // 计算误差 (在机体坐标系下)
+    // Compute the error (in the body frame)
     float dx = lx - robot_x;
     float dy = ly - robot_y;
     float cos_th = cosf(robot_theta);
     float sin_th = sinf(robot_theta);
 
-    // 世界坐标误差 → 机体坐标误差
-    float ex = cos_th * dx + sin_th * dy;   // 前方
-    float ey = -sin_th * dx + cos_th * dy;  // 左方
+    // World-frame error → body-frame error
+    float ex = cos_th * dx + sin_th * dy;   // forward
+    float ey = -sin_th * dx + cos_th * dy;  // left
 
-    // 终端减速: 距目标越近速度越低, 防止冲过头绕圈
+    // Final slowdown: the closer to the target, the lower the speed, to avoid overshooting and circling
     float dist_to_goal = distTo(robot_x, robot_y, path_[count_ - 1].x, path_[count_ - 1].y);
     float v_cap = max_speed_;
     if (dist_to_goal < END_DECEL_DIST)
         v_cap = fmaxf(MIN_APPROACH_SPEED, max_speed_ * dist_to_goal / END_DECEL_DIST);
 
-    // 比例控制 (终端减速封顶)
+    // Proportional control (capped by the final slowdown)
     float dist = sqrtf(ex * ex + ey * ey);
     float scale = (dist > 0.001f) ? fminf(kp_linear_ * dist, v_cap) / dist : 0;
 
     out_vel.vx = ex * scale;
     out_vel.vy = ey * scale;
 
-    // 航向保持: 把 theta 主动拉回 0, 抵消旋转漂移 -> 走直线
+    // Heading hold: actively pull theta back to 0 to cancel rotational drift -> drive straight
     float theta_err = -robot_theta;
     while (theta_err >  (float)M_PI) theta_err -= 2.0f * (float)M_PI;
     while (theta_err < -(float)M_PI) theta_err += 2.0f * (float)M_PI;

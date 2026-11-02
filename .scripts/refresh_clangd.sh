@@ -1,12 +1,12 @@
 #!/bin/bash
-# 手动刷新 compile_commands.json 并清洗（供 clangd 使用）
-# 用法: ./.scripts/refresh_clangd.sh
+# Manually refresh compile_commands.json and clean it (for clangd)
+# Usage: ./.scripts/refresh_clangd.sh
 
 set -e
 cd "$(dirname "$0")/.."
-# 脚本位于 .scripts/ 目录下
+# The script lives in the .scripts/ directory
 
-echo ">> 生成 compile_commands.json ..."
+echo ">> Generating compile_commands.json ..."
 
 if [ -x ".venv/bin/pio" ]; then
     .venv/bin/pio run -t compiledb
@@ -15,9 +15,9 @@ else
 fi
 
 echo ""
-echo ">> 清洗 compile_commands.json ..."
+echo ">> Cleaning compile_commands.json ..."
 
-# 用 Python 清洗
+# Clean with Python
 PYTHON=".venv/bin/python3"
 [ ! -x "$PYTHON" ] && PYTHON="python3"
 
@@ -45,8 +45,8 @@ for entry in entries:
 with open('compile_commands.json', 'w') as f:
     json.dump(entries, f, indent=4)
 
-print('>> 清洗完成')
+print('>> Cleaning done')
 "
 
 echo ""
-echo ">> 完成! 请在 Cursor 中执行 Cmd+Shift+P → 'clangd: Restart language server'"
+echo ">> Done! In Cursor, run Cmd+Shift+P → 'clangd: Restart language server'"

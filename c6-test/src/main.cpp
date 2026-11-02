@@ -1,17 +1,17 @@
-// ESP32-C6 电机+编码器全链路测试 (屏幕板插转接板, 转接板插驱动板)
-// 引脚映射与配对关系: 见记忆 whiteboardbot-header-pairing (2026-07-03 定案)
-//   固件头 M0 -> 底板H2 = 物理电机1 (ctrl1)
-//   固件头 M1 -> 底板H1 = 物理电机3 (ctrl3)
-//   固件头 M2 -> 底板H3 = 物理电机2 (ctrl2)
-// 安全: 每条转动命令带死人开关, 默认 800ms 自动停, 上限 3000ms
+// ESP32-C6 motor + encoder full-chain test (display board on adapter board, adapter board on driver board)
+// Pin map and pairing: see memory note whiteboardbot-header-pairing (settled 2026-07-03)
+//   firmware header M0 -> base H2 = physical motor 1 (ctrl1)
+//   firmware header M1 -> base H1 = physical motor 3 (ctrl3)
+//   firmware header M2 -> base H3 = physical motor 2 (ctrl2)
+// Safety: every spin command has a dead-man switch; auto stop after 800ms by default, max 3000ms
 #include <Arduino.h>
 
 static const int PWM_FI[3] = {0, 2, 4};    // GP0/2/4
 static const int PWM_BI[3] = {1, 3, 5};    // GP1/3/5
-static const int ENC_A[3]  = {16, 18, 20}; // GP16(经100Ω)/18/20
+static const int ENC_A[3]  = {16, 18, 20}; // GP16(via 100Ω)/18/20
 static const int ENC_B[3]  = {17, 19, 23}; // GP17/19/23
 static const char* HEAD_DESC[3] = {
-    "M0头->底板H2=电机1", "M1头->底板H1=电机3", "M2头->底板H3=电机2"};
+    "M0 header->base H2=motor 1", "M1 header->base H1=motor 3", "M2 header->base H3=motor 2"};
 
 volatile long cnt[3] = {0, 0, 0};
 
@@ -51,7 +51,7 @@ void setup() {
     attachInterrupt(digitalPinToInterrupt(20), isr2, CHANGE);
     Serial.println("\n=== C6 MOTOR/ENCODER TEST READY ===");
     for (int i = 0; i < 3; i++) Serial.printf("  %s\n", HEAD_DESC[i]);
-    Serial.println("命令: w <i> <duty> [ms] | x=停 | s=计数 | z=清零 | t=遥测开关");
+    Serial.println("Commands: w <i> <duty> [ms] | x=stop | s=counts | z=zero | t=telemetry on/off");
 }
 
 void loop() {

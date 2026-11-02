@@ -129,38 +129,38 @@ def render(report, traces, output_dir):
     options = []
     table = []
     for r in report['results']:
-        label = f'第{r["repeat"]}轮 · 电机{r["motor"]} · {"正向" if r["sign"] > 0 else "反向"} · 曲线{r["profile"]} · {"达标" if r["passed"] else "未达标"}'
+        label = f'Repeat {r["repeat"]} · Motor {r["motor"]} · {"positive" if r["sign"] > 0 else "negative"} · Profile {r["profile"]} · {"pass" if r["passed"] else "below criterion"}'
         options.append(f'<option value="{r["id"]}.png">{html.escape(label)}</option>')
         table.append(f'<tr><td>{html.escape(label)}</td><td>{r["r_squared"]:.3f}</td>'
                      f'<td>{100*r["rmse_fraction_of_speed_span"]:.1f}%</td></tr>')
     worst = min(report['results'], key=lambda r: r['r_squared'])['id'] + '.png'
     options = [o.replace(f'value="{worst}"', f'value="{worst}" selected') for o in options]
-    page = '''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>新屏幕板：三轮实测与独立验证</title><style>
+    page = '''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>New screen board: three repeats of real tests and independent validation</title><style>
 body{font:18px/1.6 system-ui,sans-serif;max-width:1200px;margin:28px auto;padding:0 20px;background:#f8fafc;color:#182a3a}
 h1{font-size:30px}select{font:inherit;padding:10px;max-width:100%}img{width:100%;height:auto;background:white;margin-top:18px}
 a{color:#086960}table{border-collapse:collapse;width:100%}th,td{text-align:left;padding:8px;border-bottom:1px solid #d7e0e5}
 .metric{font-size:24px;font-weight:700}small{color:#526372}</style>
-<h1>新屏幕板：三轮实测与独立验证</h1><p><a href="../hardware-response.html">返回原响应页面</a> · <a href="audit.json">完整指标与来源</a></p>
+<h1>New screen board: three repeats of real tests and independent validation</h1><p><a href="../hardware-response.html">Back to the original response page</a> · <a href="audit.json">Full metrics and sources</a></p>
 '''
-    page += (f'<p class="metric">{report["complete_runs"]} 段完整采集 · {report["driven_control_samples"]:,} 个驱动中采样点</p>'
-             f'<p>三轮悬空，逐轮正反转，PWM 120–200/255。仅用第一轮的 6 段 A 曲线拟合，参数随后冻结。'
-             f'余下 {report["heldout_runs"]} 段独立预测中，{report["passed_runs"]} 段达到预先设定的精度，'
-             f'{report["heldout_runs"]-report["passed_runs"]} 段未达标。采集完成不等于控制器已通过。</p>'
-             '<p>绿实线是实测轮速，橙虚线是模型预测，下方是实际 PWM。两线越接近越好；此处不是目标跟踪 PID 测试。'
-             '判据：R² ≥ 0.90，且 RMSE / 实测速度范围 ≤ 10%。默认显示误差最大的一段。</p>'
-             '<label for="case">选择一张大图：</label> <select id="case">' + ''.join(options) + '</select>'
-             f'<p><a id="full" href="{worst}" target="_blank">打开完整分辨率英文图片</a></p>'
-             f'<img id="chart" src="{worst}" alt="实测编码器速度与冻结模型预测，以及 PWM 输入">'
-             '<p>碰触中断的段落另存并排除。以上只覆盖已经转动的悬空轮子，排除了每段开头 1 秒；'
-             '不代表起步死区、带载直行、打滑或墙面保持已解决。没有写入新 PID 或解除固件验证限制。</p>'
-             '<p>本次第三轮电机 1 反向 A 曲线还有一次短暂速度突降；PWM 当时保持不变，原因尚未确定。'
-             '该段保留在评分中，不能直接认定是人为碰触或电机损坏。'
-             '<a href="../../reports/newboard-suspended-anomaly-01.json">查看原始计数与边沿记录</a>。</p>'
-             '<details><summary>全部独立预测结果</summary><table><thead><tr><th>实验</th><th>R²</th><th>RMSE / 速度范围</th></tr></thead><tbody>'
+    page += (f'<p class="metric">{report["complete_runs"]} complete runs captured · {report["driven_control_samples"]:,} samples while driven</p>'
+             f'<p>All three wheels suspended, each wheel driven forward and reverse in turn, PWM 120–200/255. Only the 6 A-profile runs from the first repeat were used for fitting; the parameters were then frozen. '
+             f'Of the remaining {report["heldout_runs"]} independently predicted runs, {report["passed_runs"]} reached the preset accuracy and '
+             f'{report["heldout_runs"]-report["passed_runs"]} fell short. A finished capture does not mean the controller has passed.</p>'
+             '<p>The solid green line is the measured wheel speed, the dashed orange line is the model prediction, and below is the actual PWM. The closer the two lines, the better; this is not a target-tracking PID test. '
+             'Criteria: R² ≥ 0.90, and RMSE / measured speed range ≤ 10%. The run with the largest error is shown by default.</p>'
+             '<label for="case">Choose a large chart:</label> <select id="case">' + ''.join(options) + '</select>'
+             f'<p><a id="full" href="{worst}" target="_blank">Open the full-resolution English image</a></p>'
+             f'<img id="chart" src="{worst}" alt="Measured encoder speed and frozen model prediction, plus PWM input">'
+             '<p>Runs interrupted by contact were saved separately and excluded. The above covers only suspended wheels that were already turning, with the first 1 second of each run excluded; '
+             'it does not mean the startup dead zone, loaded straight driving, slip or wall hold is solved. No new PID was written and no firmware validation limit was lifted.</p>'
+             '<p>In this session, repeat 3, motor 1, reverse A profile also had one brief sudden speed drop; the PWM stayed unchanged at the time, and the cause is not yet known. '
+             'That run stays in the scoring; it cannot simply be put down to human contact or motor damage. '
+             '<a href="../../reports/newboard-suspended-anomaly-01.json">View raw counts and edge records</a>.</p>'
+             '<details><summary>All independent prediction results</summary><table><thead><tr><th>Experiment</th><th>R²</th><th>RMSE / speed range</th></tr></thead><tbody>'
              + ''.join(table) + '</tbody></table></details>'
-             '<p><small>方法参考：<a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/viewing-diagnostics.html">WPILib SysId diagnostics</a>。'
-             '原始文件 SHA-256 与硬件身份见完整指标。</small></p>'
+             '<p><small>Method reference: <a href="https://docs.wpilib.org/en/stable/docs/software/advanced-controls/system-identification/viewing-diagnostics.html">WPILib SysId diagnostics</a>. '
+             'Raw-file SHA-256 and hardware identity are in the full metrics.</small></p>'
              '<script>document.getElementById("case").onchange=function(){document.getElementById("chart").src=this.value;document.getElementById("full").href=this.value;};</script></html>')
     (output_dir / 'index.html').write_text(page)
     write_json(output_dir / 'audit.json', report)

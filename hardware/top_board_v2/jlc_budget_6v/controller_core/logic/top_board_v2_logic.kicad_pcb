@@ -9640,7 +9640,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "韩国韩荣"
+		(property "Manufacturer" "Korean Hroparts Elec"
 			(at 0 0 240)
 			(layer "F.Fab")
 			(hide yes)
@@ -16047,7 +16047,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "XFCN(兴飞)"
+		(property "Manufacturer" "XFCN"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -16413,7 +16413,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "XFCN(兴飞)"
+		(property "Manufacturer" "XFCN"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -17461,7 +17461,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "XFCN(兴飞)"
+		(property "Manufacturer" "XFCN"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)
@@ -18510,7 +18510,7 @@
 				)
 			)
 		)
-		(property "Manufacturer" "XFCN(兴飞)"
+		(property "Manufacturer" "XFCN"
 			(at 0 0 0)
 			(layer "F.Fab")
 			(hide yes)

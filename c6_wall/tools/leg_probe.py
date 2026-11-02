@@ -101,7 +101,7 @@ def main():
                 dx, dy = (sign * D, 0) if a.axis == "x" else (0, sign * D)
                 heads, tel, t_end = leg(r, cam, H, dx, dy, a.speed, a.accel)
                 if len(heads) < 5:
-                    print("  相机帧太少，跳过")
+                    print("  Too few camera frames; skipping")
                     continue
                 h0 = heads[0][1]
                 rel = [(t, (h - h0 + 180) % 360 - 180) for t, h, _, _ in heads]
@@ -109,7 +109,7 @@ def main():
                 def at(tq):
                     best = min(rel, key=lambda x: abs(x[0] - tq))
                     return best[1]
-                phases = {"起步": (0, ta), "匀速": (ta, T - ta), "刹车": (T - ta, T), "停稳": (T, (t_end or T) + 1.4)}
+                phases = {"start": (0, ta), "cruise": (ta, T - ta), "brake": (T - ta, T), "settle": (T, (t_end or T) + 1.4)}
                 dturn = {n: at(b) - at(a_) for n, (a_, b) in phases.items()}
                 total = rel[-1][1]
                 worst = max(dturn, key=lambda n: abs(dturn[n]))
@@ -120,10 +120,10 @@ def main():
                     errs = [abs(x["w"][i][0]) for x in seg]
                     us = [abs(x["w"][i][1]) for x in seg]
                     stuck = sum(1 for x in seg if abs(x["w"][i][2]) < 25 and abs(x["w"][i][0]) > 4 and x["moving"])
-                    wheel.append(f"轮{i + 1} 误差峰 {max(errs) if errs else 0:3.0f} 输出峰 {max(us) if us else 0:.2f} 卡住 {stuck}")
-                name = ("上" if dy > 0 else "下") if a.axis == "y" else ("右" if dx > 0 else "左")
-                print(f"  {name}{D:g}: 总转 {total:+5.2f}°  " + "  ".join(f"{n} {v:+5.2f}°" for n, v in dturn.items())
-                      + f"   | 最大在[{worst}]: " + "; ".join(wheel), flush=True)
+                    wheel.append(f"wheel{i + 1} error peak {max(errs) if errs else 0:3.0f} output peak {max(us) if us else 0:.2f} stuck {stuck}")
+                name = ("U" if dy > 0 else "D") if a.axis == "y" else ("R" if dx > 0 else "L")
+                print(f"  {name}{D:g}: total turn {total:+5.2f}°  " + "  ".join(f"{n} {v:+5.2f}°" for n, v in dturn.items())
+                      + f"   | largest in [{worst}]: " + "; ".join(wheel), flush=True)
                 out.append({"dir": name, "heads": rel, "tel": tel, "phases": dturn, "total": total})
     finally:
         r.cmd("stop")
@@ -135,7 +135,7 @@ def main():
                 t = [o["total"] for o in out if o["dir"] == nm]
                 m = sum(t) / len(t)
                 sdv = (sum((x - m) ** 2 for x in t) / max(1, len(t) - 1)) ** 0.5
-                print(f"  {nm}: 转角 均值 {m:+.2f}°  标准差 {sdv:.2f}°  (n={len(t)})")
+                print(f"  {nm}: turn mean {m:+.2f}°  std dev {sdv:.2f}°  (n={len(t)})")
         path = os.path.join(ROOT, "logs", time.strftime("legprobe-%m%d-%H%M%S.json"))
         json.dump(out, open(path, "w"))
         print("log:", path)

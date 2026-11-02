@@ -55,7 +55,7 @@ def gpio_fault_status():
 def padded_envelope(frame, length, *, unicode=False):
     value = dict(frame)
     if unicode:
-        value["note"] = "电压é"
+        value["note"] = "\u7535\u538b\u00e9"
     payload = json.dumps(value, ensure_ascii=not unicode, separators=(",", ":"))
     size = len(payload.encode("utf-8"))
     if size > length:

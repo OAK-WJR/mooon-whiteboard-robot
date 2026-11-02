@@ -1,27 +1,27 @@
 /**
- * WhiteBoardBot 主固件 — ESP32 自主控制 (无 ROS)
+ * WhiteBoardBot main firmware — ESP32 autonomous control (no ROS)
  *
- * ESP32 自己做: 路径规划 + 循线 + FF/PID。上位机 (scripts/whiteboard_app.py)
- * 只通过 WiFi UDP 发目标区域 / 位置校正, 并接收状态回传。
+ * The ESP32 does it all: path planning + path following + FF/PID. The host PC (scripts/whiteboard_app.py)
+ * only sends target areas / position corrections over WiFi UDP and receives status reports.
  *
- * 双任务: controlTask(50Hz 控制) + commTask(WiFi 收发)。C6 两者都在 Core0。
- * loop() 跑一个串口调参控制台 —— 运行时改 PID/速度/前瞻, 无需重新烧录。
+ * Two tasks: controlTask (50Hz control) + commTask (WiFi send/receive). On the C6 both run on Core0.
+ * loop() runs a serial tuning console — change PID/speed/lookahead at runtime without reflashing.
  *
- * 串口命令 (115200, 行结束发送):
- *   s              打印状态 JSON
- *   p              打印所有可调参数
- *   t              切换遥测流 (每轮 目标/实际/PWM, 10Hz)
- *   m <0|1|2|a>    选择调参电机 (a=全部, 默认全部)
- *   kp/ki/kd/kf/il <v>   设 P/I/D/前馈/积分限幅 (作用于选中电机)
- *   v <v>          最大线速度 m/s
- *   la <v>         前瞻距离 m
- *   gt <v>         到达容差 m
- *   kl <v>         循线比例增益
- *   area <x y w h spacing>   本地规划一条 zigzag 路径 (台架测试)
- *   pos <x y th>   校正里程计位姿
- *   go             开始执行当前路径
- *   x              停止
- *   h / ?          帮助
+ * Serial commands (115200, sent on line end):
+ *   s              print status JSON
+ *   p              print all tunable parameters
+ *   t              toggle telemetry stream (per wheel target/actual/PWM, 10Hz)
+ *   m <0|1|2|a>    select motor to tune (a=all, default all)
+ *   kp/ki/kd/kf/il <v>   set P/I/D/feedforward/integral limit (applies to selected motor)
+ *   v <v>          max linear speed m/s
+ *   la <v>         lookahead distance m
+ *   gt <v>         arrival tolerance m
+ *   kl <v>         path-following proportional gain
+ *   area <x y w h spacing>   plan a zigzag path locally (bench test)
+ *   pos <x y th>   correct odometry pose
+ *   go             start running the current path
+ *   x              stop
+ *   h / ?          help
  */
 
 #if defined(WBB_TOP_BOARD_R3) || defined(WBB_TOP_BOARD_PICO)
@@ -50,12 +50,12 @@ static_assert(std::is_same<decltype(Serial), HWCDC>::value, "KISS C6 Serial must
 static RobotController robot;
 static WifiComm wifi;
 
-// 串口调参状态
-static int  tune_motor = -1;       // -1=全部三轮
+// Serial tuning state
+static int  tune_motor = -1;       // -1=all three wheels
 static bool telemetry_on = false;
-static bool json_stream  = false;  // j: 串口流式输出位姿 JSON (USB 导航可视化)
+static bool json_stream  = false;  // j: stream pose JSON over serial (USB navigation visualization)
 
-// FreeRTOS 控制任务 (高优先级, 50Hz)
+// FreeRTOS control task (high priority, 50Hz)
 static void controlTask(void* param) {
     (void)param;
     TickType_t last_wake = xTaskGetTickCount();
@@ -67,24 +67,24 @@ static void controlTask(void* param) {
     }
 }
 
-// FreeRTOS 通信任务 (Core 0, WiFi + 状态回传)
+// FreeRTOS communication task (Core 0, WiFi + status reports)
 static void commTask(void* param) {
     (void)param;
     unsigned long last_status = 0;
 
     for (;;) {
-        // 接收命令
+        // Receive commands
         JsonDocument doc;
         if (wifi.receive(doc)) {
             robot.handleCommand(doc);
 
-            // 立即回传状态
+            // Report status right away
             JsonDocument resp;
             robot.fillStatus(resp);
             wifi.send(resp);
         }
 
-        // 定期状态回传
+        // Periodic status report
         if (millis() - last_status > (1000 / STATUS_RATE_HZ)) {
             JsonDocument status;
             robot.fillStatus(status);
@@ -92,26 +92,26 @@ static void commTask(void* param) {
             last_status = millis();
         }
 
-        vTaskDelay(pdMS_TO_TICKS(5));  // 200Hz 轮询
+        vTaskDelay(pdMS_TO_TICKS(5));  // 200Hz polling
     }
 }
 
 static void printHelp() {
-    Serial.println(F("命令: s=状态 p=参数 t=遥测 g=机读增益  m<0/1/2/a>=选电机"));
-    Serial.println(F("  kp/ki/kd/kf/il <v>=PID  v=速度 la=前瞻 gt=容差 kl=循线增益"));
-    Serial.println(F("  w <i> <v>=单轮定速(调参)  w x=停  area/pos/goto/go/x/h"));
+    Serial.println(F("Commands: s=status p=params t=telemetry g=machine-readable gains  m<0/1/2/a>=select motor"));
+    Serial.println(F("  kp/ki/kd/kf/il <v>=PID  v=speed la=lookahead gt=tolerance kl=path-following gain"));
+    Serial.println(F("  w <i> <v>=fixed speed on one wheel (tuning)  w x=stop  area/pos/goto/go/x/h"));
 }
 
-// 处理一行串口命令
+// Handle one line of serial command
 static void handleSerialLine(char* line) {
-    // 拆出命令字与参数串
+    // Split out the command word and the argument string
     char* cmd = strtok(line, " \t");
     if (!cmd) return;
-    char* args = strtok(nullptr, "");   // 余下全部作为参数
+    char* args = strtok(nullptr, "");   // everything left is the arguments
 
     auto arg1 = [&](float def) -> float { return args ? atof(args) : def; };
 
-    // --- 复用 handleCommand 的命令 (与 UDP 同一套逻辑) ---
+    // --- Commands reused from handleCommand (same logic as UDP) ---
     if (strcmp(cmd, "go") == 0) {
         JsonDocument d; d["cmd"] = "start"; robot.handleCommand(d);
     } else if (strcmp(cmd, "x") == 0 || strcmp(cmd, "stop") == 0) {
@@ -137,7 +137,7 @@ static void handleSerialLine(char* line) {
         d["cmd"] = "pos"; d["x"] = x; d["y"] = y; d["theta"] = th;
         robot.handleCommand(d);
     }
-    // --- 串口专属: 调参 / 诊断 ---
+    // --- Serial only: tuning / diagnostics ---
     else if (strcmp(cmd, "s") == 0) {
         JsonDocument status; robot.fillStatus(status);
         serializeJsonPretty(status, Serial); Serial.println();
@@ -145,14 +145,14 @@ static void handleSerialLine(char* line) {
         robot.printParams(Serial);
     } else if (strcmp(cmd, "t") == 0) {
         telemetry_on = !telemetry_on;
-        Serial.printf("遥测 %s\n", telemetry_on ? "ON" : "OFF");
+        Serial.printf("Telemetry %s\n", telemetry_on ? "ON" : "OFF");
     } else if (strcmp(cmd, "j") == 0) {
         json_stream = !json_stream;
-        Serial.printf("位姿JSON流 %s\n", json_stream ? "ON" : "OFF");
+        Serial.printf("Pose JSON stream %s\n", json_stream ? "ON" : "OFF");
     } else if (strcmp(cmd, "m") == 0) {
         if (args && (args[0] == 'a' || args[0] == 'A')) tune_motor = -1;
         else tune_motor = constrain((int)arg1(-1), -1, 2);
-        Serial.printf("选中电机: %s\n", tune_motor < 0 ? "全部" : (String("M") + tune_motor).c_str());
+        Serial.printf("Selected motor: %s\n", tune_motor < 0 ? "all" : (String("M") + tune_motor).c_str());
     } else if (strcmp(cmd, "kp") == 0) { robot.tunePid(tune_motor, 'p', arg1(0));
     } else if (strcmp(cmd, "ki") == 0) { robot.tunePid(tune_motor, 'i', arg1(0));
     } else if (strcmp(cmd, "kd") == 0) { robot.tunePid(tune_motor, 'd', arg1(0));
@@ -164,9 +164,9 @@ static void handleSerialLine(char* line) {
         Serial.printf("goal_tol=%.3f\n", vv);
     } else if (strcmp(cmd, "kl") == 0) { float vv = arg1(KP_LINEAR); robot.setLinearGain(vv);
         Serial.printf("kp_lin=%.2f\n", vv);
-    } else if (strcmp(cmd, "g") == 0) {          // 机读增益 (调参器)
+    } else if (strcmp(cmd, "g") == 0) {          // machine-readable gains (tuner)
         robot.printGains(Serial);
-    } else if (strcmp(cmd, "w") == 0) {          // 单轮定速: w <i> <v>  /  w x=停
+    } else if (strcmp(cmd, "w") == 0) {          // fixed speed on one wheel: w <i> <v>  /  w x=stop
         if (!args || args[0] == 'x' || args[0] == 'a' || args[0] == 'A') {
             robot.setWheelTest(-1, 0.0f);
         } else {
@@ -177,7 +177,7 @@ static void handleSerialLine(char* line) {
     } else if (strcmp(cmd, "h") == 0 || strcmp(cmd, "?") == 0) {
         printHelp();
     } else {
-        Serial.printf("未知命令 '%s' (h=帮助)\n", cmd);
+        Serial.printf("Unknown command '%s' (h=help)\n", cmd);
     }
 }
 
@@ -185,7 +185,7 @@ void setup() {
     Serial.begin(115200);
     delay(500);
     Serial.println(F("\n============================"));
-    Serial.println(F("  WhiteBoardBot 自主固件"));
+    Serial.println(F("  WhiteBoardBot autonomous firmware"));
     Serial.println(F("============================"));
 
     robot.begin();
@@ -194,7 +194,7 @@ void setup() {
     Serial.printf("UDP listen: %d, report: %d\n", UDP_LISTEN_PORT, UDP_REPORT_PORT);
     printHelp();
 
-    // ESP32-C6 只有 Core0；双核 ESP32 才使用 Core1。
+    // The ESP32-C6 only has Core0; only the dual-core ESP32 uses Core1.
     constexpr BaseType_t controlCore = portNUM_PROCESSORS > 1 ? 1 : 0;
     TaskHandle_t controlHandle = nullptr;
     const BaseType_t controlResult = xTaskCreatePinnedToCore(
@@ -206,13 +206,13 @@ void setup() {
         if (controlHandle) vTaskDelete(controlHandle);
         robot.stopMotors();
         Serial.println(F("FAULT TASK_INIT: control/communication task could not start"));
-        // 不进入能接收运动命令的 loop()；复位后重新初始化。
+        // Do not enter loop(), which can accept motion commands; reinitialize after reset.
         for (;;) delay(1000);
     }
 }
 
 void loop() {
-    // 行缓冲串口命令
+    // Line-buffered serial commands
     static char buf[64];
     static int len = 0;
     while (Serial.available()) {
@@ -224,14 +224,14 @@ void loop() {
         }
     }
 
-    // 遥测流 (50Hz, 供实时调参绘制阶跃响应)
+    // Telemetry stream (50Hz, for plotting step responses during live tuning)
     static unsigned long last_tele = 0;
     if (telemetry_on && millis() - last_tele >= 20) {
         robot.printTelemetry(Serial);
         last_tele = millis();
     }
 
-    // 位姿 JSON 流 (10Hz, 给 USB 串口导航可视化)
+    // Pose JSON stream (10Hz, for USB serial navigation visualization)
     static unsigned long last_json = 0;
     if (json_stream && millis() - last_json >= 100) {
         JsonDocument st; robot.fillStatus(st);

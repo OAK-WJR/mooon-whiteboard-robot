@@ -10,12 +10,12 @@ struct Waypoint {
 
 class PathPlanner {
 public:
-    // 生成 zigzag 覆盖路径
-    // area: 左下角 (ax,ay), 宽 w, 高 h, 行间距 spacing
-    // 返回路径点数
+    // Generate a zigzag coverage path
+    // area: bottom-left corner (ax,ay), width w, height h, row spacing spacing
+    // Returns the number of path points
     int generateZigzag(float ax, float ay, float w, float h, float spacing);
 
-    // 生成点到点直线路径 (当前点 -> 目标点), 返回路径点数 (2 或 0)
+    // Generate a straight point-to-point path (current point -> target point); returns the number of path points (2 or 0)
     int generateGoto(float x0, float y0, float x1, float y1);
 
     const Waypoint* getPath() const { return path_; }

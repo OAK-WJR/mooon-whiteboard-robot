@@ -4,10 +4,10 @@
 #include <driver/gpio.h>
 #endif
 
-// Arduino-ESP32 core 3.x 改了 LEDC 接口: 通道由内核自动分配, 一律按"引脚"操作。
-// core 2.x 仍需手工指定通道；写入接口不提供失败反馈。
+// Arduino-ESP32 core 3.x changed the LEDC API: channels are assigned by the core; everything works by "pin".
+// core 2.x still needs channels set by hand; the write API gives no failure feedback.
 
-// ---- MotorDriver (RZ7889-MS: FI + BI 双引脚控制) ----
+// ---- MotorDriver (RZ7889-MS: FI + BI two-pin control) ----
 
 void MotorDriver::begin(uint8_t fi_pin, uint8_t bi_pin,
                          uint8_t fi_channel, uint8_t bi_channel,
@@ -211,11 +211,11 @@ bool MotorDriver::setSpeed(int16_t speed) {
 #endif
     if (!ready_) { forceLow(); return false; }
     if (speed > 0) {
-        // 正转: FI=PWM, BI=LOW
+        // Forward: FI=PWM, BI=LOW
         if (!writeDuty(bi_pin_, bi_channel_, 0)) return writeFailed();
         if (!writeDuty(fi_pin_, fi_channel_, constrain(speed, 0, pwm_max_))) return writeFailed();
     } else if (speed < 0) {
-        // 反转: FI=LOW, BI=PWM
+        // Reverse: FI=LOW, BI=PWM
         if (!writeDuty(fi_pin_, fi_channel_, 0)) return writeFailed();
         if (!writeDuty(bi_pin_, bi_channel_, constrain(-int32_t(speed), 0, pwm_max_))) return writeFailed();
     } else {
@@ -225,7 +225,7 @@ bool MotorDriver::setSpeed(int16_t speed) {
 }
 
 bool MotorDriver::stop() {
-    // RZ7889-MS: FI=LOW, BI=LOW 是高阻滑行停止。
+    // RZ7889-MS: FI=LOW, BI=LOW is a high-impedance coast stop.
 #if defined(WBB_TOP_BOARD_PICO) || defined(WBB_TOP_BOARD_KISS_C6)
 #ifdef WBB_TOP_BOARD_KISS_C6
     if (!initialized_ || !kiss_c6::isMotorPair(fi_pin_, bi_pin_)) return false;
@@ -251,7 +251,7 @@ bool MotorDriver::stop() {
 // ---- TriMotorDriver (3x RZ7889-MS) ----
 
 void TriMotorDriver::begin() {
-    // 每个 RZ7889 需要 2 个 LEDC 通道 (FI + BI)
+    // Each RZ7889 needs 2 LEDC channels (FI + BI)
     // Motor0: channel 0 (FI), channel 1 (BI)
     motors_[0].begin(MOTOR0_FI_PIN, MOTOR0_BI_PIN,
                      0, 1, PWM_FREQUENCY, PWM_RESOLUTION);

@@ -82,18 +82,18 @@ def main():
     gain = float(next((a.split("=")[1] for a in sys.argv if a.startswith("--gain=")), 1.0))
     if gain != 1.0:  # damped update: move only part of the way (noisy residuals)
         new = {k: model[k] + gain * (new[k] - model[k]) for k in KEYS}
-        print(f"阻尼: 只修正 {gain:.0%}")
-    print("每个方向的残差（均值, 标准差）:")
+        print(f"Damping: correcting only {gain:.0%}")
+    print("Residuals per direction (mean, std dev):")
     for k, v in rep.items():
         print(f"  {k:5s}", {kk: (round(a, 4), round(b, 4)) for kk, (a, b) in v.items()})
-    print("旧参数:", {k: round(model[k], 4) for k in KEYS})
-    print("新参数:", {k: round(new[k], 4) for k in KEYS})
+    print("Old parameters:", {k: round(model[k], 4) for k in KEYS})
+    print("New parameters:", {k: round(new[k], 4) for k in KEYS})
     if "--apply" in sys.argv:
         from bench import Robot
         r = Robot()
         ack = r.cmd("slip", **{k: new[k] for k in KEYS})
-        print("写入:", ack.get("ok"), ack.get("error"))
-        print("小车现在:", r.status()["slip"])
+        print("Written:", ack.get("ok"), ack.get("error"))
+        print("Robot now:", r.status()["slip"])
     json.dump(new, open(path.replace(".json", "-refit.json"), "w"), indent=1)
 
 

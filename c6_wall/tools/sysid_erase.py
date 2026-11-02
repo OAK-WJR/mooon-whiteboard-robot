@@ -47,16 +47,16 @@ def wait_still(r, trk, timeout=40):
     time.sleep(0.3)
     while time.time() < end:
         if trk.out:
-            raise SystemExit(f"车中心 ({trk.out[0]:.1f}, {trk.out[1]:.1f}) 出了安全范围，已暂停")
+            raise SystemExit(f"Robot center ({trk.out[0]:.1f}, {trk.out[1]:.1f}) left the safe area; paused")
         s = r.status()
         if s["mode"] != "active":
-            raise SystemExit(f"小车不在保持状态: {s['mode']} {s['fault']}")
+            raise SystemExit(f"Robot is not holding: {s['mode']} {s['fault']}")
         if s["src"] == "none" and not s["moving"]:
             time.sleep(0.5)  # let the chassis settle
             return r.status()
         time.sleep(0.1)
     r.cmd("pause")
-    raise SystemExit("移动超时，已停下")
+    raise SystemExit("Move timed out; stopped")
 
 
 def odom_board(s):
@@ -73,7 +73,7 @@ def measure(rec, H, n=7):
 def move(r, trk, dx, dy, speed, accel):
     ack = r.cmd("move", x=dx / 100, y=dy / 100, speed=speed, accel=accel)
     if not ack.get("ok"):
-        raise SystemExit(f"move 被拒绝: {ack.get('error')}")
+        raise SystemExit(f"move rejected: {ack.get('error')}")
     return wait_still(r, trk, timeout=15 + math.hypot(dx, dy) / (100 * speed) * 3)
 
 
@@ -113,7 +113,7 @@ def run_motion(args, r, rec, trk, H):
     c = args.centre
     tests = []
     for mode in args.modes:
-        print(f"\n== {'开环（只发 move）' if mode == 'open' else '实时相机校正（fix）'}", flush=True)
+        print(f"\n== {'Open loop (move only)' if mode == 'open' else 'Live camera correction (fix)'}", flush=True)
         # Re-zero so the first fix does not yank the robot by the drift collected so far.
         trk.fix = False
         v = square_up(r, rec, trk, H)
@@ -152,12 +152,12 @@ def run_motion(args, r, rec, trk, H):
                              "wander": wander(trk.since(t0 + 0.2), (a["x"], a["y"]), cmd),
                              "turn": dturn(a["heading"], b["heading"]), "time": dt}
                         tests.append(t)
-                        print(f"  {mode:4s} {d:4.1f} cm → {heading:3d}°: 走了 {100 * t['along']:5.1f}%  "
-                              f"方向偏 {t['dir_err_deg']:+5.1f}°  终点误差 {t['end_err']:.2f} cm  "
-                              f"中途偏离 {t['wander']:.2f} cm  车头 {t['turn']:+.1f}°", flush=True)
+                        print(f"  {mode:4s} {d:4.1f} cm → {heading:3d}°: moved {100 * t['along']:5.1f}%  "
+                              f"dir err {t['dir_err_deg']:+5.1f}°  end err {t['end_err']:.2f} cm  "
+                              f"wander {t['wander']:.2f} cm  turn {t['turn']:+.1f}°", flush=True)
                         if (d >= 4 and t["along"] < 0.3) or t["along"] > 1.8 or abs(t["turn"]) > 12:
                             r.cmd("pause")
-                            raise SystemExit("这一步和命令差太多，已停下查看")
+                            raise SystemExit("This step is too far from the command; stopped to check")
     trk.fix = False
     return tests
 
@@ -175,7 +175,7 @@ def summarize_motion(tests):
                          "dir_err_abs_deg": float(np.mean([abs(t["dir_err_deg"]) for t in g])),
                          "end_err_cm": m("end_err"), "end_err_max_cm": max(t["end_err"] for t in g),
                          "wander_cm": m("wander"), "turn_abs_deg": float(np.mean([abs(t["turn"]) for t in g]))})
-    print("\n模式   距离  次数  走了%(最少)   方向偏|°|  终点误差 平均/最大 cm  中途偏离 cm  车头|°|")
+    print("\nmode  dist    n   moved% (min)   dir|°|  end err mean/max cm     wander cm   turn|°|")
     for w in rows:
         print(f"{w['mode']:5s} {w['dist']:4.1f}  {w['n']:3d}   {w['along_pct']:5.1f} ({w['along_min_pct']:5.1f})"
               f"   {w['dir_err_abs_deg']:5.1f}      {w['end_err_cm']:5.2f} / {w['end_err_max_cm']:5.2f}"
@@ -184,10 +184,10 @@ def summarize_motion(tests):
     for t in tests:
         if t["dist"] == max(x["dist"] for x in tests):
             by_dir.setdefault((t["mode"], t["dir"]), []).append(t)
-    print("\n最长距离按方向（0°=右，90°=上）：")
+    print("\nLongest distance by direction (0°=right, 90°=up):")
     for (mode, ang), g in sorted(by_dir.items()):
-        print(f"  {mode:5s} {ang:3d}°: 走了 {100 * np.mean([t['along'] for t in g]):5.1f}%  "
-              f"方向偏 {np.mean([t['dir_err_deg'] for t in g]):+5.1f}°  终点误差 {np.mean([t['end_err'] for t in g]):.2f} cm")
+        print(f"  {mode:5s} {ang:3d}°: moved {100 * np.mean([t['along'] for t in g]):5.1f}%  "
+              f"dir err {np.mean([t['dir_err_deg'] for t in g]):+5.1f}°  end err {np.mean([t['end_err'] for t in g]):.2f} cm")
     return rows
 
 
@@ -219,7 +219,7 @@ def run_erase(args, r, rec, trk, H):
     goto(r, rec, trk, H, (x0, y0), args.speed, args.accel, tol=0.5)
     square_up(r, rec, trk, H)
     shots = [(still_image(rec), measure(rec, H))]
-    print(f"起点 ({shots[0][1]['x']:.1f}, {shots[0][1]['y']:.1f})，线长 {L:.1f} cm", flush=True)
+    print(f"Start ({shots[0][1]['x']:.1f}, {shots[0][1]['y']:.1f}), line length {L:.1f} cm", flush=True)
     passes = []
     for k in range(args.passes):
         fwd = k % 2 == 0
@@ -238,8 +238,8 @@ def run_erase(args, r, rec, trk, H):
                        "track_off_mean": float(np.mean(off)) if off else None,
                        "track_off_max": float(np.max(np.abs(off))) if off else None,
                        "end_err": math.hypot(b["x"] - tgt[0], b["y"] - tgt[1])})
-        print(f"  第 {k + 1} 遍: 车中心偏离线 平均 {passes[-1]['track_off_mean'] or 0:+.2f} cm，"
-              f"最大 {passes[-1]['track_off_max'] or 0:.2f} cm；终点误差 {passes[-1]['end_err']:.2f} cm", flush=True)
+        print(f"  Pass {k + 1}: robot center off the line mean {passes[-1]['track_off_mean'] or 0:+.2f} cm, "
+              f"max {passes[-1]['track_off_max'] or 0:.2f} cm; end err {passes[-1]['end_err']:.2f} cm", flush=True)
     trk.fix = False
 
     # Profile across the line, only where no photo has the robot body over it.
@@ -255,7 +255,7 @@ def run_erase(args, r, rec, trk, H):
         vis &= np.hypot(X - p["x"], Y - p["y"]) > args.robot_radius
     vis_len = float(np.ptp(s_al[vis])) if vis.any() else 0.0
     if vis_len < 2:
-        raise SystemExit("线太短：车身挡住了整段，换一条更长的线（至少 26 cm）")
+        raise SystemExit("Line too short: the robot body covers all of it; use a longer line (at least 26 cm)")
     bins = np.arange(-args.band, args.band + 1e-6, 0.25)
     idx = np.digitize(s_off[vis], bins) - 1
     prof = []
@@ -268,8 +268,8 @@ def run_erase(args, r, rec, trk, H):
             row[f"px{k}"] = int(np.count_nonzero(v > 22))
         prof.append(row)
     tot0 = sum(p["ink0"] for p in prof) or 1.0
-    print(f"\n可见的一段长 {vis_len:.1f} cm。离线距离 vs 剩下的墨（第 0 遍 = 擦之前 = 100%）：")
-    print("  偏移 cm   " + "  ".join(f"第{k}遍" for k in range(len(maps))))
+    print(f"\nVisible segment length {vis_len:.1f} cm. Distance from the line vs. ink left (pass 0 = before erasing = 100%):")
+    print("  offset cm   " + "  ".join(f"pass{k}" for k in range(len(maps))))
     for p in prof:
         if abs(p["off"]) <= args.band and p["ink0"] > 0.003 * tot0:
             print(f"  {p['off']:+6.2f}   " + "  ".join(f"{100 * p[f'ink{k}'] / p['ink0']:5.0f}%" for k in range(len(maps))))
@@ -278,7 +278,7 @@ def run_erase(args, r, rec, trk, H):
         sel = [p for p in prof if abs(p["off"]) <= half]
         i0 = sum(p["ink0"] for p in sel) or 1.0
         summary[half] = [sum(p[f"ink{k}"] for p in sel) / i0 for k in range(len(maps))]
-    print("\n线两侧 ±x cm 范围里剩下的墨：")
+    print("\nInk left within ±x cm on both sides of the line:")
     for half, v in summary.items():
         print(f"  ±{half:4.2f} cm: " + "  ".join(f"{100 * q:5.1f}%" for q in v))
 
@@ -321,7 +321,7 @@ def main():
     args.centre = tuple(float(v) for v in args.centre.split(","))
     if args.what == "erase":
         if not args.line:
-            raise SystemExit("erase 需要 --line x0,y0,x1,y1")
+            raise SystemExit("erase needs --line x0,y0,x1,y1")
         args.line = tuple(float(v) for v in args.line.split(","))
 
     cfg = vision.config()
@@ -330,7 +330,7 @@ def main():
     pts = [args.centre] if args.what == "motion" else [args.line[:2], args.line[2:]]
     for p in pts:
         if not (box[0] <= p[0] <= box[1] and box[2] <= p[1] <= box[3]):
-            raise SystemExit(f"({p[0]}, {p[1]}) 离边框不到 {MARGIN} cm")
+            raise SystemExit(f"({p[0]}, {p[1]}) is less than {MARGIN} cm from the frame")
 
     r = Robot()
     if r.status()["mode"] != "active":
@@ -348,7 +348,7 @@ def main():
         img = rec.frame()
         H = vision.surface_homography(img, cfg)
         if H is None:
-            raise SystemExit("找不到四个角的红胶带")
+            raise SystemExit("Cannot find the red tape on the four corners")
         rec.H, rec.box = H, box
         trk = Tracker(rec, H, box)
         start = square_up(r, rec, trk, H)
@@ -361,7 +361,7 @@ def main():
             res, pic = run_erase(args, r, rec, trk, H)
             log.update(res)
             cv2.imwrite(base + ".jpg", pic)
-            print("图:", base + ".jpg")
+            print("Image:", base + ".jpg")
         log["fixes"] = {"sent": trk.sent, "rejected": trk.rejected}
     finally:
         r.cmd("pause")
@@ -369,7 +369,7 @@ def main():
             trk.close()
         rec.close()
         json.dump(log, open(base + ".json", "w"), indent=1, ensure_ascii=False, default=float)
-        print("记录:", base + ".json", "\n录像:", base + ".mp4")
+        print("Record:", base + ".json", "\nVideo:", base + ".mp4")
 
 
 if __name__ == "__main__":

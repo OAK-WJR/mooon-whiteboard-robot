@@ -134,7 +134,8 @@ python3 control_tests/verify_kiss_c6.py   # pins vs EasyEDA netlist, host-side t
 | [`c6_selftest/`](c6_selftest), [`testboard_selftest/`](testboard_selftest), [`c6-test/`](c6-test), [`usb_diagnostics/`](usb_diagnostics) | Bring-up and diagnostic firmware | archived |
 | [`third_party/`](third_party) | Patched copy of Espressif's ESP-IDF I2C driver (Apache-2.0) | |
 
-Many September notes are in Chinese. Some notes in archived folders link to raw
+Many September notes were written in Chinese at the time and translated into
+English in November 2026. Some notes in archived folders link to raw
 reports, previews or review files that are only in the full-history
 repository.
 
@@ -190,7 +191,8 @@ and tuned it:**
   identification, erasing, drawing, demo cutting); most of the schematic clean-up,
   routing and checks of the unbuilt `top_board_v2_logic` board in EasyEDA
   from my requirements (Oct 27–30), starting from the Codex KiCad draft
-  below; its review firmware and tests (Oct 2026).
+  below; its review firmware and tests (Oct 2026); translating the Chinese
+  comments, notes, logs and web pages into English (Nov 2026).
 - **OpenAI Codex:** the September top-board explorations (KiCad, never built)
   and the September firmware in `c6_drive/` (Wi-Fi driving, web page,
   calibration, system ID, MuJoCo simulation).

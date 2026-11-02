@@ -1,40 +1,40 @@
-# 电池选型与供电改版 — 2026-09-07
+# Battery selection and power redesign — 2026-09-07
 
-> **2026-10-28 起已被取代：** 当前板 `top_board_v2_logic`（EasyEDA）在板上用 IP2326 给 2S 电池 USB-C 充电，2026-10-29 又去掉 CH343G、改用 C6 原生 USB，见 [hardware/README.md](../README.md)。下文的外置充电及“顶板不充电”是 2026-09 记录。
+> **Superseded since 2026-10-28:** the current board `top_board_v2_logic` (EasyEDA) charges the 2S battery over USB-C on the board with an IP2326, and on 2026-10-29 the CH343G was removed in favor of the C6's native USB; see [hardware/README.md](../README.md). The external charging and "the top board does not charge" below are records from 2026-09.
 
-**最新要求：用户已同意外置充电，当前依据为 [低成本顶板简化方案](jlc_budget_6v/KISS_SCOPE.md)及 [外置充电配套](jlc_budget_6v/external_charging/README.md)。新顶板取消板上充电、均衡及车载充电口。以下成品模块、R3、板上 USB 充电和 12V 兼容内容均为历史记录，不再作为当前要求。**
+**Latest requirement: the user has agreed to external charging; the current basis is the [low-cost top board simplification plan](jlc_budget_6v/KISS_SCOPE.md) and the [external charging kit](jlc_budget_6v/external_charging/README.md). The new top board drops on-board charging, balancing and the on-robot charging port. The ready-made module, R3, on-board USB charging and 12V compatibility content below are all historical records and are no longer current requirements.**
 
-用户已选择 **GAONENG GNB8502S80A：2S 7.4V、850mAh、80C、XT30**，并要求解决充电、采购成本、Amazon 可购性及 PCB 电池固定问题。新版电路围绕这块电池设计；它尚未通过整机放行，也没有下单。
+The user has chosen the **GAONENG GNB8502S80A: 2S 7.4V, 850mAh, 80C, XT30**, and asked to solve charging, purchase cost, Amazon availability and fixing the battery to the PCB. The new circuit is designed around this battery; it has not passed whole-robot release, and has not been ordered.
 
-厂家规格：60 × 30 × 16 mm，56 ± 2 g，标称能量 6.29 Wh，XT30 放电接口。官网当前页面为多件包装，价格不能误当单块价格。[厂家产品页](https://www.gaoneng.shop/products/gaoneng-gnb-2s-7.4v-850mah-80c-xt30-lipo-battery)。
+Manufacturer specs: 60 × 30 × 16 mm, 56 ± 2 g, nominal energy 6.29 Wh, XT30 discharge connector. The manufacturer's current page is for a multi-pack, so its price must not be mistaken for a single-battery price. [Manufacturer product page](https://www.gaoneng.shop/products/gaoneng-gnb-2s-7.4v-850mah-80c-xt30-lipo-battery).
 
-本轮成本复查时，厂家同一型号页面明确列出充电倍率 **1C–5C**。这更新了此前未确认倍率的信息，但不是本板可提供的电流：现有 R3 仅有低电流 USB 输入稿，充电使能 R503 不装，逐节保护和互锁仍未完成。没有据此提高充电设定或授权实际充电；温度范围、最高逐节电压、低电压恢复及实际电池状态仍需分别确认。
+During this round's cost re-check, the manufacturer's page for the same model clearly lists a charge rate of **1C–5C**. This updates the earlier information where the rate was unconfirmed, but it is not the current this board can provide: the existing R3 only has a low-current USB input draft, the charge enable R503 is not fitted, and per-cell protection and interlocks are still not done. The charge setting was not raised and actual charging was not authorized on this basis; the temperature range, maximum per-cell voltage, low-voltage recovery and actual battery state still need to be confirmed separately.
 
-原候选为用户提供标题中的四块独立 1S 3.7V、2000mAh、1C、PH2.0 带保护电池。按标题的 1C 放电标识计算，每块约 2A、标称 7.4Wh。没有获得该电池厂家规格书，连续/脉冲定义、保护截止电流、线径与正负极均未确认。若假定升压效率 85%，单块在 3.7V、2A 下只能提供约 6.29W：6V 端约 1.05A，12V 端约 0.52A，且还未扣除逻辑电源；这不是实测结果。[C 倍率定义](https://learn.sparkfun.com/tutorials/what-is-a-battery/all?print=1)。
+The original candidate was the four separate 1S 3.7V, 2000mAh, 1C, PH2.0 protected batteries in the listing title the user provided. Using the title's 1C discharge marking, each is about 2A and nominally 7.4Wh. No manufacturer datasheet was obtained for this battery; the continuous/pulse definitions, protection cutoff current, wire gauge and polarity were not confirmed. Assuming 85% boost efficiency, one cell at 3.7V and 2A can only provide about 6.29W: about 1.05A at 6V and about 0.52A at 12V, before subtracting the logic supply; this is not a measured result. [C-rate definition](https://learn.sparkfun.com/tutorials/what-is-a-battery/all?print=1).
 
-2S 850mAh 的能量约为原候选的 85%，不是因 850 小于 2000 就只有 43% 的续航。电机负载、转换效率、截止电压尚未知，不能承诺具体运行分钟数。80C 是厂家标称值，不能把换算出的 68A 当作连接器、保护或 PCB 可连续承受的电流。
+The 2S 850mAh has about 85% of the original candidate's energy; it does not have only 43% of the run time just because 850 is less than 2000. Motor load, conversion efficiency and cutoff voltage are not yet known, so no specific run time in minutes can be promised. 80C is the manufacturer's rating; the 68A it works out to must not be taken as a current the connector, protection or PCB can carry continuously.
 
-选择方向：小型、标准 4.2V/节的 2S 动力电池，避免仅为容量采用过长的电池。当前按三台 6V GA12-N20 编码器电机选型；此前 MECCANIXITY 12V 型号仅保留为历史参考。确切链接和底板复用边界见 [底板与电机复查](bottom_board_review/README.md)。准确堵转电流和编码器线束定义仍待确认，不借用通用 N20 的电流参数。
+Selection direction: a small 2S power battery with the standard 4.2V/cell, avoiding an overly long battery chosen only for capacity. The current selection is for three 6V GA12-N20 encoder motors; the earlier MECCANIXITY 12V model is kept only as a historical reference. For the exact links and the limits of reusing the base board, see [base board and motor review](bottom_board_review/README.md). The exact stall current and encoder harness definition are still to be confirmed; generic N20 current parameters are not borrowed.
 
-必须完成的电路适配：
+Circuit changes that must be made:
 
-- 新版电池输入与保护按 2S 工作电压设计；使用匹配的 XT30 接口并核对接插件视图和极性。当前 R2 的 BAT 1S、TP4056 与 ME6217 供电路径 **不能直接接这块 2S 电池**。
-- 固定 6V 由成品降压模块产生，不把电池电压直接接 6V 电机；模块选择、默认停机、限流和回生处理仍需定型。
-- USB 充电必须改成 2S 充电方案，并具备逐节电压检测、均衡和保护；该动力电池的内置 BMS/保护能力未被厂家页面证实，不能沿用原候选“集成保护”的描述。
-- 主逻辑电源需具备 USB/电池供电切换与断电隔离；独立 USB 恢复桥已整合到 R3 原理图审查稿，电气裕量和实板时序尚未完成验证。
-- 同一 USB-C 接口承担数据与充电。电脑 USB、未完成枚举、挂起、Type-C 不同电流公告必须分别处理，不把所有 USB 电源一律按 3A 使用。
-- 成本统计包括电池、板上充电与保护、USB 恢复、电池与均衡连接器、线材及绑带/支架；标明包装数量，区分元件参考价与整板装配成本。
-- 当前顶板外廓包围盒为 62.411 × 54.229 mm，形状为截角三角形。60 × 30 mm 的电池不能凭包围盒尺寸就宣称能完整放进板框内；安装位置、厚度、线材弯曲空间及天线距离待核实。
-- 固定方案应有绝缘托面和受控夹紧力，避免绑带压在元件、焊点和软包电池棱角上；槽孔必须核对铜层、板边余量、配对接口及天线区域。
+- The new battery input and protection are designed for the 2S working voltage; use a matching XT30 connector and check the connector view and polarity. The current R2's BAT 1S, TP4056 and ME6217 power path **cannot be connected directly to this 2S battery**.
+- A fixed 6V is produced by a ready-made buck module, and the battery voltage is not connected directly to the 6V motors; module choice, default shutdown, current limiting and regeneration handling still need to be finalized.
+- USB charging must change to a 2S charging solution, with per-cell voltage sensing, balancing and protection; this power battery's built-in BMS/protection is not confirmed by the manufacturer's page, so the original candidate's "integrated protection" description cannot be reused.
+- The main logic supply needs USB/battery power switching and power-off isolation; a separate USB recovery bridge has been integrated into the R3 schematic review draft, and its electrical margins and real-board timing have not been verified.
+- The same USB-C port handles data and charging. Computer USB, enumeration not finished, suspend, and different Type-C current advertisements must each be handled; not all USB power is treated as 3A.
+- The cost count includes the battery, on-board charging and protection, USB recovery, battery and balance connectors, wires, and straps/brackets; mark pack quantities, and separate component reference prices from whole-board assembly cost.
+- The current top board's outline bounding box is 62.411 × 54.229 mm, and the shape is a truncated triangle. A 60 × 30 mm battery cannot be claimed to fit fully inside the board outline from the bounding box size alone; mounting position, thickness, wire bending space and antenna distance are to be verified.
+- The fixing method should have an insulating support surface and controlled clamping force, so straps do not press on components, solder joints or the corners of the pouch battery; slots must be checked against copper layers, board edge margins, mating connectors and the antenna area.
 
-未选方案：Gens ace 2S 2200mAh 60C 硬壳型号长 92.8 mm、重约 107g，过长；Tattu 3S 850mAh 75C 为 60 × 30 × 23 mm、约 80g，较厚较重；Tattu 2S 650mAh 75C 为 57 × 31 × 12 mm、约 43g，可作为更薄但能量较小的备选。相关厂家页面分别为 [Gens ace](https://www.genstattu.com/gens-ace-2200mah-2s-60c-7-4v-hardcase-g-tech-lipo-battery-pack-with-xt60-plug/)、[Tattu 3S](https://genstattu.com/tattu-850mah-11-1v-75c-3s1p-lipo-battery-pack-with-xt30-plug.html)、[Tattu 2S](https://www.tattuworld.com/products/tattu-classic-650mah-2s1p-7-4v-75c-fpv-lipo-battery.html)。
+Options not chosen: the Gens ace 2S 2200mAh 60C hard-case model is 92.8 mm long and about 107g, too long; the Tattu 3S 850mAh 75C is 60 × 30 × 23 mm and about 80g, thicker and heavier; the Tattu 2S 650mAh 75C is 57 × 31 × 12 mm and about 43g, and can serve as a thinner backup with less energy. The manufacturer pages are [Gens ace](https://www.genstattu.com/gens-ace-2200mah-2s-60c-7-4v-hardcase-g-tech-lipo-battery-pack-with-xt60-plug/), [Tattu 3S](https://genstattu.com/tattu-850mah-11-1v-75c-3s1p-lipo-battery-pack-with-xt30-plug.html), [Tattu 2S](https://www.tattuworld.com/products/tattu-classic-650mah-2s1p-7-4v-75c-fpv-lipo-battery.html).
 
-该选择不改变 R2 文件和制造未放行状态。待上述电机确切版本的堵转电流和安装空间确认后再做最终电池/保护/功率级匹配。
+This choice does not change the R2 files or their not-released-for-manufacturing status. The final battery/protection/power stage match will be made after the stall current and mounting space of the exact motor version above are confirmed.
 
-后续核对结果：
+Follow-up check results:
 
-- [采购记录](procurement/SOURCING.md)：GNB 官网显示四块装 $34.40，折合 $8.60/块；未核实确切型号的 Amazon 可购现货。已保留一个 Tattu 标准 2S 的 Amazon 目录候选，没有擅自换电池。
-- [成本更新](procurement/R3_COST_UPDATE.md)：已核价的 16 颗核心芯片和两颗电感共 $37.92，加计划中的保护芯片 $5.63 和一块电池摊价 $8.60，参考小计 $52.15。尚缺全部器件、电机电源、PCB、装配、固定件及运税，不是整板报价。
-- [安装研究](mounting/MOUNTING_REVIEW.md)：名义 60×30 mm 电池在任何平面旋转角度都无法完全收进现有三角板框。采用抬高绝缘托架的方向，当前投影示例最大外伸约 9.62 mm；实际机壳空间与高度待确认。
-- 已生成独立的 [R3 机械布局底稿](kicad/r3_mechanical/README.md)，包含四个托架孔和四层禁布空间，保持原板框和 19 个对接引脚。它尚未布线，不是改好的完整电路。
-- 当前充电实现方向为 BQ25798＋独立逐节保护/均衡，供电和保护仍需完整集成；[初步充电研究](charging_research/CHARGING_DECISION.md) 保留 BQ25883 比较及保护限制。USB 插入默认停止电机，但允许明确授权、有时限的 USB 电机台架测试；测试时由受保护电池供电，并正向禁止充电。
+- [Procurement record](procurement/SOURCING.md): the GNB official site shows a four-pack at $34.40, or $8.60 each; Amazon stock of the exact model was not verified. A standard Tattu 2S Amazon catalog candidate is kept; the battery was not swapped without permission.
+- [Cost update](procurement/R3_COST_UPDATE.md): the 16 priced core chips and two inductors total $37.92; adding the planned protection chip at $5.63 and one battery's share at $8.60 gives a reference subtotal of $52.15. The full parts list, motor power, PCB, assembly, fixings, shipping and tax are still missing; this is not a whole-board quote.
+- [Mounting study](mounting/MOUNTING_REVIEW.md): a nominal 60×30 mm battery cannot fit fully inside the existing triangular board outline at any in-plane rotation angle. The chosen direction is a raised insulating bracket; in the current projection example the max overhang is about 9.62 mm; the actual enclosure space and height are to be confirmed.
+- A separate [R3 mechanical layout draft](kicad/r3_mechanical/README.md) has been generated, with four bracket holes and four-layer keep-out areas, keeping the original board outline and 19 mating pins. It is not routed yet and is not a finished, modified circuit.
+- The current charging implementation direction is BQ25798 + separate per-cell protection/balancing, and power and protection still need full integration; the [initial charging research](charging_research/CHARGING_DECISION.md) keeps the BQ25883 comparison and protection limits. Plugging in USB stops the motors by default, but an explicitly authorized, time-limited USB motor bench test is allowed; during the test, power comes from the protected battery, and charging is actively inhibited.

@@ -47,7 +47,7 @@ wireless test. See [diagnostic deployment evidence](reports/school-wifi-diagnost
 
 ## Existing control page
 
-Connect to this robot's `WBB-C6-XXXX` hotspot and open `http://192.168.4.1/`. Use the new **Wi-Fi 网络** section in the original driving page. Choose personal password authentication or the school's PEAP / TTLS method. Enterprise configuration additionally requires username, optional outer identity, the officially specified authentication-server name and its official CA certificate in PEM format. The user enters the network's credentials and selects **保存并连接**. No school credentials have been read, received, guessed or submitted by the agent.
+Connect to this robot's `WBB-C6-XXXX` hotspot and open `http://192.168.4.1/`. Use the new **Wi-Fi network** section in the original driving page. Choose personal password authentication or the school's PEAP / TTLS method. Enterprise configuration additionally requires username, optional outer identity, the officially specified authentication-server name and its official CA certificate in PEM format. The user enters the network's credentials and selects **Save and connect**. No school credentials have been read, received, guessed or submitted by the agent.
 
 HTTP configuration is accepted only through the private robot hotspot, while disarmed, with fresh control telemetry and all wheels below 30 counts/s. Personal Wi-Fi can also be provisioned over local USB as described below. This keeps account/password submissions out of HTTP forms on a shared campus LAN. Profiles are saved as one versioned NVS blob. Usernames, passwords, outer identities and CA contents are not returned in status or saved in browser storage. Saved credential storage is ordinary NVS, not a claim of encrypted flash.
 

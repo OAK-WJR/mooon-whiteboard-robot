@@ -4,37 +4,37 @@
 #include <Arduino.h>
 
 /**
- * 单个直流电机驱动 (RZ7889-MS)
- * 双引脚控制: FI (正向输入) + BI (反向输入)
+ * Single DC motor driver (RZ7889-MS)
+ * Two-pin control: FI (forward input) + BI (reverse input)
  *
- * 正转: FI=PWM, BI=LOW
- * 反转: FI=LOW, BI=PWM
- * 滑行停止: FI=LOW, BI=LOW；RZ7889-MS 主动刹车为两脚 HIGH。
+ * Forward: FI=PWM, BI=LOW
+ * Reverse: FI=LOW, BI=PWM
+ * Coast stop: FI=LOW, BI=LOW; RZ7889-MS active braking is both pins HIGH.
  */
 class MotorDriver {
 public:
     MotorDriver() = default;
 
     /**
-     * 初始化电机引脚
-     * @param fi_pin    正向输入引脚 (FI)
-     * @param bi_pin    反向输入引脚 (BI)
-     * @param fi_channel ESP32 LEDC 通道 (FI 用)
-     * @param bi_channel ESP32 LEDC 通道 (BI 用)
-     * @param pwm_freq  PWM 频率
-     * @param pwm_res   PWM 分辨率 (bits)
+     * Initialize motor pins
+     * @param fi_pin    forward input pin (FI)
+     * @param bi_pin    reverse input pin (BI)
+     * @param fi_channel ESP32 LEDC channel (for FI)
+     * @param bi_channel ESP32 LEDC channel (for BI)
+     * @param pwm_freq  PWM frequency
+     * @param pwm_res   PWM resolution (bits)
      */
     void begin(uint8_t fi_pin, uint8_t bi_pin,
                uint8_t fi_channel, uint8_t bi_channel,
                uint32_t pwm_freq, uint8_t pwm_res);
 
     /**
-     * 设置电机速度
-     * @param speed -255 ~ +255, 正值正转, 负值反转, 0 停止
+     * Set motor speed
+     * @param speed -255 ~ +255, positive = forward, negative = reverse, 0 = stop
      */
     bool setSpeed(int16_t speed);
 
-    /** 滑行停止 (FI=LOW, BI=LOW) */
+    /** Coast stop (FI=LOW, BI=LOW) */
     bool stop();
 
     bool ready() const { return ready_; }
@@ -72,7 +72,7 @@ private:
 };
 
 /**
- * 三电机驱动管理 (3x RZ7889-MS)
+ * Three-motor driver manager (3x RZ7889-MS)
  */
 class TriMotorDriver {
 public:

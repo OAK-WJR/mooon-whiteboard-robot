@@ -1,17 +1,17 @@
-# 顶部电压采样的掉电检查
+# Power-off check of the top voltage sensing
 
-当前两路 120kΩ/10kΩ 分压及 100nF 滤波仍直接连接 C6 GPIO4/5。**尚未加入掉电隔离，也没有实际注入电流测试。** 本次将待解决条件量化，未把模拟开关直接加入板上 BOM。
+The current two 120kΩ/10kΩ dividers and 100nF filters still connect directly to C6 GPIO4/5. **No power-off isolation has been added yet, and there is no actual injection current test.** This check quantifies the conditions still to be solved; the analog switch was not added directly to the board BOM.
 
-后续已完成[开关两侧各 20kΩ 的具体候选与仿真](adc_isolation_review/README.md)：标称倍率保持 13，MCU 侧增加泄放，并把 100nF 留在开关之前。32 个解析组合和 6 个 ngspice 条件模型发现快速电源下降、滤波电容位置的缺口，因此尚未将候选加入主图。这些是通用模型，未使用芯片厂家的完整瞬态模型，也未获得实板掉电通过结论。
+Done later: [a specific candidate with 20kΩ on each side of the switch, and its simulation](adc_isolation_review/README.md): the nominal ratio stays 13, a bleed is added on the MCU side, and the 100nF stays before the switch. 32 analytic combinations and 6 ngspice condition models found gaps with a fast supply drop and with the filter capacitor position, so the candidate has not been added to the main drawing yet. These are generic models; the chip manufacturer's full transient model was not used, and no real-board power-off pass conclusion was obtained.
 
-在 MCU 引脚不加载分压器的计算条件下，计入电阻初始 ±1%，8.4V 输入对应采样点最高约 0.6582V；VMOT=6.2188V 时约 0.4873V。主控供电消失不会自动使这些外部输入消失。
+Under the calculation condition that the MCU pin does not load the divider, and counting the resistors' initial ±1%, an 8.4V input gives at most about 0.6582V at the sense point; at VMOT=6.2188V it is about 0.4873V. Losing the controller supply does not make these external inputs go away by itself.
 
-如果仅为敏感性分析而假设引脚被某通路钳在 0.3V，分压器仍可能分别提供约 38.48µA、20.12µA。**0.3V 是此算例的假设，既不是实测钳位特性，也不是厂商允许的注入电流。** C6 表 5-4 的 50nA 输入电流与 VDD+0.3V 条件列在 3.3V、25°C 的直流特性中，不能外推成 VDD=0 时的允许注入电流或绝对最大额定值。该手册没有在这些表中给出可用于本设计的掉电 Ioff 保证。[Espressif C6 v1.5 §5.1、§5.4](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf)。
+If, only for sensitivity analysis, the pin is assumed to be clamped at 0.3V by some path, the dividers could still supply about 38.48µA and 20.12µA respectively. **0.3V is an assumption of this example; it is neither a measured clamp characteristic nor an injection current the manufacturer allows.** The 50nA input current and VDD+0.3V conditions in C6 table 5-4 are listed in the DC characteristics at 3.3V and 25°C, and cannot be extrapolated to an allowed injection current at VDD=0 or to absolute maximum ratings. The manual gives no power-off Ioff guarantee in these tables that could be used for this design. [Espressif C6 v1.5 §5.1, §5.4](https://www.espressif.com/sites/default/files/documentation/esp32-c6_datasheet_en.pdf).
 
-作为一个具体解决方向，已检查 TI TMUX1511，尚未选入设计。它在 VDD<1.5V 时允许信号端 0–3.6V；VDD=0、源端 0–3.6V、漏端 0V 时，掉电漏电最大绝对值为 2µA。手册给出的最大 4µs 电源关断时间有明确的 1µs 电源下降、200Ω 负载及 15pF 电容条件，不能直接套用顶部板的掉电波形。[TI TMUX1511 Rev.B §5.3、§5.5、§5.7](https://www.ti.com/lit/ds/symlink/tmux1511.pdf)。
+As one specific solution direction, the TI TMUX1511 was checked; it has not been chosen for the design. It allows 0–3.6V on the signal pins when VDD<1.5V; with VDD=0, source 0–3.6V and drain 0V, the max absolute power-off leakage is 2µA. The max 4µs power-off time in the manual has explicit conditions of a 1µs supply drop, 200Ω load and 15pF capacitance, and cannot be applied directly to the top board's power-off waveform. [TI TMUX1511 Rev.B §5.3, §5.5, §5.7](https://www.ti.com/lit/ds/symlink/tmux1511.pdf).
 
-后续电路需要同时解决：隔离后 MCU 侧的泄放路径及分压负载变化、100nF 电容在掉电瞬间保留的电荷、主控和开关的实际供电下降过程，以及新增器件的成本。只把模拟开关串进当前图，不足以证明整个掉电过程合格。当前未选择该器件，未新增扩展料费用。[ADC 只读固件](ADC_READOUT.md)已实现，但不能据此确认掉电电气行为。
+The later circuit must solve all of these together: the bleed path on the MCU side after isolation and the change in divider load, the charge the 100nF capacitor keeps at the moment of power-off, the actual supply drop of the controller and the switch, and the cost of the new part. Only putting an analog switch in series in the current drawing is not enough to prove the whole power-off process passes. This part is not currently chosen, and no extended part fees were added. The [ADC read-only firmware](ADC_READOUT.md) is implemented, but it cannot confirm the power-off electrical behavior.
 
-[对应数值、条件与源文件哈希](verification/adc_power_off_review.json)。本检查是电路分析，不是开关芯片瞬态仿真、实物故障注入或板子稳定性通过结果。
+[The matching values, conditions and source file hashes](verification/adc_power_off_review.json). This check is circuit analysis, not a transient simulation of the switch chip, real fault injection, or a board stability pass result.
 
-ADC 注释更新后，原数值报告保留；电气参数未变的对应证据见[版本衔接](verification/adc_revision_evidence.json)。
+After the ADC comment update, the original numeric report is kept; the evidence that the electrical parameters did not change is in the [revision link](verification/adc_revision_evidence.json).

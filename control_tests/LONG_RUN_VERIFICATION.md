@@ -1,34 +1,34 @@
-# 长时间运行边界修正 — 2026-09-07
+# Long-run boundary fixes — 2026-09-07
 
-本轮修改了主运行固件的编码器计数、里程计输入检查和堵转冷却计时。PCB 仍为嘉立创中的 `motor_controller / top_board_v2_kicad_r2`，电源与实板验证尚未完成；没有烧录或启动电机。
+This round changed the main runtime firmware's encoder counting, odometry input checks and stall cooldown timing. The PCB is still `motor_controller / top_board_v2_kicad_r2` in EasyEDA; power and real-board verification are not done; nothing was flashed and no motor was started.
 
-## 缺陷与修正
+## Defects and fixes
 
-| 触发条件 | 原行为 | 修正后行为 |
+| Trigger | Old behavior | Behavior after fix |
 |---|---|---|
-| 编码器长期正转/反转到整数边界 | ISR 对有符号 `long` 加减，越界属于未定义行为；反向取反和差值也可能越界 | 内部使用 `uint32_t` 模运算；方向修正、对外有符号窗口和相邻采样差值均显式处理回绕 |
-| `Odometry::update` 收到 NaN 或无穷时间值 | NaN 污染轮速和位姿，并持续留在状态中 | 拒绝该次更新，保留位姿、轮速和上次有效计数基准 |
-| 堵转冷却的到期时间跨过 `millis()` 回绕，或恰为零 | 绝对时间比较及零哨兵失效；目标板可能提前重试 | 以固定 32 位开始时间计算经过时间，并用独立布尔值记录冷却状态 |
-| ISR 与读数/清零同时访问计数 | 只关闭当前核心中断，双核 ESP32 上不能构成完整互斥 | ISR、快照和清零共用 FreeRTOS 临界区；方向转换在临界区外进行 |
+| Encoder runs forward/reverse for a long time up to the integer limit | The ISR adds/subtracts on a signed `long`, and overflow is undefined behavior; sign reversal and differences can also overflow | Internally uses `uint32_t` modular arithmetic; direction correction, the signed window exposed to callers, and differences between adjacent samples all handle wraparound explicitly |
+| `Odometry::update` gets a NaN or infinite time value | NaN pollutes wheel speed and pose, and stays in the state | Rejects that update; keeps pose, wheel speed and the last valid count baseline |
+| Stall cooldown expiry time crosses the `millis()` wraparound, or is exactly zero | Absolute time comparison and the zero sentinel fail; the target board may retry early | Computes elapsed time from a fixed 32-bit start time, and records cooldown state with a separate boolean |
+| ISR and read/clear access the count at the same time | Only disables interrupts on the current core, which is not full mutual exclusion on the dual-core ESP32 | ISR, snapshot and clear share a FreeRTOS critical section; direction conversion happens outside the critical section |
 
-编码器遥测 `encoder_counts` 仍是方向校正后的有符号 32 位窗口，范围为 −2147483648 至 2147483647，累计越界后回绕，不是无限增长的总里程。轮速使用模差值；每两次有效采样间的净脉冲变化量绝对值必须小于 2³¹。主运行循环另有 100ms 延迟停机机制。新的计数处理不校准编码器 CPR、方向或电机参数，也不消除电气噪声。
+Encoder telemetry `encoder_counts` is still a direction-corrected signed 32-bit window, ranging from −2147483648 to 2147483647 and wrapping around after overflow; it is not a total distance that grows without limit. Wheel speed uses modular differences; the absolute net pulse change between two valid samples must be less than 2³¹. The main runtime loop also has a separate 100ms delayed-stop mechanism. The new count handling does not calibrate encoder CPR, direction or motor parameters, and does not remove electrical noise.
 
-采用模运算的依据是 C++ 对无符号整数和有符号溢出的不同规定；没有依赖超范围的无符号转有符号强转结果。[C++ 工作草案](https://eel.is/c++draft/basic.fundamental)
+The basis for modular arithmetic is that C++ has different rules for unsigned integers and for signed overflow; it does not rely on the result of casting an out-of-range unsigned value to signed. [C++ working draft](https://eel.is/c++draft/basic.fundamental)
 
-临界区做法依据已安装 ESP-IDF 5.5.4 的 `task.h` 与 Xtensa/RISC-V `portmacro.h`。官方文档明确说明关闭中断只作用于当前核心，SMP 共享数据应使用带 spinlock 的临界区；C6 单核对应实现仍使用其端口的临界区 API。[Espressif FreeRTOS 文档](https://docs.espressif.com/projects/esp-idf/en/v5.5.4/esp32/api-reference/system/freertos_idf.html#critical-sections)
+The critical-section approach is based on `task.h` and the Xtensa/RISC-V `portmacro.h` in the installed ESP-IDF 5.5.4. The official documentation states that disabling interrupts only affects the current core, and that SMP shared data should use critical sections with a spinlock; the matching implementation on the single-core C6 still uses its port's critical-section API. [Espressif FreeRTOS documentation](https://docs.espressif.com/projects/esp-idf/en/v5.5.4/esp32/api-reference/system/freertos_idf.html#critical-sections)
 
-## 复现与验证范围
+## Reproduction and verification scope
 
-修改前的结果保存在 [odometry_before.json](../hardware/top_board_v2/validation/reverification/odometry_before.json) 和 [stall_timing_before.json](../hardware/top_board_v2/validation/reverification/stall_timing_before.json)，均记录被测源码散列。计数溢出由 UBSAN 实际报告，非法时间值测试实际得到 NaN。桌面 `long` 为 64 位，ESP32 为 32 位：旧冷却逻辑在该桌面测试中表现为跨界后仍不重试；目标板到期加法先回绕，也可能提前重试。没有把桌面表现说成目标板实测。
+Results from before the change are saved in [odometry_before.json](../hardware/top_board_v2/validation/reverification/odometry_before.json) and [stall_timing_before.json](../hardware/top_board_v2/validation/reverification/stall_timing_before.json), both recording the hash of the source under test. Count overflow was actually reported by UBSAN, and the invalid-time test actually got NaN. Desktop `long` is 64-bit and ESP32's is 32-bit: in this desktop test the old cooldown logic showed up as never retrying after crossing the boundary; on the target board the expiry addition wraps first, and it may also retry early. The desktop behavior is not presented as a target-board measurement.
 
-新增测试执行实际 `odometry.cpp`、GPIO 中断回调及 `robot_controller.cpp` / `motor_driver.cpp`：
+New tests run the real `odometry.cpp`, GPIO interrupt callbacks and `robot_controller.cpp` / `motor_driver.cpp`:
 
-- 三个 ISR 计数器的正反向全范围回绕。
-- 18 个带方向修正的遥测边界，24 个正反转跨界轮速积分案例。
-- 通过注册的中断处理器输入 120,000 次模拟 GPIO 边沿，并检查轮速和复位。
-- 零、负数、NaN、无穷时间值，以及之后恢复有效更新。
-- 三路电机分别测试普通冷却、跨计时回绕、到期时间恰为零，共 9 个冷却案例；检查到期前保持停止、到期后原有重试策略生效，显式 stop 后不再恢复。
+- Full-range forward and reverse wraparound of the three ISR counters.
+- 18 telemetry boundaries with direction correction, and 24 wheel-speed integration cases crossing the boundary in forward and reverse.
+- 120,000 simulated GPIO edges fed through the registered interrupt handlers, checking wheel speed and reset.
+- Zero, negative, NaN and infinite time values, and recovery of valid updates afterward.
+- Normal cooldown, crossing the timer wraparound, and expiry time exactly zero, tested on each of the three motors, 9 cooldown cases in total; checks that it stays stopped before expiry, that the original retry policy takes effect after expiry, and that it does not resume after an explicit stop.
 
-执行 `.venv/bin/python control_tests/verify.py` 会运行完整套件及六个固件构建环境；每次生成 [software_verification.json](../hardware/top_board_v2/validation/reverification/software_verification.json)，以其当前散列和结果为准。ASAN/UBSAN 发现问题时直接令检查失败，不只在日志中告警。
+Running `.venv/bin/python control_tests/verify.py` runs the full suite and six firmware build environments; each run generates [software_verification.json](../hardware/top_board_v2/validation/reverification/software_verification.json), and its current hash and results are what count. When ASAN/UBSAN find a problem, the check fails outright instead of only warning in the log.
 
-这些测试在主机上模拟 GPIO、32 位时钟和互斥 API。它们不是 50 天实机耐久试验，也没有模拟 C6 中断延迟、双核调度、RF 共存、电机温升或真实电源切断。堵转的阈值和有限自动重试策略沿用原配置，尚未做热安全验收；板级启动限制仍保持 `BOARD_POWER_UNREVIEWED`。
+These tests simulate GPIO, the 32-bit clock and the mutex API on the host. They are not a 50-day real-hardware endurance test, and do not simulate C6 interrupt latency, dual-core scheduling, RF coexistence, motor temperature rise or real power cuts. The stall threshold and limited auto-retry policy keep the original configuration and have not passed thermal safety acceptance; the board-level startup limit stays `BOARD_POWER_UNREVIEWED`.

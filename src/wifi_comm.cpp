@@ -2,16 +2,16 @@
 
 void WifiComm::begin(const char* ssid, const char* pass) {
 #if !USE_WIFI
-    // USB 串口工作模式: 完全不碰 WiFi/UDP —— 不阻塞启动, 不刷 WiFiUdp 报错,
-    // 也消除 GPIO36/39(ENC1) 的射频噪声。命令走串口, 位姿走 'j' JSON 流。
+    // USB serial mode: never touch WiFi/UDP — startup doesn't block, no flood of WiFiUdp errors,
+    // and no RF noise on GPIO36/39 (ENC1). Commands go over serial, pose goes over the 'j' JSON stream.
     (void)ssid; (void)pass;
     WiFi.mode(WIFI_OFF);
-    Serial.println("WiFi 关闭 (USB 串口模式, USE_WIFI=0)");
+    Serial.println("WiFi off (USB serial mode, USE_WIFI=0)");
     return;
 #else
     WiFi.begin(ssid, pass);
     Serial.print("WiFi connecting");
-    // 非阻塞: 超时后继续运行, 不卡启动 (USB/串口模式无需 WiFi)
+    // Non-blocking: keep running after the timeout, don't hang startup (USB/serial mode needs no WiFi)
     unsigned long t0 = millis();
     while (WiFi.status() != WL_CONNECTED && millis() - t0 < 8000) {
         delay(250);
@@ -20,17 +20,17 @@ void WifiComm::begin(const char* ssid, const char* pass) {
     if (WiFi.status() == WL_CONNECTED) {
         Serial.printf("\nWiFi connected: %s\n", WiFi.localIP().toString().c_str());
     } else {
-        Serial.println("\nWiFi 未连接 (超时), 关射频走 USB — 消除 ENC1(GPIO36/39) RF 噪声");
-        WiFi.mode(WIFI_OFF);   // 关 WiFi 射频, 否则 GPIO36/39 编码器被灌假计数
-        return;                // USB 模式不需要 UDP
+        Serial.println("\nWiFi not connected (timeout), turning off radio and using USB — removes ENC1 (GPIO36/39) RF noise");
+        WiFi.mode(WIFI_OFF);   // turn off the WiFi radio, otherwise the GPIO36/39 encoder gets flooded with false counts
+        return;                // USB mode needs no UDP
     }
     udp_.begin(UDP_LISTEN_PORT);
-    active_ = true;            // 连上且 UDP 已 begin, 才允许 receive/send
+    active_ = true;            // only allow receive/send once connected and UDP has begun
 #endif
 }
 
 bool WifiComm::receive(JsonDocument& doc) {
-    if (!active_) return false;           // USB 模式: 不碰 UDP (否则刷 WiFiUdp 报错)
+    if (!active_) return false;           // USB mode: don't touch UDP (otherwise WiFiUdp floods errors)
     int len = udp_.parsePacket();
     if (len == 0) return false;
 
@@ -39,7 +39,7 @@ bool WifiComm::receive(JsonDocument& doc) {
     if (n <= 0) return false;
     buf[n] = '\0';
 
-    // 记住发送方地址用于回传
+    // Remember the sender's address for replies
     remote_ip_ = udp_.remoteIP();
     remote_port_ = udp_.remotePort();
     has_remote_ = true;

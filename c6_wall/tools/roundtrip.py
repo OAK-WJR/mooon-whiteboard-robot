@@ -55,9 +55,9 @@ def rel_measure(cam, n=15, tries=3):
             return {"x": float(np.median(xs)), "y": float(np.median(ys)), "heading": float(np.median(hs)),
                     "mm_per_px": float(np.median(ss)), "spread_mm": float(max(np.ptp(xs), np.ptp(ys))),
                     "spread_deg": float(np.ptp(hs)), "frames": len(xs)}
-        print(f"  只在 {len(xs)}/{n} 帧里看到信标，2 秒后重试")
+        print(f"  Beacon seen in only {len(xs)}/{n} frames; retrying in 2 s")
         time.sleep(2)
-    raise SystemExit("相机看不到小车的信标")
+    raise SystemExit("The camera cannot see the robot beacon")
 
 
 def wait_still(r, timeout=40):
@@ -66,12 +66,12 @@ def wait_still(r, timeout=40):
     while time.time() < end:
         s = r.status()
         if s["mode"] != "active":
-            raise SystemExit(f"小车不在保持状态: {s['mode']} {s['fault']}")
+            raise SystemExit(f"Robot is not holding: {s['mode']} {s['fault']}")
         if s["src"] == "none" and not s["moving"]:
             time.sleep(0.8)
             return r.status()
         time.sleep(0.15)
-    raise SystemExit("移动超时")
+    raise SystemExit("Move timed out")
 
 
 def odom_board(s):
@@ -90,7 +90,7 @@ def square(r, cam, front, tol=0.3):
     for _ in range(4):
         v = rel_measure(cam, n=9)
         turn = dturn(v["heading"] + front, 90)
-        print(f"  车头朝 {v['heading'] + front:.2f}°（画面竖直 90°），转 {turn:+.2f}°")
+        print(f"  Heading {v['heading'] + front:.2f}° (image vertical = 90°), turning {turn:+.2f}°")
         if abs(turn) < tol:
             return v
         r.cmd("turn", deg=turn, rate=0.3)
@@ -123,7 +123,7 @@ def main():
            "trips": []}
     try:
         if args.square or not args.no_square:
-            print("摆正车头")
+            print("Squaring up the heading")
             square(r, cam, front)
             r.cmd("origin")
             if args.square:
@@ -135,13 +135,13 @@ def main():
             oa = odom_board(r.status())
             ack = r.cmd("move", x=out[0], y=out[1], speed=args.speed, accel=args.accel)
             if not ack.get("ok"):
-                raise SystemExit(f"move 被拒绝: {ack.get('error')}")
+                raise SystemExit(f"move rejected: {ack.get('error')}")
             wait_still(r)
             b = rel_measure(cam)
             ob = odom_board(r.status())
             ack = r.cmd("move", x=-out[0], y=-out[1], speed=args.speed, accel=args.accel)
             if not ack.get("ok"):
-                raise SystemExit(f"move 被拒绝: {ack.get('error')}")
+                raise SystemExit(f"move rejected: {ack.get('error')}")
             wait_still(r)
             c = rel_measure(cam)
             oc = odom_board(r.status())
@@ -151,10 +151,10 @@ def main():
             trip["err_dist"] = math.hypot(*trip["err_mm"])
             log["trips"].append(trip)
             ok = trip["err_dist"] <= 2 and abs(trip["err_turn"]) <= 1
-            print(f"第 {k + 1} 趟: 去程 相机 ({trip['out_mm'][0]:+7.1f},{trip['out_mm'][1]:+6.1f}) mm 转 {trip['out_turn']:+5.2f}°"
-                  f" | 回到起点误差 {trip['err_dist']:5.2f} mm ({trip['err_mm'][0]:+5.2f},{trip['err_mm'][1]:+5.2f})"
-                  f"  航向 {trip['err_turn']:+5.2f}°  {'达标' if ok else '未达标'}"
-                  f"  [测量抖动 {c['spread_mm']:.2f} mm / {c['spread_deg']:.2f}°]")
+            print(f"Trip {k + 1}: outbound camera ({trip['out_mm'][0]:+7.1f},{trip['out_mm'][1]:+6.1f}) mm turn {trip['out_turn']:+5.2f}°"
+                  f" | return-to-start error {trip['err_dist']:5.2f} mm ({trip['err_mm'][0]:+5.2f},{trip['err_mm'][1]:+5.2f})"
+                  f"  heading {trip['err_turn']:+5.2f}°  {'pass' if ok else 'not met'}"
+                  f"  [measurement jitter {c['spread_mm']:.2f} mm / {c['spread_deg']:.2f}°]")
     finally:
         r.cmd("stop")
         cam.close()

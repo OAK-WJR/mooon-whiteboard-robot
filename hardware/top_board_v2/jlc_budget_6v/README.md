@@ -1,80 +1,80 @@
-# 五片顶部板：当前布局与成本范围
+# Five top boards: current layout and cost scope
 
-> **2026-10-28 起已被取代：** 当前板 `top_board_v2_logic`（EasyEDA）在板上用 IP2326 给 2S 电池 USB-C 充电，2026-10-29 又去掉 CH343G、改用 C6 原生 USB，见 [hardware/README.md](../../README.md)。下文的外置充电、“顶板不充电”以及 70 个元件的六页 KiCad 图都是 2026-09 记录。
+> **Superseded since 2026-10-28:** the current board `top_board_v2_logic` (EasyEDA) charges the 2S battery over USB-C on the board with an IP2326, and on 2026-10-29 the CH343G was removed in favor of the C6's native USB; see [hardware/README.md](../../README.md). The external charging, "the top board does not charge" and the six-page, 70-component KiCad drawing below are all records from 2026-09.
 
-预算只算 **5 片顶部 PCB、板上元件及焊接成品**，合计目标 ¥30、上限 ¥50，人民币优先；美元同额度仅为可考虑的备选。底板、电机、电池、充电器及外部配套不计入，也不继续选购。
+The budget only counts **5 top PCBs, the components on them and soldered finished boards**, total target ¥30, cap ¥50, CNY preferred; the same figure in USD is only a possible fallback. The base board, motors, battery, charger and external accessories are not counted, and no more of them are being bought.
 
-- [两层 PCB 布局预览](controller_core/logic/preview/placement.png) / [KiCad 工程和验证范围](controller_core/logic/README.md)
-- [六页原理图 PDF](controller_core/logic/top_board_v2_review.pdf) / [当前元件清单](TOP_COMPONENTS.md)
-- [成本复核](COST_REVIEW.md) / [供电候选](controller_core/power_review/README.md) / [固件](controller_core/logic/FIRMWARE.md)
-- [顶部简化范围](KISS_SCOPE.md) / [结构化预算约束](budget_constraints.json)
+- [Two-layer PCB layout preview](controller_core/logic/preview/placement.png) / [KiCad project and verification scope](controller_core/logic/README.md)
+- [Six-page schematic PDF](controller_core/logic/top_board_v2_review.pdf) / [current component list](TOP_COMPONENTS.md)
+- [Cost review](COST_REVIEW.md) / [power candidates](controller_core/power_review/README.md) / [firmware](controller_core/logic/FIRMWARE.md)
+- [Top board simplified scope](KISS_SCOPE.md) / [structured budget constraints](budget_constraints.json)
 
-当前 C6-MINI 空间/接线审查稿共 70 个实体元件、246 个物理引脚，ERC 0 错误、0 警告。PCB 已建立两层布局、四个安装孔，19 个原接口焊盘原位保留；仍有 10 项未连接及一处接口装配边界重叠，没有布线完成或制造放行。固件 73 项离线检查和当前 C6/R3 两次交叉编译通过，保持运动禁用。
+The current C6-MINI space/wiring review draft has 70 physical components and 246 physical pins, ERC 0 errors, 0 warnings. The PCB has a two-layer placement and four mounting holes, with the 19 original interface pads kept in place; there are still 10 unconnected items and one interface assembly boundary overlap, and it is not fully routed or released for manufacturing. 73 offline firmware checks and the current C6/R3 cross-compiles pass, and motion stays disabled.
 
-MINI 的国际站料号 C5736265 标为 Standard Only，原经济型贴装费用不能套用。当前模组没有获得低成本定案；国内装配资格和完整报价尚未取得。70 个元件中 63 个位号已有商城料号，7 个待选，完整输入连接器与保护仍未画入。外置充电和缩小模组都没有证明整批预算达标。
+The MINI's global-site part number C5736265 is marked Standard Only, so the original economic assembly fees cannot be applied. The current module has no low-cost final decision; China-site assembly eligibility and a full quote have not been obtained. Of the 70 components, 63 references have store part numbers and 7 are still to be chosen; the full input connector and protection are still not drawn. Neither external charging nor the smaller module has shown that the whole batch meets the budget.
 
-国内公开页面的 MINI 预订参考价为 ¥17.21/颗，五颗 ¥86.05，页面显示无库存；这已经超过五片完整顶部成品的 ¥50 上限。该页面是联网工具返回的缓存公开参考，不是实时订单报价。三种已选芯片的人民币参考及其余缺价项见 [成本复核](COST_REVIEW.md)，不与国际站美元费用混算。
+The MINI pre-order reference price on the China-site public page is ¥17.21 each, ¥86.05 for five, and the page shows no stock; this already exceeds the ¥50 cap for five complete finished top boards. That page is a cached public reference returned by a web-access tool, not a live order quote. The CNY references for the three chosen chips and the other items with missing prices are in the [cost review](COST_REVIEW.md), not mixed with the global site's USD fees.
 
-USB 用电额度、浪涌与回灌、ADC 掉电与外部分压校准、供电动态、天线与实际叠板净空尚未解决。布局按三角形板框、原 19 接点和顶部单面贴装安排；后续手工布线采用 30°/60° 方向，再核对嘉立创导入。现阶段只保留可复查的布局候选，不把它称作完成板。
+USB power budget, inrush and back-feed, ADC power-off and external divider calibration, power dynamics, the antenna and the actual board-stack clearance are not resolved. Placement follows the triangular board outline, the original 19 contacts and single-sided assembly on top; later hand routing will use 30°/60° directions, then the EasyEDA import will be checked. At this stage only a reviewable placement candidate is kept; it is not called a finished board.
 
-## 历史筛选记录（下列价格与选型状态不代表当前六页图）
+## Historical screening records (the prices and selection status below do not represent the current six-page drawing)
 
-以下保留先前的充电/主控/供电候选分析及暂停处状态。当前状态以上方入口、六页网表和 COST_REVIEW 为准；历史稿不继续布线。
+Below are the earlier charging/controller/power candidate analyses and the state where they were paused. The current state follows the entry points above, the six-page netlist and COST_REVIEW; the historical drafts are not routed further.
 
-## 外置充电后的费用变化
+## Cost change after external charging
 
-仅用下方 **2026-09-08 保存的历史价格**重算：去掉每板一颗 IP2326，以及示例中的一种扩展料上料费，五板的部分参考费用减少 **$3.098 + $3.07 = $6.168**。原 $51.699 变为 **$45.531**；若仍采用历史双 TPS62933 候选，则为 **$47.474**。这只是芯片与少数固定费用的条件计算，不是当前报价，也不是完整新架构的价格。
+Recomputed only with the **historical prices saved on 2026-09-08** below: removing one IP2326 per board, and the loading fee for one extended part in the example, lowers the partial reference cost for five boards by **$3.098 + $3.07 = $6.168**. The original $51.699 becomes **$45.531**; if the historical dual TPS62933 candidate is still used, it is **$47.474**. This is only a conditional calculation of the chips and a few fixed fees, not a current quote, and not the price of the full new architecture.
 
-这些顶部板数值仍缺 PCB、其余板上元件与贴装、板上必要保护和连接器等费用；双 TPS54302 的 USB 低压供电问题也仍存在。**不能据此宣布五块完整板低于 $50。** 更新的结构化计算见 [价格记录中的 external_charging_revision](candidate_cost_reference.json)。
+These top board figures still lack the PCB, the other on-board components and assembly, necessary on-board protection, connectors and similar costs; the USB low-voltage supply problem of the dual TPS54302 also still exists. **This cannot be used to declare five complete boards under $50.** The updated structured calculation is in [external_charging_revision in the price record](candidate_cost_reference.json).
 
-随后改用 CH343G，按已保存的芯片参考价再增加五颗合计 $3.216；上述两个历史部分小计分别变为 **$48.747 / $50.690**。它们仍不是当前完整 BOM 或报价，不能把缺失元件和费用按零计算。详见同一价格记录的 `usb_recovery_circuit_revision`。
+The later switch to CH343G adds $3.216 for five chips at the saved chip reference price; the two historical partial subtotals above become **$48.747 / $50.690**. They are still not the current full BOM or a quote, and missing components and fees cannot be counted as zero. See `usb_recovery_circuit_revision` in the same price record.
 
-## 历史板上充电候选价格（供比较，已非当前架构）
+## Historical on-board charging candidate prices (for comparison; no longer the current architecture)
 
-以下美元单价是 **立创商城 LCSC 零售参考价**，不是嘉立创 PCBA 结算价。数量采用 5 块板的实际用量对应阶梯，不使用千片价。嘉立创公开页已核对封装、扩展料类别和贴装类型；上方另列新取得的 C6 国内 SMT 人民币公开价，保持币种分开。本次仍未取得完整实时 PCBA 订单报价，没有下单或预购。
+The USD unit prices below are **LCSC retail reference prices**, not JLCPCB PCBA billing prices. Quantities use the price tier matching the actual use for 5 boards, not the 1000-piece price. The JLCPCB public pages were checked for package, extended part category and assembly type; the newly obtained C6 China-site SMT CNY public price is listed separately above, keeping the currencies separate. A full live PCBA order quote has still not been obtained this time; nothing was ordered or pre-ordered.
 
-| 功能候选 | 型号 / 料号 | 每板数量 | 本批数量 | 参考单价 USD | 本批参考小计 USD | 嘉立创类型 |
+| Function candidate | Model / part number | Per board | This batch | Reference unit price USD | Batch reference subtotal USD | JLCPCB type |
 | --- | --- | ---: | ---: | ---: | ---: | --- |
-| 主控射频模组 | ESP32-C6-WROOM-1-N4 / C6034714 | 1 | 5 | 4.1266 | 20.6330 | 扩展料，经济型 / 标准型 |
-| 独立 USB 串口恢复 | CH340C / C84681 | 1 | 5 | 0.5900 | 2.9500 | 扩展料，经济型 / 标准型 |
-| 电机与逻辑降压芯片 | TPS54302DDCR / C311983 | 2 | 10 | 0.3028 | 3.0280 | 扩展料，经济型 / 标准型 |
-| 板上 2S 升压充电 | IP2326 / C2832094 | 1 | 5 | 0.6196 | 3.0980 | 扩展料，经济型 / 标准型 |
-| **仅上述核心元件** | **不是完整 BOM** | | | | **29.7090** | |
+| Main controller RF module | ESP32-C6-WROOM-1-N4 / C6034714 | 1 | 5 | 4.1266 | 20.6330 | Extended part, Economic / Standard |
+| Separate USB serial recovery | CH340C / C84681 | 1 | 5 | 0.5900 | 2.9500 | Extended part, Economic / Standard |
+| Motor and logic buck chip | TPS54302DDCR / C311983 | 2 | 10 | 0.3028 | 3.0280 | Extended part, Economic / Standard |
+| On-board 2S boost charging | IP2326 / C2832094 | 1 | 5 | 0.6196 | 3.0980 | Extended part, Economic / Standard |
+| **Core components above only** | **Not a full BOM** | | | | **29.7090** | |
 
-这组候选没有通过预算。上述芯片参考价再加经济型开机 $8.18、钢网 $1.53、4 种扩展料上料费 $12.28，示例小计已为 **$51.699**。这还是混用 LCSC 参考价与嘉立创公开费用的筛选计算，**不能称为供应商报价，也不能据此断言所有替代方案都无法低于 $50**。
+This candidate set did not pass the budget. The chip reference prices above plus the Economic setup fee of $8.18, the stencil at $1.53 and loading fees for 4 extended parts at $12.28 already give an example subtotal of **$51.699**. This is still a screening calculation that mixes LCSC reference prices with JLCPCB public fees; **it cannot be called a supplier quote, nor used to claim that no alternative can get under $50**.
 
-上述小计尚缺 PCB、焊点、可能的 X 光、损耗/备料/最小采购量、电感、电容、阻容、连接器、电池放电保护、功率开关、故障停机、ESD、防反接、USB 供电切换、线束、安装件及税运费。不能把缺项置零或把芯片价写成完整电源价格。
+The subtotal above still lacks the PCB, solder joints, possible X-ray, loss/spares/minimum order quantity, inductors, capacitors, passive R/C parts, connectors, battery discharge protection, power switches, fault shutdown, ESD, reverse-polarity protection, USB power switching, harness, mounting parts, tax and shipping. Missing items cannot be set to zero, and chip prices cannot be written up as the full power supply price.
 
-费用来源：[嘉立创 PCBA 费用表，页面更新 2026-08-20](https://jlcpcb.com/help/article/pcb-assembly-price)。经济型 SMT 为 $0.0016/焊点；扩展料每种 $3.07；QFN 等隐藏焊点封装可能触发按数量收取的 X 光检查，具体数量和收费由最终订单确定。没有计入优惠券或活动补贴。
+Fee source: [JLCPCB PCBA fee table, page updated 2026-08-20](https://jlcpcb.com/help/article/pcb-assembly-price). Economic SMT is $0.0016/joint; each extended part is $3.07; QFN and other packages with hidden joints may trigger X-ray inspection charged by quantity, with the exact quantity and charge set by the final order. No coupons or promotional subsidies are counted.
 
-价格及贴装类型来源：
+Price and assembly type sources:
 
-- C6：[LCSC 价格](https://www.lcsc.com/product-detail/C6034714.html)、[JLC 经济型资格](https://jlcpcb.com/partdetail/ESPRESSIFINC-ESP32_C6_WROOM_1N4/C6034714)。
-- CH340C：[LCSC 价格](https://www.lcsc.com/product-detail/USB_CH340C_C84681.html)、[JLC 类别](https://jlcpcb.com/partdetail/WCH_Jiangsu_Qin_Heng-CH340C/C84681)。不要与同名不同料号 C7464026 混算。
-- TPS54302：[LCSC 价格](https://www.lcsc.com/product-detail/C311983.html)、[JLC 类别](https://jlcpcb.com/partdetail/TexasInstruments-TPS54302DDCR/C311983)。
-- IP2326：[LCSC 价格](https://www.lcsc.com/product-detail/Battery-Management-ICs_INJOINIC-IP2326_C2832094.html)、[JLC 类别](https://jlcpcb.com/partdetail/Injoinic-IP2326/C2832094)。
+- C6: [LCSC price](https://www.lcsc.com/product-detail/C6034714.html), [JLC Economic eligibility](https://jlcpcb.com/partdetail/ESPRESSIFINC-ESP32_C6_WROOM_1N4/C6034714).
+- CH340C: [LCSC price](https://www.lcsc.com/product-detail/USB_CH340C_C84681.html), [JLC category](https://jlcpcb.com/partdetail/WCH_Jiangsu_Qin_Heng-CH340C/C84681). Do not mix it up with C7464026, which has the same name but a different part number.
+- TPS54302: [LCSC price](https://www.lcsc.com/product-detail/C311983.html), [JLC category](https://jlcpcb.com/partdetail/TexasInstruments-TPS54302DDCR/C311983).
+- IP2326: [LCSC price](https://www.lcsc.com/product-detail/Battery-Management-ICs_INJOINIC-IP2326_C2832094.html), [JLC category](https://jlcpcb.com/partdetail/Injoinic-IP2326/C2832094).
 
-## 选型结论与尚缺的依据
+## Selection conclusions and missing evidence
 
-1. **先减少功能重复及扩展料种类，再进入新原理图。** 复用底板三路驱动；优先顶部单面贴装和两层 PCB，最终层数仍须满足回流、供电及无线布局。原板框与 19 接点作为接口依据，不沿用旧模块的空间堆叠。
-2. **C6-WROOM 已作为成本待确认候选接入三页逻辑图，尚未替换旧 PCB 或固件。** GPIO 与模块物理脚号已核对，余下供电、外设和固件适配仍须完成。嘉立创确认其可经济型贴装。另查的 S3-WROOM-1-N16R2 / C2913205 为 Standard Only，不能按经济型费用估算它。旧 Motor3 故障并未被证实由 C6 芯片型号造成。
-3. **TPS54302 可研究复用同一芯片做两路降压。** TI Rev. C（2026-03）§6.3.10 说明，BOOT-SW 高于典型 2.1V 时可进入 100% 占空比；这不是全电量、全负载恒定 6V 的保证。§6.3.5 要求 EN 用开漏/开集驱动，浮空默认使能；电机电源必须另落实默认关断。§6.3.7 给出跨温度参考电压 ±2.5%。还需计算反馈误差、自举刷新、低电量压差、三电机启动/堵转、电感饱和、温升及回灌。[TI 原厂数据手册](https://www.ti.com/lit/ds/symlink/tps54302.pdf)。
-4. **IP2326 已因外置充电决定移出当前顶板候选。** 其 2S 充电均衡、NTC、输入识别及专用充电端口不再继续集成。原参数研究仅留作历史依据；电池放电保护仍为当前要求。[历史资料：INJOINIC 原厂手册，LCSC 托管](https://datasheet.lcsc.com/datasheet/pdf/925274b0e33bb8cb0aa1e158750a3907.pdf?productCode=C2832094)。
+1. **First reduce duplicate functions and the number of extended part types, then start the new schematic.** Reuse the base board's three drive channels; prefer single-sided assembly on top and a two-layer PCB, though the final layer count must still meet return path, power and wireless layout needs. The original board outline and 19 contacts are the interface basis; the old modules' stacked use of space is not carried over.
+2. **The C6-WROOM has been put into the three-page logic drawing as a candidate pending cost confirmation; it has not yet replaced the old PCB or firmware.** GPIO and module physical pin numbers have been checked; the remaining power, peripheral and firmware adaptation still needs to be done. JLCPCB confirms it can be assembled as Economic. The S3-WROOM-1-N16R2 / C2913205 checked separately is Standard Only, so it cannot be estimated with Economic fees. The old Motor3 fault was not shown to be caused by the C6 chip model.
+3. **Reusing the TPS54302 as the same chip for both buck rails can be studied.** TI Rev. C (2026-03) §6.3.10 says it can enter 100% duty cycle when BOOT-SW is above the typical 2.1V; this is not a guarantee of a constant 6V across the full battery charge range and at full load. §6.3.5 requires EN to be driven open-drain/open-collector, and it enables by default when floating; the motor power must separately ensure default-off. §6.3.7 gives ±2.5% reference voltage across temperature. Still to compute: feedback error, bootstrap refresh, low-battery dropout, three-motor start/stall, inductor saturation, temperature rise and back-feed. [TI datasheet](https://www.ti.com/lit/ds/symlink/tps54302.pdf).
+4. **The IP2326 has been removed from the current top board candidates because of the external charging decision.** Its 2S charge balancing, NTC, input detection and dedicated charging port are no longer being integrated. The original parameter research is kept only as a historical basis; battery discharge protection is still a current requirement. [Historical material: INJOINIC datasheet, hosted by LCSC](https://datasheet.lcsc.com/datasheet/pdf/925274b0e33bb8cb0aa1e158750a3907.pdf?productCode=C2832094).
 
-备选 TPS62130RGTR / C43590 的 LCSC 1+ 价 $1.3226，JLC 可经济型贴装，但为 QFN；TI 支持最高 6V 和 100% 占空比。它比上表双 TPS54302 路线多一类料，先保留作压差/性能备选，不定为当前方案。[LCSC](https://www.lcsc.com/product-detail/C43590.html)、[JLC](https://jlcpcb.com/partdetail/TexasInstruments-TPS62130RGTR/C43590)、[TI](https://www.ti.com/lit/gpn/tps62130)。S3 限制来源：[JLC 精确料号页](https://jlcpcb.com/partdetail/3198303-ESP32_S3_WROOM_1N16R2/C2913205)。
+The alternative TPS62130RGTR / C43590 is $1.3226 at LCSC 1+, and JLC can assemble it as Economic, but it is QFN; per TI it supports up to 6V and 100% duty cycle. It adds one more part type than the dual TPS54302 route in the table above, so for now it is kept as a dropout/performance alternative and not set as the current plan. [LCSC](https://www.lcsc.com/product-detail/C43590.html), [JLC](https://jlcpcb.com/partdetail/TexasInstruments-TPS62130RGTR/C43590), [TI](https://www.ti.com/lit/gpn/tps62130). Source of the S3 limit: [JLC exact part page](https://jlcpcb.com/partdetail/3198303-ESP32_S3_WROOM_1N16R2/C2913205).
 
-**补充电源候选 TPS62933DRLR / C3200405**：JLC 精确料号页为扩展料、经济型/标准型可贴；LCSC 当日 10+ 价 $0.4971。若每板两颗、整批十颗，芯片参考小计 $4.971，比双 TPS54302 的 $3.028 多 $1.943；其余假设不变时，上述不完整小计变为 **$53.642**。它的 3.8–30V 输入范围值得用于 USB 低压供电复核，但没有使该组合通过预算。该料号尚未选入原理图，不能与 PG 版本 TPS62933P 混用。[LCSC 价格](https://www.lcsc.com/product-detail/C3200405.html)、[JLC 类别](https://jlcpcb.com/partdetail/TexasInstruments-TPS62933DRLR/C3200405)、[TI Rev.D，2022-08](https://www.ti.com/lit/ds/symlink/tps62933.pdf)。
+**Extra power candidate TPS62933DRLR / C3200405**: the JLC exact part page lists it as an extended part that can be assembled as Economic/Standard; the LCSC same-day 10+ price is $0.4971. With two per board, ten for the whole batch, the chip reference subtotal is $4.971, $1.943 more than the dual TPS54302's $3.028; with the other assumptions unchanged, the incomplete subtotal above becomes **$53.642**. Its 3.8–30V input range is worth using for the USB low-voltage supply re-check, but it did not make this combination pass the budget. This part number has not been put into the schematic yet, and must not be mixed up with the PG version TPS62933P. [LCSC price](https://www.lcsc.com/product-detail/C3200405.html), [JLC category](https://jlcpcb.com/partdetail/TexasInstruments-TPS62933DRLR/C3200405), [TI Rev.D, 2022-08](https://www.ti.com/lit/ds/symlink/tps62933.pdf).
 
-当前保留：三台同规格 6V 编码器 N20、底板复用、Wi-Fi/BLE、USB 诊断及无需按键的复位/下载恢复、必要电池/功率保护、默认停机、顶部电池固定及接口检查。用户已同意改用外置充电，板上充电不再是保留项。装配方式及其他功能不因这一选择自动改变。
+Currently kept: three identical 6V encoder N20s, base board reuse, Wi-Fi/BLE, USB diagnostics and button-free reset/download recovery, necessary battery/power protection, default stop, battery fixing on top, and interface checks. The user has agreed to switch to external charging, so on-board charging is no longer kept. The assembly method and other functions do not change automatically because of this choice.
 
-下一步完成电池/USB 供电切换、默认关闭电机电源和采样，核对三电机负载，继续接入供电采样与标定，再补齐 BOM 并按实际 BOM/CPL 核价。**最终总价未取得，预算未通过，尚未开始这组候选的新 PCB 布局。** 当前三页图没有板上充电电路，也没有整机仿真或实板通过结论。
+Next: complete battery/USB power switching, default-off motor power and sensing, check the three-motor load, keep integrating power sensing and calibration, then fill in the BOM and price it from the actual BOM/CPL. **No final total price has been obtained, the budget has not passed, and the new PCB layout for this candidate set has not started.** The current three-page drawing has no on-board charging circuit, and there are no whole-robot simulation or real-board pass conclusions.
 
-与预算无关的接口复核已继续：[底板铜连接审查](../bottom_board_review/native_copper/README.md)检查了保存源文件与导入模型，包含 Motor3 六条路径的断线对照。导入模型连通性成立，但原生 EDA 铺铜差异、实际线束及实板验证仍未解决；不得把这一结果写成新顶板或整机已经稳定。
+Interface re-checks unrelated to the budget have continued: the [base board copper connection review](../bottom_board_review/native_copper/README.md) checked the saved source file and the import model, including an open-circuit comparison of Motor3's six paths. Connectivity in the import model holds, but native EDA copper pour differences, the real harness and real-board verification are still unresolved; this result must not be written up as the new top board or the whole robot being stable.
 
-**共用固件进展，2026-09-08：** 已修复指令验签期间控制租约到期、清空控制权却遗漏停止调用的问题；新边界回归及相关重启测试通过，C6 R3 配置交叉编译通过。[修正与离线验证范围](../../../control_tests/LEASE_DEADLINE_FIX.md)。该修正独立于最终主控和电源选型，未开放运动门禁，也没有改变本目录的预算或制造状态。
+**Shared firmware progress, 2026-09-08:** fixed the issue where the control lease expired during the command signature check and control was cleared but the stop call was missed; the new boundary regression and related restart tests pass, and the C6 R3 config cross-compile passes. [Fix and offline verification scope](../../../control_tests/LEASE_DEADLINE_FIX.md). This fix is independent of the final controller and power choices, did not open the motion gate, and did not change this folder's budget or manufacturing status.
 
-## 历史稿状态
+## Historical draft status
 
-原模块版仍在 [kiss_6v](../kiss_6v/README.md)，最新局部原生 PCB 有 62 个板内元件、103 个板外待布局封装、375 段线、74 个过孔；DRC 7 项、未连接 235 项。原预览和部分审查报告仍对应 55 元件阶段，不能代表最新 62 元件状态。局部恢复区新增铜连接已有原生连接检查，但完整差异审查尚未完成，暂停处没有制造放行。
+The original module version is still in [kiss_6v](../kiss_6v/README.md); the latest partial native PCB has 62 components on the board, 103 footprints off the board awaiting placement, 375 trace segments and 74 vias; 7 DRC items, 235 unconnected. The original preview and some review reports still match the 55-component stage and do not represent the latest 62-component state. The new copper connections in the partial recovery area have a native connection check, but the full difference review is not done; there is no manufacturing release where it was paused.
 
-[暂停状态清单](paused_module_state.json)记录核心文件和原审查清单的差异；它仅是当前文件状态记录，不能替代整板审查。旧 review_manifest.json 对应早先检查点，不能当作最新文件全部通过的证明。
+The [paused state list](paused_module_state.json) records the differences between the core files and the original review list; it is only a record of the current file state and cannot replace a whole-board review. The old review_manifest.json matches an earlier checkpoint and cannot be taken as proof that all the latest files pass.

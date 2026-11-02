@@ -40,7 +40,7 @@ class Camera:
         self.cfg = cfg or config()
         self.cap = cv2.VideoCapture(self.cfg["camera"], cv2.CAP_AVFOUNDATION)
         if not self.cap.isOpened():
-            raise SystemExit("打不开摄像头")
+            raise SystemExit("Cannot open the camera")
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, self.cfg["width"])
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self.cfg["height"])
         # Continuity Camera switches format a few frames after the request (4:3 1920x1440
@@ -232,7 +232,7 @@ def measure(cam, n=8, H=None, tries=3):
         except RuntimeError as err:
             if attempt == tries - 1:
                 raise
-            print(f"  ({err}，2 秒后重试)")
+            print(f"  ({err}; retrying in 2 s)")
             time.sleep(2)
 
 
@@ -247,7 +247,7 @@ def _measure(cam, n=8, H=None):
         if p:
             xs.append(p["x"]); ys.append(p["y"]); hs.append(p["heading"])
     if len(xs) < max(2, n // 2):
-        raise RuntimeError(f"只在 {len(xs)}/{n} 帧里找到小车")
+        raise RuntimeError(f"Found the robot in only {len(xs)}/{n} frames")
     ref = hs[0]
     hs = [ref + ((h - ref + 180) % 360 - 180) for h in hs]
     return H, {"x": float(np.median(xs)), "y": float(np.median(ys)), "heading": float(np.median(hs)),

@@ -117,7 +117,7 @@ class Tracker:
                 if self.pose and self.pose[0] > newer_than:
                     return self.pose
             time.sleep(0.03)
-        raise RuntimeError("看不到小车")
+        raise RuntimeError("Cannot see the robot")
 
     def mean(self, n=5):
         """Average of the next n fresh poses."""
@@ -139,14 +139,14 @@ def wait_still(r, trk, timeout=60):
     time.sleep(0.3)
     while time.time() < end:
         if trk.out:
-            raise SystemExit(f"车中心 ({trk.out[0]:.1f}, {trk.out[1]:.1f}) 出了安全范围，已暂停")
+            raise SystemExit(f"Robot center ({trk.out[0]:.1f}, {trk.out[1]:.1f}) left the safe area; paused")
         s = r.status()
         if s["src"] == "none" and not s["moving"]:
             time.sleep(0.3)
             return s
         time.sleep(0.08)
     r.cmd("pause")
-    raise SystemExit("移动超时，已停下")
+    raise SystemExit("Move timed out; stopped")
 
 
 def main():
@@ -188,17 +188,17 @@ def main():
     pen = glyph_67(args.height)
     targets = [(start[0] + x - pen[0][0], start[1] + y - pen[0][1]) for x, y in pen]
     xs, ys = [p[0] for p in targets], [p[1] for p in targets]
-    print(f"现在车中心 ({here['x']:.1f}, {here['y']:.1f})，航向 {here['heading']:.1f}°（起点航向 {heading0:.1f}°）；"
-          f"路线 x {min(xs):.1f}..{max(xs):.1f}, y {min(ys):.1f}..{max(ys):.1f}；安全框 x {box[0]:.1f}..{box[1]:.1f}, y {box[2]:.1f}..{box[3]:.1f}")
+    print(f"Robot center now ({here['x']:.1f}, {here['y']:.1f}), heading {here['heading']:.1f}° (start heading {heading0:.1f}°); "
+          f"route x {min(xs):.1f}..{max(xs):.1f}, y {min(ys):.1f}..{max(ys):.1f}; safety box x {box[0]:.1f}..{box[1]:.1f}, y {box[2]:.1f}..{box[3]:.1f}")
     if min(xs) < box[0] or max(xs) > box[1] or min(ys) < box[2] or max(ys) > box[3]:
-        raise SystemExit("路线超出安全框：把小车挪开一点再试")
+        raise SystemExit("Route goes outside the safety box: move the robot a little and try again")
     todo = list(range(args.first, len(targets)))
-    print(f"要画第 {todo[0]}..{todo[-1]} 个点，共 {len(targets) - 1} 段")
+    print(f"Drawing points {todo[0]}..{todo[-1]}, {len(targets) - 1} segments in total")
     if args.dry_run:
         cam.close()
         return
     if abs(dturn(heading0, here["heading"])) > 30:
-        raise SystemExit("车头比起点偏了 30° 以上：先手动摆回来")
+        raise SystemExit("Heading is more than 30° off the start: turn it back by hand first")
 
     trk = Tracker(cam, cfg, H, box)
     log = {"start": start, "heading0": heading0, "steps": [], "resume": args.resume, "from": args.first}
@@ -216,14 +216,14 @@ def main():
             off = dturn(heading0, hd)
             if abs(off) < 3:
                 break
-            print(f"车头偏了 {off:+.1f}°，先转回起点航向（笔会画一小段弧）")
+            print(f"Heading off by {off:+.1f}°; turning back to the start heading first (the pen will draw a short arc)")
             r.cmd("turn", deg=-off)
             wait_still(r, trk)
             time.sleep(0.4)
             x, y, hd = trk.mean(5)
         ack = r.cmd("origin")
         if not ack.get("ok"):
-            raise SystemExit(f"origin 被拒绝: {ack.get('error')}")
+            raise SystemExit(f"origin rejected: {ack.get('error')}")
         trk.world = (x, y, heading0)  # world frame of the firmware, taken at the START heading
         # Let the fixes pull the heading back to the start heading before drawing on.
         for _ in range(40):
@@ -231,7 +231,7 @@ def main():
             _, _, hd = trk.mean(3)
             if abs(dturn(heading0, hd)) < 1.0:
                 break
-        print(f"相机校正已开 ({trk.sent} 次，拒绝 {trk.rejected})，车头 {dturn(heading0, hd):+.1f}°")
+        print(f"Camera correction on ({trk.sent} sent, {trk.rejected} rejected), heading {dturn(heading0, hd):+.1f}°")
 
         def move_to(tgt):
             px, py, hd = trk.mean(4)
@@ -243,20 +243,20 @@ def main():
             ack = r.cmd("move", x=v[0] / 100, y=v[1] / 100, speed=args.speed, accel=args.accel)
             if not ack.get("ok"):
                 r.cmd("pause")
-                raise SystemExit(f"move 被拒绝: {ack.get('error')}")
+                raise SystemExit(f"move rejected: {ack.get('error')}")
             wait_still(r, trk, timeout=15 + d / (100 * args.speed) * 3)
             time.sleep(0.4)  # let the last fixes settle
             nx, ny, nh = trk.mean(5)
             turn = dturn(heading0, nh)
             log["steps"].append({"tgt": tgt, "cmd": v, "meas": (nx, ny), "heading": nh, "t": time.time() - t0,
                                  "fixes": trk.sent, "rejected": trk.rejected})
-            print(f"    目标 ({tgt[0]:.1f}, {tgt[1]:.1f}) 实到 ({nx:.1f}, {ny:.1f})  差 {math.dist(tgt, (nx, ny)):.2f} cm  车头 {turn:+.1f}°")
+            print(f"    target ({tgt[0]:.1f}, {tgt[1]:.1f}) reached ({nx:.1f}, {ny:.1f})  off {math.dist(tgt, (nx, ny)):.2f} cm  heading {turn:+.1f}°")
             if abs(turn) > 8:
                 r.cmd("pause")
-                raise SystemExit(f"车头转了 {turn:+.1f}°，已停下")
+                raise SystemExit(f"Heading turned {turn:+.1f}°; stopped")
             if trk.errors > 5:
                 r.cmd("pause")
-                raise SystemExit("相机校正发送出错，已停下")
+                raise SystemExit("Camera correction send failed; stopped")
             return (nx, ny, nh)
 
         for k in todo:
@@ -284,12 +284,12 @@ def main():
             cam.text = "Done" if not sys.exc_info()[0] else "Stopped"
             time.sleep(1.5)
             cam.close()
-            print("视频:", video)
+            print("Video:", video)
         except Exception as err:
-            print("关闭录像出错:", err)
+            print("Error closing the video:", err)
         json.dump(log, open(path, "w"), indent=1)
-        print("记录:", path)
-    print(f"画完了，用时 {time.time() - t0:.0f} s")
+        print("Record:", path)
+    print(f"Drawing done, took {time.time() - t0:.0f} s")
 
 
 if __name__ == "__main__":

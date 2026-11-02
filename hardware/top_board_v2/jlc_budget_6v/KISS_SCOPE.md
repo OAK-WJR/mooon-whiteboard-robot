@@ -1,32 +1,32 @@
-# 顶部板简化范围
+# Top board simplified scope
 
-> **2026-10-28 起已被取代：** 当前板 `top_board_v2_logic`（EasyEDA）在板上用 IP2326 给 2S 电池 USB-C 充电，2026-10-29 又去掉 CH343G、改用 C6 原生 USB，见 [hardware/README.md](../../README.md)。下文的外置充电、“顶板不充电”以及 70 个元件的六页 KiCad 图都是 2026-09 记录。
+> **Superseded since 2026-10-28:** the current board `top_board_v2_logic` (EasyEDA) charges the 2S battery over USB-C on the board with an IP2326, and on 2026-10-29 the CH343G was removed in favor of the C6's native USB; see [hardware/README.md](../../README.md). The external charging, "the top board does not charge" and the six-page, 70-component KiCad drawing below are all records from 2026-09.
 
-用户最新指示：“充电器和电机不用管,只要管顶部pcb”。当前任务与预算仅覆盖五片顶部 PCB、板上元件和焊接成品；目标 ¥30、上限 ¥50，人民币优先。美元同额度仅为可考虑的备选。底板、电机、电池、外部充电器及线束不计入；历史资料保留，不再继续选购或扩展研究。
+The user's latest instruction: "No need to deal with the charger and motors, only the top PCB". The current task and budget only cover five finished top PCBs with the components on them and soldering; target ¥30, cap ¥50, CNY preferred. The same figure in USD is only a possible fallback. The base board, motors, battery, external charger and harness are not counted; historical material is kept, and there is no more buying or extended research.
 
-| 顶部板功能 | 设计责任 |
+| Top board function | Design responsibility |
 | --- | --- |
-| ESP32 | Wi-Fi/BLE、六路编码器输入、六路底板驱动信号、控制与诊断 |
-| USB | 通信、下载、独立 EN/BOOT 自动恢复、逻辑诊断供电 |
-| 供电 | 主控 3.3V、约 6V 输出、必要输入保护与去耦；上电/复位默认停止 |
-| 接口与安装 | 复用底板 H 桥、不大于底板的三角形轮廓及原 19 个接点；顶部固定位置、底面尽量空 |
+| ESP32 | Wi-Fi/BLE, six encoder inputs, six base board drive signals, control and diagnostics |
+| USB | Communication, download, separate EN/BOOT auto recovery, logic power for diagnostics |
+| Power | 3.3V for the controller, about 6V output, necessary input protection and decoupling; stopped by default on power-up/reset |
+| Interface and mounting | Reuse the base board H-bridges, a triangular outline no larger than the base board, and the original 19 contacts; fixed position on top, bottom side kept as empty as possible |
 
-外置充电已接受，新顶板不加入充电、均衡及其专用外围。USB 不给电池充电、不直接供电机。板上实际装入的保护、连接器和外围元件仍计入顶部 BOM；若依赖外部保护，须明列输入要求，不能把 `VBAT_PROTECTED` 标签当作保护电路。
+External charging is accepted, and the new top board adds no charging, balancing or their dedicated peripherals. USB does not charge the battery or power the motors directly. Protection, connectors and peripheral components actually fitted on the board still count in the top BOM; if it relies on external protection, the input requirements must be listed explicitly, and the `VBAT_PROTECTED` label cannot be treated as a protection circuit.
 
-不增加旧方案中的独立控制器、逐节数字遥测、隔离 I²C、重复电压监督、多级故障锁存及额外充电接口。停止超时、任务看门狗、重启原因、编码器计数、通信错误和测试日志由固件承担。诊断只报告实际可观测数据，不能保证 USB 能发现任何硬件故障。
+None of the old plan's separate controller, per-cell digital telemetry, isolated I²C, duplicate voltage supervision, multi-level fault latches or extra charging port are added. Stop timeouts, the task watchdog, reset reason, encoder counts, communication errors and test logs are handled by the firmware. Diagnostics only report data that can actually be observed, and cannot guarantee that USB will find every hardware fault.
 
-布局优先两层及顶部单面贴装，最终须满足电源回流、射频与接口净空。先在 KiCad 手工布局和布线，按三角形使用 30°/60° 方向，再完成嘉立创导入与往返核对。底板已有三路驱动不重复设计；不能为节省顶板价格随意改变板间针序。
+Layout prefers two layers and single-sided assembly on top, and must finally meet power return, RF and connector clearance. First place and route by hand in KiCad, using 30°/60° directions for the triangle, then complete the EasyEDA import and round-trip check. The three drive channels already on the base board are not redesigned; the board-to-board pin order must not be changed at will to save top board cost.
 
-当前[六页原理图](controller_core/logic/README.md)已合并主控、USB、接口、两路分压与电源候选，共 70 个元件，ERC 0 错误、0 警告。[元件清单](TOP_COMPONENTS.md)还不是完整 BOM；[成本复核](COST_REVIEW.md)未通过预算。新固件与当前网表离线核对通过，保持运动禁用。此前三页图、复杂电源稿及模块载板均为历史。
+The current [six-page schematic](controller_core/logic/README.md) merges the controller, USB, interfaces, two dividers and the power candidates, 70 components in total, ERC 0 errors, 0 warnings. The [component list](TOP_COMPONENTS.md) is not yet a full BOM; the [cost review](COST_REVIEW.md) has not passed the budget. The new firmware passed an offline check against the current netlist, and motion stays disabled. The earlier three-page drawing, the complex power drafts and the module carrier boards are all historical.
 
-| 顶部板验证条件 | 要核实的结果 |
+| Top board verification condition | Result to verify |
 | --- | --- |
-| 仅 USB | 通信、诊断、自动恢复；逻辑用电额度及浪涌满足要求 |
-| 仅外部电池输入 | 主控和无线可工作，复位默认停止 |
-| 两路输入同时接入或插拔 | 回灌、切换及启动行为满足设计条件 |
-| 通信中断、程序卡住、复位/下载 | 停止和恢复行为正确，不自动恢复运动 |
-| 低输入电压、负载阶跃、故障及回生 | 输入保护、供电瞬态、温升和默认关闭行为符合要求 |
-| ADC 上电/掉电与无线运行 | 注入电流及输入范围合格，转换/校准有效，未测量状态不伪装为数值 |
-| 制造与接口 | DRC、19 接点位置/针序、实际封装、装配净空、天线区域和导入往返一致 |
+| USB only | Communication, diagnostics, auto recovery; logic power budget and inrush meet requirements |
+| External battery input only | Controller and wireless work; stopped by default on reset |
+| Both inputs connected at once, or plugged/unplugged | Back-feed, switching and startup behavior meet the design conditions |
+| Communication loss, program hang, reset/download | Stop and recovery behavior correct; motion does not resume automatically |
+| Low input voltage, load step, faults and regeneration | Input protection, supply transients, temperature rise and default-off behavior meet requirements |
+| ADC power-up/power-down and wireless running | Injection current and input range pass, conversion/calibration valid, unmeasured state not disguised as a value |
+| Manufacturing and interface | DRC, 19 contact positions/pin order, actual footprints, assembly clearance, antenna area and import round trip consistent |
 
-上述是待完成的整板验证要求。现有 ERC、接线对照、局部 USB/RC 模拟及离线固件检查不代替实际供电、无线、接口及实板验收。当前已有 MINI 两层布局候选，整板布线未完成、没有完整报价或制造放行。MINI 的国际站料号为 Standard Only，不作为已通过预算的低成本定案。
+The above are whole-board verification requirements still to be done. The existing ERC, wiring comparison, partial USB/RC simulation and offline firmware checks do not replace real power, wireless, interface and real-board acceptance. There is currently a MINI two-layer placement candidate; full-board routing is not done, and there is no full quote or manufacturing release. The MINI's part number on the global site is Standard Only, so it is not taken as a low-cost final design that has passed the budget.

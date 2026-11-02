@@ -93,17 +93,17 @@ async function test(){
   target_cps:[500,600,700],speed_cps:[490,0,695],applied_pwm:[80,140,90]};
  const faultStart=calls.length;await vm.runInContext('tick()',ctx);
  assert.equal(el('faultPanel').hidden,false);
- assert(el('faultSummary').textContent.includes('电机 2'));
- assert(el('faultSummary').textContent.includes('启动补偿结束'));
+ assert(el('faultSummary').textContent.includes('Motor 2'));
+ assert(el('faultSummary').textContent.includes('Startup compensation ended'));
  assert(el('faultData').textContent.includes('PWM 140/255'));
  assert(!calls.slice(faultStart).some(([u,o])=>u==='/cmd'),'Fault display must not send commands');
  state.armed=true;state.control_run=4;await vm.runInContext('tick()',ctx);
- assert(el('faultSummary').textContent.includes('历史记录'));
+ assert(el('faultSummary').textContent.includes('History'));
  state.armed=false;delete state.last_fault;state.reason='ROBUST_INPUT_FAULT';
  await vm.runInContext('tick()',ctx);
  assert.equal(el('faultPanel').hidden,true);
- assert(el('message').textContent.includes('无法确定出错电机'));
- assert(el('modeLimitNote').textContent.includes('不用于墙面保持'));
+ assert(el('message').textContent.includes('cannot identify the faulty motor'));
+ assert(el('modeLimitNote').textContent.includes('not for wall hold'));
  // Provisioning uses the existing page/token, never browser password storage,
  // never an automatic arm, and is locked while any controller is active.
  state.network={configured:false,connected:false,busy:false,state:'ap_only',ssid:'',
@@ -114,13 +114,13 @@ async function test(){
  await vm.runInContext('tick()',ctx);
  assert(el('networkState').textContent.includes('2.4 GHz'));
  state.network.disconnect_reason=23;await vm.runInContext('tick()',ctx);
- assert(el('networkState').textContent.includes('学校接入策略'),'Authentication failure is not proof of a wrong password');
+ assert(el('networkState').textContent.includes('school access policy'),'Authentication failure is not proof of a wrong password');
  state.network.associated=true;state.network.state='connecting';await vm.runInContext('tick()',ctx);
- assert(el('networkState').textContent.includes('等待 IP'));
+ assert(el('networkState').textContent.includes('waiting for IP'));
  state.network.associated=false;state.network.state='retry_wait';
  state.network.scan_state='complete';state.network.scan_ap_count=12;state.network.scan_matches=0;
  await vm.runInContext('tick()',ctx);
- assert(el('networkState').textContent.includes('当前网络匹配 0 个'));
+ assert(el('networkState').textContent.includes('0 match this network'));
  el('wifiSsid').value='Test school';el('wifiPassword').value='test-only-password';
  const beforeNetwork=calls.length;
  await primaryNetworkSubmit({preventDefault(){}});
@@ -133,7 +133,7 @@ async function test(){
  state.network={...state.network,connected:true,state:'connected',station_url:'http://10.0.0.77/',ssid:'<img src=x onerror=alert(1)>'};
  await vm.runInContext('tick()',ctx);
  assert.equal(el('homeUrl').href,'http://10.0.0.77/');assert(!el('homeUrl').hidden);
- assert(!el('networkState').textContent.includes('上次断开'),'Old failure must not obscure a successful connection');
+ assert(!el('networkState').textContent.includes('Last disconnect'),'Old failure must not obscure a successful connection');
  assert(el('networkState').textContent.includes('<img'));
  vm.runInContext('networkLink("homeUrl","javascript:alert(1)","test")',ctx);assert(el('homeUrl').hidden);
  state.armed=true;await vm.runInContext('tick()',ctx);assert(el('wifiSave').disabled);
@@ -167,8 +167,8 @@ async function test(){
  state.network={...state.network,configured:true,connected:true,auth:'personal',ssid:'Saved Test Network',password_saved:true,configure_over_lan:true};
  el('wifiSsid').value='Saved Test Network';el('wifiAuth').value='personal';el('wifiPassword').value='';
  await vm.runInContext('tick()',ctx);
- assert(el('networkHint').textContent.includes('无需重新保存'));
- assert(el('wifiPassword').placeholder.includes('不改密码请留空'));
+ assert(el('networkHint').textContent.includes('no need to save again'));
+ assert(el('wifiPassword').placeholder.includes('leave blank to keep it'));
  const unchangedPosts=calls.filter(([u])=>u==='/network').length;
  await primaryNetworkSubmit({preventDefault(){}});
  assert.equal(calls.filter(([u])=>u==='/network').length,unchangedPosts,'Connected unchanged form does not reconnect');

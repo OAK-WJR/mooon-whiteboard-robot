@@ -75,7 +75,7 @@
 			)
 		)
 	)
-	(property "Manufacturer" "韩国韩荣"
+	(property "Manufacturer" "Korean Hroparts Elec"
 		(at 0 0 240)
 		(layer "F.Fab")
 		(hide yes)

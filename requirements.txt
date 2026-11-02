@@ -1,13 +1,13 @@
-# WhiteBoardBot 依赖
-# 与 ESP32 串口通信
+# WhiteBoardBot dependencies
+# Serial communication with the ESP32
 pyserial>=3.5
-# PlatformIO（ESP32 编译/烧录）
+# PlatformIO (ESP32 build/flash)
 platformio>=6.1
 
-# 上位机 GUI（scripts/whiteboard_app.py 控制面板 + scripts/pid_tuner.py 调参）
+# Host GUI (scripts/whiteboard_app.py control panel + scripts/pid_tuner.py tuning)
 PyQt5>=5.15
 pyqtgraph>=0.13
 numpy>=1.24
 
-# 可选：如需图像/白板处理可取消注释
+# Optional: uncomment if image/whiteboard processing is needed
 # opencv-python>=4.8.0

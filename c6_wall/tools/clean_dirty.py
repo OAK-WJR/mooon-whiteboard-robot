@@ -703,17 +703,17 @@ def wait_still(r, timeout=60, trk=None):
     time.sleep(0.3)
     while time.time() < end:
         if trk and trk.out:
-            raise SystemExit(f"车中心 ({trk.out[0]:.1f}, {trk.out[1]:.1f}) 出了安全范围，已暂停")
+            raise SystemExit(f"Robot center ({trk.out[0]:.1f}, {trk.out[1]:.1f}) left the safe area; paused")
         if trk and (not trk.thread.is_alive() or trk.errors > 5):
             r.cmd("pause")
-            raise SystemExit(f"相机校正线程出问题（{trk.last_error or '线程退出'}），已停下")
+            raise SystemExit(f"Camera correction thread failed ({trk.last_error or 'thread exited'}); stopped")
         s = r.status()
         if s["src"] == "none" and not s["moving"]:
             time.sleep(0.3)
             return s
         time.sleep(0.08)
     r.cmd("pause")
-    raise SystemExit("移动超时，已停下")
+    raise SystemExit("Move timed out; stopped")
 
 
 def square_up(r, cam, H):
@@ -746,7 +746,7 @@ def run_vision_path(r, cam, H, path, box, speed, accel, step=30.0, tol=0.5, trk=
         dist = math.hypot(dx, dy)
         ack = r.cmd("move", x=dx / 100, y=dy / 100, speed=speed, accel=accel)
         if not ack.get("ok"):
-            raise SystemExit(f"move 被拒绝: {ack.get('error')}")
+            raise SystemExit(f"move rejected: {ack.get('error')}")
         wait_still(r, timeout=10 + dist / (100 * speed) * 2, trk=trk)
         for attempt in range(30):  # someone in front of the camera: hold and wait, do not drive blind
             try:
@@ -755,11 +755,11 @@ def run_vision_path(r, cam, H, path, box, speed, accel, step=30.0, tol=0.5, trk=
             except RuntimeError:
                 if attempt == 0:
                     r.cmd("pause")
-                    print("  看不到小车（有人挡住相机？），停着等")
+                    print("  Cannot see the robot (someone blocking the camera?); waiting in place")
                 time.sleep(2)
         else:
             r.cmd("pause")
-            raise SystemExit("一分钟都看不到小车，已停下")
+            raise SystemExit("Robot not seen for a whole minute; stopped")
         moved = ((now["x"] - pos[0]) * dx + (now["y"] - pos[1]) * dy) / dist
         turn = (now["heading"] - heading0 + 180) % 360 - 180
         # Moves under ~3 cm lose much of their length to wheel slack, so only longer ones judge "stuck".
@@ -767,21 +767,21 @@ def run_vision_path(r, cam, H, path, box, speed, accel, step=30.0, tol=0.5, trk=
             short = short + 1 if moved < 0.5 * dist else 0
             if moved > 1.6 * dist:
                 r.cmd("pause")
-                raise SystemExit(f"这一步走了 {100 * moved / dist:.0f}%（滑下去了？），已停下")
+                raise SystemExit(f"This step moved {100 * moved / dist:.0f}% (slid down?); stopped")
             if short >= 3:
                 r.cmd("pause")
-                raise SystemExit(f"连续三步都只走了不到一半（这一步 {100 * moved / dist:.0f}%），可能卡住，已停下")
+                raise SystemExit(f"Three steps in a row moved less than half (this one {100 * moved / dist:.0f}%); may be stuck; stopped")
         if abs(turn) > 12:
             r.cmd("pause")
-            raise SystemExit(f"车头转了 {turn:+.1f}°，已停下")
+            raise SystemExit(f"Heading turned {turn:+.1f}°; stopped")
         if not (x0 - 2 <= now["x"] <= x1 + 2 and y0 - 2 <= now["y"] <= y1 + 2):
             r.cmd("pause")
-            raise SystemExit(f"车中心 ({now['x']:.1f}, {now['y']:.1f}) 出了安全范围，已停下")
+            raise SystemExit(f"Robot center ({now['x']:.1f}, {now['y']:.1f}) left the safe area; stopped")
         if abs(turn) > 1.5:  # slip on the wall rotates the body; square it again so board-frame moves stay true
             r.cmd("turn", deg=-turn)
             wait_still(r, trk=trk)
             H, now = vision.measure(cam, n=5, H=H)
-            print(f"      车头偏了 {turn:+.1f}°，已摆正")
+            print(f"      Heading off by {turn:+.1f}°; straightened")
         pos = (now["x"], now["y"])
 
     prev = pos
@@ -798,8 +798,8 @@ def run_vision_path(r, cam, H, path, box, speed, accel, step=30.0, tol=0.5, trk=
             if math.hypot(tgt[0] - pos[0], tgt[1] - pos[1]) <= tol:
                 break
             go(tgt)
-        print(f"  {k + 1}/{len(path)}  目标 ({tgt[0]:.1f}, {tgt[1]:.1f})  实际 ({pos[0]:.1f}, {pos[1]:.1f})  "
-              f"误差 {math.hypot(pos[0] - tgt[0], pos[1] - tgt[1]):.1f} cm")
+        print(f"  {k + 1}/{len(path)}  target ({tgt[0]:.1f}, {tgt[1]:.1f})  actual ({pos[0]:.1f}, {pos[1]:.1f})  "
+              f"error {math.hypot(pos[0] - tgt[0], pos[1] - tgt[1]):.1f} cm")
         prev = tgt
     return H
 
@@ -813,9 +813,9 @@ def run_blind_path(r, path, start, speed, accel):
             continue
         ack = r.cmd("move", x=dx / 100, y=dy / 100, speed=speed, accel=accel)
         if not ack.get("ok"):
-            raise SystemExit(f"move 被拒绝: {ack.get('error')}")
+            raise SystemExit(f"move rejected: {ack.get('error')}")
         wait_still(r, timeout=10 + dist / (100 * speed) * 2)
-        print(f"  {k + 1}/{len(path)}  到 ({tgt[0]:.1f}, {tgt[1]:.1f})")
+        print(f"  {k + 1}/{len(path)}  to ({tgt[0]:.1f}, {tgt[1]:.1f})")
         pos = tgt
 
 
@@ -894,9 +894,9 @@ def clear_still(cam, H, tries=15):
         _, p = vision.locate(img, cam.cfg, H)
         if p:
             return img, p
-        print("  有东西挡住了相机，等 2 秒")
+        print("  Something is blocking the camera; waiting 2 s")
         time.sleep(2)
-    raise SystemExit("相机一直被挡住")
+    raise SystemExit("The camera stays blocked")
 
 
 def park(r, cam, H, cfg, args, area, trk, text="Moving clear of the drawing"):
@@ -946,16 +946,16 @@ def fine_wipe(r, cam, H, cfg, args, area, trk):
         H = run_vision_path(r, cam, H, [spot], box, 0.05, args.accel, args.step, args.tol, trk)
     img, here = clear_still(cam, H)
     res = [residue(img, H, surface, area, here)]
-    print(f"细擦前：残留 {res[0]['excess']:.2f} ΔE，明显的点 {res[0]['faint_cm2']:.1f} cm² "
-          f"（{res[0]['faint_pct']:.1f}%，旁边干净的板 {res[0]['ring_pct']:.1f}%），看到 {res[0]['seen_cm2']:.0f} cm²")
+    print(f"Before fine erase: residue {res[0]['excess']:.2f} ΔE, visible spots {res[0]['faint_cm2']:.1f} cm² "
+          f"({res[0]['faint_pct']:.1f}%, clean board nearby {res[0]['ring_pct']:.1f}%), seen {res[0]['seen_cm2']:.0f} cm²")
     for k in range(args.fine_passes):
         path = plan_fine(area, surface, (here["x"], here["y"]), args.fine_pitch, args.margin, sweep=args.sweep,
                          bottom_up=args.bottom_up)
         if spot:
             path.append(spot)
         length = _length(path, (here["x"], here["y"]))
-        print(f"细擦第 {k + 1} 遍：{len(path)} 个点，{length / 100:.2f} m，{'左右' if args.sweep == 'horizontal' else '上下'}"
-              f"车道间距 {args.fine_pitch:g} cm，{100 * args.fine_speed:g} cm/s，每条来回")
+        print(f"Fine erase pass {k + 1}: {len(path)} points, {length / 100:.2f} m, {'left-right' if args.sweep == 'horizontal' else 'up-down'}"
+              f" lane spacing {args.fine_pitch:g} cm, {100 * args.fine_speed:g} cm/s, each lane back and forth")
         if trk:
             trk.mark = time.time()
         full = [(here["x"], here["y"])] + path
@@ -971,8 +971,8 @@ def fine_wipe(r, cam, H, cfg, args, area, trk):
         img, here = clear_still(cam, H)
         res.append(residue(img, H, surface, area, here))
         q = res[-1]
-        print(f"细擦第 {k + 1} 遍后：残留 {q['excess']:.2f} ΔE，明显的点 {q['faint_cm2']:.1f} cm² "
-              f"（{q['faint_pct']:.1f}%，旁边干净的板 {q['ring_pct']:.1f}%）")
+        print(f"After fine erase pass {k + 1}: residue {q['excess']:.2f} ΔE, visible spots {q['faint_cm2']:.1f} cm² "
+              f"({q['faint_pct']:.1f}%, clean board nearby {q['ring_pct']:.1f}%)")
         cam.text = f"Fine wipe {k + 1} done: residue {res[0]['excess']:.2f} -> {q['excess']:.2f} dE"
     return H, res
 
@@ -990,7 +990,7 @@ def save(tag, img, data):
 def scan_once(img, cfg, args, H=None, pose=None):
     H = H if H is not None else vision.surface_homography(img, cfg)
     if H is None:
-        raise SystemExit("找不到四个角的红胶带")
+        raise SystemExit("Cannot find the red tape on the four corners")
     if pose is None:
         _, pose = vision.locate(img, cfg, H)
     dirt, top, info = detect_dirt(img, cfg, H, pose, args.sensitivity, args.robot_radius)
@@ -1009,11 +1009,11 @@ def scan_once(img, cfg, args, H=None, pose=None):
 
 
 def describe(rep, path):
-    kind = (f"沿笔画 {rep['strokes']} 条 + 扫 {rep.get('lane_regions', 0)} 块" if "strokes" in rep
-            else f"分 {rep['regions']} 块")
-    print(f"脏的面积 {rep['dirty_cm2']:.0f} cm²，{kind}；能擦到 {rep['covered_cm2']:.0f} cm²，"
-          f"离边框太近擦不到 {rep['unreachable_cm2']:.0f} cm²；路线 {len(path)} 个点，共 {rep['path_cm'] / 100:.2f} m，"
-          f"车道间距 {rep.get('pitch_cm', 0):.1f} cm")
+    kind = (f"along {rep['strokes']} strokes + sweep {rep.get('lane_regions', 0)} regions" if "strokes" in rep
+            else f"in {rep['regions']} region(s)")
+    print(f"dirty area {rep['dirty_cm2']:.0f} cm², {kind}; reachable {rep['covered_cm2']:.0f} cm², "
+          f"too close to the frame to reach {rep['unreachable_cm2']:.0f} cm²; route {len(path)} points, {rep['path_cm'] / 100:.2f} m total, "
+          f"lane spacing {rep.get('pitch_cm', 0):.1f} cm")
 
 
 def main():
@@ -1025,7 +1025,7 @@ def main():
     ap.add_argument("--eraser", type=float, default=2.0, help="cleaned width of one pass, cm (measured)")
     ap.add_argument("--eraser-offset", default="0,0", help="eraser centre minus robot centre in the board frame, cm")
     ap.add_argument("--overlap", type=float, default=0.2, help="lane overlap as a fraction of the eraser width")
-    # 2026-10-28 the user: left-right only ("不然容易抖动": up/down travel jitters), bottom to top.
+    # 2026-10-28 the user: left-right only ("otherwise it jitters easily": up/down travel jitters), bottom to top.
     ap.add_argument("--lanes", choices=["strokes", "sweep", "auto"], default="sweep",
                     help="strokes: drive along the pen lines (lanes only for wide filled areas); "
                          "sweep: lanes everywhere; auto: one traced line per region, else the shorter lane direction")
@@ -1065,14 +1065,14 @@ def main():
         if args.image:
             img = cv2.imread(args.image)
             if img is None:
-                raise SystemExit(f"读不了图片 {args.image}")
+                raise SystemExit(f"Cannot read image {args.image}")
         else:
             cam = vision.Camera(cfg)
             img = cam.frame()
             cam.close()
         H, pose, path, rep, vis = scan_once(img, cfg, args)
         describe(rep, path)
-        print("结果图:", save("scan", vis, {"path": path, "report": rep}))
+        print("Result image:", save("scan", vis, {"path": path, "report": rep}))
         return
 
     from bench import Robot
@@ -1085,18 +1085,18 @@ def main():
 
     if args.mode == "blind":
         if not args.at:
-            raise SystemExit("blind 模式要用 --at x,y 告诉我小车现在在哪（白板坐标，cm）")
+            raise SystemExit("blind mode needs --at x,y to tell me where the robot is now (whiteboard coordinates, cm)")
         start = tuple(float(v) for v in args.at.split(","))
         w, h = cfg["surface_cm"]
         rects = [tuple(float(v) for v in t.split(",")) for t in args.rect]
         if args.full:
             rects.append((0, 0, w, h))
         if not rects:
-            raise SystemExit("blind 模式要给 --rect 或 --full")
+            raise SystemExit("blind mode needs --rect or --full")
         path, rep = plan_rects(rects, cfg["surface_cm"], start, args.eraser, args.overlap, args.margin)
-        print(f"路线 {len(path)} 个点，共 {rep['path_cm'] / 100:.2f} m")
+        print(f"Route {len(path)} points, {rep['path_cm'] / 100:.2f} m total")
         run_blind_path(r, robot_targets(path), start, args.speed, args.accel)
-        print("完成（开环，没有相机检查）")
+        print("Done (open loop, no camera check)")
         return
 
     # vision / fine
@@ -1105,7 +1105,7 @@ def main():
         import glob
         src = args.area_from or max(glob.glob(os.path.join(ROOT, "logs", "clean-*-pass1.json")), key=os.path.getmtime)
         area_polys = json.load(open(src))["report"]["outlines"]
-        print("细擦范围取自:", src)
+        print("Fine erase area taken from:", src)
     r.cmd("beacon", on=True)
     time.sleep(0.5)
     os.makedirs(os.path.join(ROOT, "logs"), exist_ok=True)
@@ -1116,7 +1116,7 @@ def main():
     try:
         H = vision.surface_homography(cam.frame(), cfg)
         if H is None:
-            raise SystemExit("找不到四个角的红胶带")
+            raise SystemExit("Cannot find the red tape on the four corners")
         cam.H, cam.box = H, reachable_box(cfg["surface_cm"], args.margin)
         if not args.dry_run:
             H, v = square_up(r, cam, H)
@@ -1128,9 +1128,9 @@ def main():
             trk.fix = not args.no_fix
             time.sleep(1.5)
             if trk.fix and (trk.sent < 3 or trk.errors or trk.rejected > trk.sent // 2):
-                raise SystemExit(f"相机校正没跑起来：发了 {trk.sent} 次，被拒 {trk.rejected}，出错 {trk.errors} "
+                raise SystemExit(f"Camera correction did not start: sent {trk.sent}, rejected {trk.rejected}, errors {trk.errors} "
                                  f"{trk.last_error}")
-            print(f"相机校正已开：1.5 秒发了 {trk.sent} 次，被拒 {trk.rejected} 次")
+            print(f"Camera correction on: sent {trk.sent} times in 1.5 s, rejected {trk.rejected} times")
             cam.event("start")
             if args.mode == "vision" and args.park:
                 # Start clear of the drawing so the first photo shows all of it (ink under the robot
@@ -1143,9 +1143,9 @@ def main():
             H, pose = vision.measure(cam, n=7, H=H)
             img = cam.frame()
             H, pose, path, rep, vis = scan_once(img, cfg, args, H, pose)
-            print(f"第 {k + 1} 遍：", end="")
+            print(f"Pass {k + 1}: ", end="")
             describe(rep, path)
-            print("  图:", save(f"pass{k + 1}", vis, {"path": path, "report": rep}))
+            print("  Image:", save(f"pass{k + 1}", vis, {"path": path, "report": rep}))
             area_polys += rep["outlines"]
             cam.event("scan", pass_=k + 1, outlines=rep["outlines"], route=[rep["start"]] + robot_targets(path),
                       dirty_cm2=rep["dirty_cm2"], strokes=rep.get("strokes", 0), lanes=rep.get("lane_regions", 0),
@@ -1168,7 +1168,7 @@ def main():
                 cam.text = f"Pass {k + 1}: route {len(path)} points, {rep['path_cm'] / 100:.2f} m (eraser {args.eraser:.0f} cm)"
             time.sleep(2.0)
             if not path:
-                print("没有要擦的了")
+                print("Nothing left to erase")
                 break
             if args.dry_run:
                 break
@@ -1178,7 +1178,7 @@ def main():
             cam.event("erase_end", pass_=k + 1)
         if not args.dry_run and args.fine_passes > 0 and area_polys:
             area = area_mask(area_polys, cfg["surface_cm"], args.margin, args.eraser)
-            print(f"细擦范围 {np.count_nonzero(area) / PPC ** 2:.0f} cm²")
+            print(f"Fine erase area {np.count_nonzero(area) / PPC ** 2:.0f} cm²")
             H, res = fine_wipe(r, cam, H, cfg, args, area, trk)
             save("fine", cv2.cvtColor(area, cv2.COLOR_GRAY2BGR), {"residue": res, "outlines": area_polys})
         if not args.dry_run:
@@ -1188,9 +1188,9 @@ def main():
             img, pose = clear_still(cam, H)
             H, pose, path, rep, vis = scan_once(img, cfg, args, H, pose)
             cam.event("final", outlines=rep["outlines"], dirty_cm2=rep["dirty_cm2"])
-            print("最后检查：", end="")
+            print("Final check: ", end="")
             describe(rep, path)
-            print("  图:", save("final", vis, {"path": path, "report": rep}))
+            print("  Image:", save("final", vis, {"path": path, "report": rep}))
             cam.dirt, cam.route, cam.target = rep["outlines"], [], None
             cam.text = f"Done: {rep['dirty_cm2']:.0f} cm^2 of marks left"
             time.sleep(2.0)
@@ -1199,9 +1199,9 @@ def main():
         if trk:
             cam.full_track = list(trk.track)
             trk.close()
-            print(f"相机校正 {trk.sent} 次，被拒 {trk.rejected} 次")
+            print(f"Camera correction {trk.sent} times, rejected {trk.rejected} times")
         cam.close()
-        print("录像:", video)
+        print("Video:", video)
 
 
 if __name__ == "__main__":

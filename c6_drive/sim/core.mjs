@@ -2,14 +2,14 @@
 export const DT = .01, MPC = .11938052 / 2800, R = .033738;
 export const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
 export const variants = ['legacy', 'model', 'eso'];
-export const labels = {legacy:'现有轮速 PI', model:'模型前馈 + PI', eso:'模型前馈 + PI + ESO'};
+export const labels = {legacy:'Existing wheel-speed PI', model:'Model feedforward + PI', eso:'Model feedforward + PI + ESO'};
 const sign = Math.sign;
 const dot = (a,b) => a.reduce((s,x,i)=>s+x*b[i],0);
 export function modelsFrom(data) {
   return [1,2,3].map(motor => [1,-1].map(direction => {
     const m=data.models.find(m=>m.motor===motor&&m.sign===direction);
     if(!m||!(m.gain_cps_per_pwm>0)||!(m.tau_s>0)||!Number.isFinite(m.bias_cps))
-      throw Error('需要完整的六组实测模型');
+      throw Error('All six measured models are required');
     return {K:m.gain_cps_per_pwm,tau:m.tau_s,ks:Math.max(0,-m.bias_cps/m.gain_cps_per_pwm)};
   }));
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""WhiteBoardBot 控制面板 — 发送目标区域 + 接收状态 + 可视化轨迹"""
+"""WhiteBoardBot control panel - sends the target area + receives state + visualizes the trajectory"""
 
 import sys, json, socket, time, threading
 import numpy as np
@@ -13,7 +13,7 @@ from PyQt5.QtCore import QTimer, Qt, pyqtSignal
 from PyQt5.QtGui import QFont
 import pyqtgraph as pg
 
-ESP32_IP = "192.168.1.74"   # ESP32 的 WiFi IP
+ESP32_IP = "192.168.1.74"   # the ESP32 WiFi IP
 ESP32_PORT = 8888
 LISTEN_PORT = 8889
 
@@ -26,7 +26,7 @@ class WhiteBoardApp(QMainWindow):
         self.resize(1200, 800)
 
         self.send_sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.send_sock.bind(("0.0.0.0", LISTEN_PORT))  # 绑定固定端口，ESP32 回传到这个端口
+        self.send_sock.bind(("0.0.0.0", LISTEN_PORT))  # bind a fixed port; the ESP32 replies to this port
         self.send_sock.settimeout(0.01)
 
         self.esp32_ip = None
@@ -34,18 +34,18 @@ class WhiteBoardApp(QMainWindow):
         self.traj_y = deque(maxlen=2000)
         self.plan_x = []
         self.plan_y = []
-        self.robot_pose = (0.0, 0.0, 0.0)   # 最新 x,y,theta
-        self.target_xy = None               # 点到点目标
+        self.robot_pose = (0.0, 0.0, 0.0)   # latest x,y,theta
+        self.target_xy = None               # point-to-point target
 
         self._build_ui()
         self.status_received.connect(self._on_status)
 
-        # 接收线程
+        # receive thread
         self.running = True
         self.recv_thread = threading.Thread(target=self._recv_loop, daemon=True)
         self.recv_thread.start()
 
-        # UI 刷新
+        # UI refresh
         self.timer = QTimer()
         self.timer.timeout.connect(self._update_plots)
         self.timer.start(50)
@@ -63,13 +63,13 @@ class WhiteBoardApp(QMainWindow):
         self.plan_curve = self.plot.plot(pen=pg.mkPen('c', width=1, style=Qt.DashLine), name="Plan")
         self.traj_curve = self.plot.plot(pen=pg.mkPen('y', width=2), name="Actual")
         self.robot_dot = self.plot.plot(pen=None, symbol='o', symbolSize=12, symbolBrush='r', name="Robot")
-        self.heading_line = self.plot.plot(pen=pg.mkPen('r', width=2))                 # 机器人朝向
+        self.heading_line = self.plot.plot(pen=pg.mkPen('r', width=2))                 # robot heading
         self.target_dot = self.plot.plot(pen=None, symbol='star', symbolSize=20,
-                                         symbolBrush=(0, 220, 0), name="Target")        # 点到点目标
-        # 目标区域矩形
+                                         symbolBrush=(0, 220, 0), name="Target")        # point-to-point target
+        # target area rectangle
         self.area_rect = pg.PlotDataItem(pen=pg.mkPen('g', width=2, style=Qt.DashLine))
         self.plot.addItem(self.area_rect)
-        # 点击地图设目标点 (点到点导航)
+        # click the map to set the target point (point-to-point navigation)
         self.plot.scene().sigMouseClicked.connect(self._on_plot_click)
         main.addWidget(self.plot, stretch=3)
 
@@ -91,10 +91,10 @@ class WhiteBoardApp(QMainWindow):
             self.spins[label.lower()] = s
         ctrl.addWidget(area_grp)
 
-        # Navigation (点到点)
-        nav_grp = QGroupBox("点到点导航")
+        # Navigation (point-to-point)
+        nav_grp = QGroupBox("Point-to-point navigation")
         ng = QGridLayout(nav_grp)
-        hint = QLabel("← 左键点击地图 = 设目标并前往")
+        hint = QLabel("← Left-click the map = set target and go")
         hint.setStyleSheet("color:#ffaa33;")
         ng.addWidget(hint, 0, 0, 1, 2)
         ng.addWidget(QLabel("X"), 1, 0)
@@ -179,14 +179,14 @@ class WhiteBoardApp(QMainWindow):
             "spacing": self.spins["spacing"].value()
         }
         self._send(area)
-        # 画目标区域
+        # draw the target area
         x, y, w, h = area["x"], area["y"], area["w"], area["h"]
         self.area_rect.setData([x, x+w, x+w, x, x], [y, y, y+h, y+h, y])
-        # 画规划路径预览
+        # draw the planned path preview
         self._preview_zigzag(x, y, w, h, area["spacing"])
 
     def _goto(self, x, y):
-        # 点到点导航: 发目标, 画目标星标 + 当前->目标直线预览
+        # point-to-point navigation: send the target, draw the target star + current->target straight-line preview
         self.target_xy = (x, y)
         self._send({"cmd": "goto", "x": round(x, 4), "y": round(y, 4)})
         self.target_dot.setData([x], [y])
@@ -196,7 +196,7 @@ class WhiteBoardApp(QMainWindow):
         self.log.append(f"GOTO ({x:.3f}, {y:.3f})")
 
     def _on_plot_click(self, ev):
-        # 左键点击轨迹图 = 设目标点并前往
+        # left-click on the trajectory plot = set target point and go
         if ev.button() != Qt.LeftButton:
             return
         vb = self.plot.getPlotItem().vb
@@ -262,7 +262,7 @@ class WhiteBoardApp(QMainWindow):
             self.plan_curve.setData(self.plan_x, self.plan_y)
         if len(self.traj_x) > 1:
             self.traj_curve.setData(list(self.traj_x), list(self.traj_y))
-        # 机器人当前位姿 + 朝向 (始终更新, 不只是 running)
+        # robot's current pose + heading (always updated, not only while running)
         rx, ry, th = self.robot_pose
         self.robot_dot.setData([rx], [ry])
         hl = 0.03

@@ -220,7 +220,7 @@ def main():
     path = args.session or max(glob.glob(os.path.join(ROOT, "logs", "clean-*-session.json")), key=os.path.getmtime)
     ses = json.load(open(path))
     if not ses.get("H") or not ses.get("times"):
-        raise SystemExit("这个记录没有相机标定或帧时间（用新版 clean_dirty.py 录）")
+        raise SystemExit("This record has no camera calibration or frame times (record it with the new clean_dirty.py)")
     raw = os.path.join(os.path.dirname(path), ses["raw"])
     src = Source(raw, ses["times"])
     first = src.at(ses["times"][0])
@@ -284,7 +284,7 @@ def main():
     hold(2.5, lambda a: card(title))
     scans = [e for e in ev if e["kind"] == "scan"]
     if not scans:
-        raise SystemExit("记录里没有扫描")
+        raise SystemExit("The record has no scan")
     # 2. The board before (up to 3 s of real footage before the first look).
     t_scan = scans[0]["t"]
     span(max(ses["times"][0], t_scan - 3.0), t_scan, 1, lambda t: (lambda f: (caption(f, "The task", "Erase everything drawn on the board, by itself"), f)[1])(scene(t)))

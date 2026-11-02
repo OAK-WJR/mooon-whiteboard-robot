@@ -31,11 +31,11 @@ Group ID
 Channel ID
 
 LCSC Part Name
-AMASS(艾迈斯)航模插头 卧式弯脚 XT30PW-M公头
+AMASS XT30PW-M male connector, horizontal, right-angle pins
 Supplier Part
 C431092
 Manufacturer
-AMASS(艾迈斯)
+AMASS
 Manufacturer Part
 XT30PW-M30.G.Y
 Supplier Footprint
@@ -53,7 +53,7 @@ Rated current
 Rated voltage
 500VDC
 Connector type
-航模插头
+RC plug
 Wire gauge
 16/18/20AWG
 contact resistance
@@ -61,7 +61,7 @@ contact resistance
 Size/Specification
 2pin
 interface form
-公头
+Male
 Description
 Socket,DCsupply,XT30,male,PIN:2
 
@@ -75,7 +75,7 @@ CONN-SMD_6P-P1.50_ZX-ZH1.5-6PWT
 PARTTYPE
 ZX-ZH1.5-6PWT
 DESCRIPTION
-插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+Pin structure:1x6P;Pitch:1.5mm;Mounting type:Horizontal SMD;Reference series:ZH;Total pins:6P;Rows:1;Pins per row:6;Row spacing:-;Rated current:1A;Contact material:Brass;Contact plating:Tin;Operating temperature:-25°C~+85°C;
 Component Kind
 Standard
 Add into BOM
@@ -99,15 +99,15 @@ Group ID
 Channel ID
 
 LCSC Part Name
-1x6P 间距:1.5mm 卧贴 系列:ZH
+1x6P Pitch:1.5mm Horizontal SMD Series:ZH
 Supplier Part
 C19272409
 Manufacturer
-Megastar(兆星)
+Megastar
 Manufacturer Part
 ZX-ZH1.5-6PWT
 Supplier Footprint
-SMD,P=1.5mm,卧贴
+SMD,P=1.5mm,Horizontal SMD
 JLCPCB Part Class
 Extended Part
 Datasheet
@@ -121,7 +121,7 @@ Pins Structure
 Pitch
 1.5mm
 Mounting Type
-卧贴
+Horizontal SMD
 Reference Series
 ZH
 Number of Pins
@@ -135,11 +135,11 @@ Row Spacing
 Current Rating
 1A
 Contact Material
-黄铜
+Brass
 Contact Plating
-锡
+Tin
 Operating Temperature
--25℃~+85℃
+-25°C~+85°C
 Voltage Rating
 250V
 Plastic Material
@@ -147,9 +147,9 @@ LCP
 Flame Retardant Rating
 -
 Supplementary Features
-辅助焊脚
+Auxiliary solder tabs
 Color
-米色
+Beige
 Z-Height of the Board
 3.8mm
 X-Length of Bottom Edge on Board (Spacing Line)
@@ -157,7 +157,7 @@ X-Length of Bottom Edge on Board (Spacing Line)
 Y-Width of Bottom Edge on Board
 6mm
 Description
-插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+Pin structure:1x6P;Pitch:1.5mm;Mounting type:Horizontal SMD;Reference series:ZH;Total pins:6P;Rows:1;Pins per row:6;Row spacing:-;Rated current:1A;Contact material:Brass;Contact plating:Tin;Operating temperature:-25°C~+85°C;
 
 *
 ]
@@ -169,7 +169,7 @@ SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL
 PARTTYPE
 RZ7899-MS
 DESCRIPTION
-DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+DC bidirectional motor driver chip in an SOP8 package, with 6A max output current, 3.0-30V operating voltage, ultra-low on-resistance, 1UA quiescent current, over-temperature protection, short-circuit protection, overcurrent protection, emergency stop and more. Thanks to its excellent performance, it is widely used to drive DC motors in robots, drones, smart home devices, power tools, personal mobility devices, toys and all kinds of automation control systems.
 Component Kind
 Standard
 Add into BOM
@@ -193,11 +193,11 @@ Group ID
 Channel ID
 
 LCSC Part Name
-DC双向马达驱动电路
+DC bidirectional motor driver circuit
 Supplier Part
 C22462553
 Manufacturer
-MSKSEMI(美森科)
+MSKSEMI
 Manufacturer Part
 RZ7899-MS
 Supplier Footprint
@@ -211,7 +211,7 @@ LCSC
 3D Model Title
 SOIC-8_L4.9-W3.9-H1.7-LS6.0-P1.27
 Technology
-是
+Yes
 Number of H-bridges
 1
 Output Current
@@ -223,9 +223,9 @@ RDS(on)
 Quiescent Current(Iq)
 1mA
 Operating Temperature
--25℃~+85℃
+-25°C~+85°C
 Description
-DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+DC bidirectional motor driver chip in an SOP8 package, with 6A max output current, 3.0-30V operating voltage, ultra-low on-resistance, 1UA quiescent current, over-temperature protection, short-circuit protection, overcurrent protection, emergency stop and more. Thanks to its excellent performance, it is widely used to drive DC motors in robots, drones, smart home devices, power tools, personal mobility devices, toys and all kinds of automation control systems.
 
 *
 ]
@@ -237,7 +237,7 @@ CONN-SMD_6P-P1.50_ZX-ZH1.5-6PWT
 PARTTYPE
 ZX-ZH1.5-6PWT
 DESCRIPTION
-插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+Pin structure:1x6P;Pitch:1.5mm;Mounting type:Horizontal SMD;Reference series:ZH;Total pins:6P;Rows:1;Pins per row:6;Row spacing:-;Rated current:1A;Contact material:Brass;Contact plating:Tin;Operating temperature:-25°C~+85°C;
 Component Kind
 Standard
 Add into BOM
@@ -261,15 +261,15 @@ Group ID
 Channel ID
 
 LCSC Part Name
-1x6P 间距:1.5mm 卧贴 系列:ZH
+1x6P Pitch:1.5mm Horizontal SMD Series:ZH
 Supplier Part
 C19272409
 Manufacturer
-Megastar(兆星)
+Megastar
 Manufacturer Part
 ZX-ZH1.5-6PWT
 Supplier Footprint
-SMD,P=1.5mm,卧贴
+SMD,P=1.5mm,Horizontal SMD
 JLCPCB Part Class
 Extended Part
 Datasheet
@@ -283,7 +283,7 @@ Pins Structure
 Pitch
 1.5mm
 Mounting Type
-卧贴
+Horizontal SMD
 Reference Series
 ZH
 Number of Pins
@@ -297,11 +297,11 @@ Row Spacing
 Current Rating
 1A
 Contact Material
-黄铜
+Brass
 Contact Plating
-锡
+Tin
 Operating Temperature
--25℃~+85℃
+-25°C~+85°C
 Voltage Rating
 250V
 Plastic Material
@@ -309,9 +309,9 @@ LCP
 Flame Retardant Rating
 -
 Supplementary Features
-辅助焊脚
+Auxiliary solder tabs
 Color
-米色
+Beige
 Z-Height of the Board
 3.8mm
 X-Length of Bottom Edge on Board (Spacing Line)
@@ -319,7 +319,7 @@ X-Length of Bottom Edge on Board (Spacing Line)
 Y-Width of Bottom Edge on Board
 6mm
 Description
-插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+Pin structure:1x6P;Pitch:1.5mm;Mounting type:Horizontal SMD;Reference series:ZH;Total pins:6P;Rows:1;Pins per row:6;Row spacing:-;Rated current:1A;Contact material:Brass;Contact plating:Tin;Operating temperature:-25°C~+85°C;
 
 *
 ]
@@ -331,7 +331,7 @@ CONN-SMD_6P-P1.50_ZX-ZH1.5-6PWT
 PARTTYPE
 ZX-ZH1.5-6PWT
 DESCRIPTION
-插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+Pin structure:1x6P;Pitch:1.5mm;Mounting type:Horizontal SMD;Reference series:ZH;Total pins:6P;Rows:1;Pins per row:6;Row spacing:-;Rated current:1A;Contact material:Brass;Contact plating:Tin;Operating temperature:-25°C~+85°C;
 Component Kind
 Standard
 Add into BOM
@@ -355,15 +355,15 @@ Group ID
 Channel ID
 
 LCSC Part Name
-1x6P 间距:1.5mm 卧贴 系列:ZH
+1x6P Pitch:1.5mm Horizontal SMD Series:ZH
 Supplier Part
 C19272409
 Manufacturer
-Megastar(兆星)
+Megastar
 Manufacturer Part
 ZX-ZH1.5-6PWT
 Supplier Footprint
-SMD,P=1.5mm,卧贴
+SMD,P=1.5mm,Horizontal SMD
 JLCPCB Part Class
 Extended Part
 Datasheet
@@ -377,7 +377,7 @@ Pins Structure
 Pitch
 1.5mm
 Mounting Type
-卧贴
+Horizontal SMD
 Reference Series
 ZH
 Number of Pins
@@ -391,11 +391,11 @@ Row Spacing
 Current Rating
 1A
 Contact Material
-黄铜
+Brass
 Contact Plating
-锡
+Tin
 Operating Temperature
--25℃~+85℃
+-25°C~+85°C
 Voltage Rating
 250V
 Plastic Material
@@ -403,9 +403,9 @@ LCP
 Flame Retardant Rating
 -
 Supplementary Features
-辅助焊脚
+Auxiliary solder tabs
 Color
-米色
+Beige
 Z-Height of the Board
 3.8mm
 X-Length of Bottom Edge on Board (Spacing Line)
@@ -413,7 +413,7 @@ X-Length of Bottom Edge on Board (Spacing Line)
 Y-Width of Bottom Edge on Board
 6mm
 Description
-插针结构:1x6P;间距:1.5mm;安装方式:卧贴;参考系列:ZH;总PIN数:6P;排数:1;每排PIN数:6;行距:-;额定电流:1A;触头材质:黄铜;触头镀层:锡;工作温度:-25℃~+85℃;
+Pin structure:1x6P;Pitch:1.5mm;Mounting type:Horizontal SMD;Reference series:ZH;Total pins:6P;Rows:1;Pins per row:6;Row spacing:-;Rated current:1A;Contact material:Brass;Contact plating:Tin;Operating temperature:-25°C~+85°C;
 
 *
 ]
@@ -425,7 +425,7 @@ CAP-SMD_BD6.3-L6.6-W6.6-LS7.3-FD-H7.7
 PARTTYPE
 JVJ25V220M6x8
 DESCRIPTION
-容值:220uF;精度:±20%;额定电压:25V;纹波电流:120mA@120Hz;
+Capacitance:220uF;Tolerance:±20%;Rated voltage:25V;Ripple current:120mA@120Hz;
 Component Kind
 Standard
 Add into BOM
@@ -445,7 +445,7 @@ LCSC Part Name
 Supplier Part
 C46550404
 Manufacturer
-JIERR(捷而瑞)
+JIERR
 Manufacturer Part
 JVJ25V220M6x8
 Supplier Footprint
@@ -471,13 +471,13 @@ Diameter
 Height - Seated (Max)
 7.7mm
 Lifetime
-2000hrs@105℃
+2000hrs@105°C
 Operating Temperature
--55℃~+105℃
+-55°C~+105°C
 Name
 220uF
 Description
-容值:220uF;精度:±20%;额定电压:25V;纹波电流:120mA@120Hz;
+Capacitance:220uF;Tolerance:±20%;Rated voltage:25V;Ripple current:120mA@120Hz;
 Reuse Block
 
 Group ID
@@ -495,7 +495,7 @@ C0805
 PARTTYPE
 CC0805KRX7R9BB104
 DESCRIPTION
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Component Kind
 Standard
 Add into BOM
@@ -515,7 +515,7 @@ LCSC Part Name
 Supplier Part
 C49678
 Manufacturer
-YAGEO(国巨)
+YAGEO
 Manufacturer Part
 CC0805KRX7R9BB104
 Supplier Footprint
@@ -539,7 +539,7 @@ X7R
 Name
 100nF
 Description
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Reuse Block
 
 Group ID
@@ -557,7 +557,7 @@ C0805
 PARTTYPE
 CC0805KRX7R9BB104
 DESCRIPTION
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Component Kind
 Standard
 Add into BOM
@@ -577,7 +577,7 @@ LCSC Part Name
 Supplier Part
 C49678
 Manufacturer
-YAGEO(国巨)
+YAGEO
 Manufacturer Part
 CC0805KRX7R9BB104
 Supplier Footprint
@@ -601,7 +601,7 @@ X7R
 Name
 100nF
 Description
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Reuse Block
 
 Group ID
@@ -619,7 +619,7 @@ SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL
 PARTTYPE
 RZ7899-MS
 DESCRIPTION
-DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+DC bidirectional motor driver chip in an SOP8 package, with 6A max output current, 3.0-30V operating voltage, ultra-low on-resistance, 1UA quiescent current, over-temperature protection, short-circuit protection, overcurrent protection, emergency stop and more. Thanks to its excellent performance, it is widely used to drive DC motors in robots, drones, smart home devices, power tools, personal mobility devices, toys and all kinds of automation control systems.
 Component Kind
 Standard
 Add into BOM
@@ -643,11 +643,11 @@ Group ID
 Channel ID
 
 LCSC Part Name
-DC双向马达驱动电路
+DC bidirectional motor driver circuit
 Supplier Part
 C22462553
 Manufacturer
-MSKSEMI(美森科)
+MSKSEMI
 Manufacturer Part
 RZ7899-MS
 Supplier Footprint
@@ -661,7 +661,7 @@ LCSC
 3D Model Title
 SOIC-8_L4.9-W3.9-H1.7-LS6.0-P1.27
 Technology
-是
+Yes
 Number of H-bridges
 1
 Output Current
@@ -673,9 +673,9 @@ RDS(on)
 Quiescent Current(Iq)
 1mA
 Operating Temperature
--25℃~+85℃
+-25°C~+85°C
 Description
-DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+DC bidirectional motor driver chip in an SOP8 package, with 6A max output current, 3.0-30V operating voltage, ultra-low on-resistance, 1UA quiescent current, over-temperature protection, short-circuit protection, overcurrent protection, emergency stop and more. Thanks to its excellent performance, it is widely used to drive DC motors in robots, drones, smart home devices, power tools, personal mobility devices, toys and all kinds of automation control systems.
 
 *
 ]
@@ -687,7 +687,7 @@ C0805
 PARTTYPE
 CC0805KRX7R9BB104
 DESCRIPTION
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Component Kind
 Standard
 Add into BOM
@@ -707,7 +707,7 @@ LCSC Part Name
 Supplier Part
 C49678
 Manufacturer
-YAGEO(国巨)
+YAGEO
 Manufacturer Part
 CC0805KRX7R9BB104
 Supplier Footprint
@@ -731,7 +731,7 @@ X7R
 Name
 100nF
 Description
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Reuse Block
 
 Group ID
@@ -749,7 +749,7 @@ C0805
 PARTTYPE
 CC0805KRX7R9BB104
 DESCRIPTION
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Component Kind
 Standard
 Add into BOM
@@ -769,7 +769,7 @@ LCSC Part Name
 Supplier Part
 C49678
 Manufacturer
-YAGEO(国巨)
+YAGEO
 Manufacturer Part
 CC0805KRX7R9BB104
 Supplier Footprint
@@ -793,7 +793,7 @@ X7R
 Name
 100nF
 Description
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Reuse Block
 
 Group ID
@@ -811,7 +811,7 @@ SOIC-8_L4.9-W3.9-P1.27-LS6.0-BL
 PARTTYPE
 RZ7899-MS
 DESCRIPTION
-DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+DC bidirectional motor driver chip in an SOP8 package, with 6A max output current, 3.0-30V operating voltage, ultra-low on-resistance, 1UA quiescent current, over-temperature protection, short-circuit protection, overcurrent protection, emergency stop and more. Thanks to its excellent performance, it is widely used to drive DC motors in robots, drones, smart home devices, power tools, personal mobility devices, toys and all kinds of automation control systems.
 Component Kind
 Standard
 Add into BOM
@@ -835,11 +835,11 @@ Group ID
 Channel ID
 
 LCSC Part Name
-DC双向马达驱动电路
+DC bidirectional motor driver circuit
 Supplier Part
 C22462553
 Manufacturer
-MSKSEMI(美森科)
+MSKSEMI
 Manufacturer Part
 RZ7899-MS
 Supplier Footprint
@@ -853,7 +853,7 @@ LCSC
 3D Model Title
 SOIC-8_L4.9-W3.9-H1.7-LS6.0-P1.27
 Technology
-是
+Yes
 Number of H-bridges
 1
 Output Current
@@ -865,9 +865,9 @@ RDS(on)
 Quiescent Current(Iq)
 1mA
 Operating Temperature
--25℃~+85℃
+-25°C~+85°C
 Description
-DC双向马达驱动芯片，采用SOP8封装，具备最大输出电流6A,工作电压3.0-30V,超低导通电阻，静态电流1UA,具有过热保护，短路保护，过流保护及紧急停止功能等。因其卓越的性能，被广泛应用于机器人、无人机、智能家居设备、电动工具、个人移动设备、玩具及各种自动化控制系统中的直流电机驱动。
+DC bidirectional motor driver chip in an SOP8 package, with 6A max output current, 3.0-30V operating voltage, ultra-low on-resistance, 1UA quiescent current, over-temperature protection, short-circuit protection, overcurrent protection, emergency stop and more. Thanks to its excellent performance, it is widely used to drive DC motors in robots, drones, smart home devices, power tools, personal mobility devices, toys and all kinds of automation control systems.
 
 *
 ]
@@ -879,7 +879,7 @@ C0805
 PARTTYPE
 CC0805KRX7R9BB104
 DESCRIPTION
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Component Kind
 Standard
 Add into BOM
@@ -899,7 +899,7 @@ LCSC Part Name
 Supplier Part
 C49678
 Manufacturer
-YAGEO(国巨)
+YAGEO
 Manufacturer Part
 CC0805KRX7R9BB104
 Supplier Footprint
@@ -923,7 +923,7 @@ X7R
 Name
 100nF
 Description
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Reuse Block
 
 Group ID
@@ -941,7 +941,7 @@ C0805
 PARTTYPE
 CC0805KRX7R9BB104
 DESCRIPTION
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Component Kind
 Standard
 Add into BOM
@@ -961,7 +961,7 @@ LCSC Part Name
 Supplier Part
 C49678
 Manufacturer
-YAGEO(国巨)
+YAGEO
 Manufacturer Part
 CC0805KRX7R9BB104
 Supplier Footprint
@@ -985,7 +985,7 @@ X7R
 Name
 100nF
 Description
-容值:100nF;精度:±10%;额定电压:50V;温度系数:X7R;
+Capacitance:100nF;Tolerance:±10%;Rated voltage:50V;Temperature coefficient:X7R;
 Reuse Block
 
 Group ID
@@ -1003,7 +1003,7 @@ C0805
 PARTTYPE
 CL21A106KAYNNNE_C15850
 DESCRIPTION
-容值:10uF;精度:±10%;额定电压:25V;温度系数:X5R;
+Capacitance:10uF;Tolerance:±10%;Rated voltage:25V;Temperature coefficient:X5R;
 Component Kind
 Standard
 Add into BOM
@@ -1023,7 +1023,7 @@ LCSC Part Name
 Supplier Part
 C15850
 Manufacturer
-SAMSUNG(三星)
+SAMSUNG
 Manufacturer Part
 CL21A106KAYNNNE
 Supplier Footprint
@@ -1047,7 +1047,7 @@ X5R
 Name
 10uF
 Description
-容值:10uF;精度:±10%;额定电压:25V;温度系数:X5R;
+Capacitance:10uF;Tolerance:±10%;Rated voltage:25V;Temperature coefficient:X5R;
 Reuse Block
 
 Group ID
@@ -1065,7 +1065,7 @@ HDR-TH_19P-P2.54-V-F
 PARTTYPE
 KH-2.54FH-1X19P-H8.5
 DESCRIPTION
-插孔结构:1x19P;间距:2.54mm;行距:-;圆孔/方孔:方孔;安装方式:直插;排数:单排;总孔位数:19P;额定电流:3A;额定电压:-;插孔方向:顶部;塑高:8.5mm;工作温度:-40℃~+105℃;
+Socket structure:1x19P;Pitch:2.54mm;Row spacing:-;Round/square hole:Square hole;Mounting type:Through-hole;Rows:Single row;Total positions:19P;Rated current:3A;Rated voltage:-;Socket direction:Top;Insulator height:8.5mm;Operating temperature:-40°C~+105°C;
 Component Kind
 Standard
 Add into BOM
@@ -1089,15 +1089,15 @@ Group ID
 Channel ID
 
 LCSC Part Name
-间距:2.54mm 1x19P 直插
+Pitch:2.54mm 1x19P Through-hole
 Supplier Part
 C2932678
 Manufacturer
-kinghelm(金航标)
+kinghelm
 Manufacturer Part
 KH-2.54FH-1X19P-H8.5
 Supplier Footprint
-插件,P=2.54mm
+Through-hole,P=2.54mm
 JLCPCB Part Class
 Extended Part
 Datasheet
@@ -1113,11 +1113,11 @@ Pitch
 Row Spacing
 -
 Circular Hole / Square Hole
-方孔
+Square hole
 Mounting Type
-直插
+Through-hole
 Number of Rows
-单排
+Single row
 Number of Positions
 19P
 Current Rating
@@ -1125,13 +1125,13 @@ Current Rating
 Voltage Rating (Max)
 -
 Holes Direction
-顶部
+Top
 Insulation Height
 8.5mm
 Operating Temperature
--40℃~+105℃
+-40°C~+105°C
 Description
-插孔结构:1x19P;间距:2.54mm;行距:-;圆孔/方孔:方孔;安装方式:直插;排数:单排;总孔位数:19P;额定电流:3A;额定电压:-;插孔方向:顶部;塑高:8.5mm;工作温度:-40℃~+105℃;
+Socket structure:1x19P;Pitch:2.54mm;Row spacing:-;Round/square hole:Square hole;Mounting type:Through-hole;Rows:Single row;Total positions:19P;Rated current:3A;Rated voltage:-;Socket direction:Top;Insulator height:8.5mm;Operating temperature:-40°C~+105°C;
 
 *
 ]
@@ -1143,7 +1143,7 @@ HDR-TH_19P-P2.54-V-F
 PARTTYPE
 KH-2.54FH-1X19P-H8.5
 DESCRIPTION
-插孔结构:1x19P;间距:2.54mm;行距:-;圆孔/方孔:方孔;安装方式:直插;排数:单排;总孔位数:19P;额定电流:3A;额定电压:-;插孔方向:顶部;塑高:8.5mm;工作温度:-40℃~+105℃;
+Socket structure:1x19P;Pitch:2.54mm;Row spacing:-;Round/square hole:Square hole;Mounting type:Through-hole;Rows:Single row;Total positions:19P;Rated current:3A;Rated voltage:-;Socket direction:Top;Insulator height:8.5mm;Operating temperature:-40°C~+105°C;
 Component Kind
 Standard
 Add into BOM
@@ -1167,15 +1167,15 @@ Group ID
 Channel ID
 
 LCSC Part Name
-间距:2.54mm 1x19P 直插
+Pitch:2.54mm 1x19P Through-hole
 Supplier Part
 C2932678
 Manufacturer
-kinghelm(金航标)
+kinghelm
 Manufacturer Part
 KH-2.54FH-1X19P-H8.5
 Supplier Footprint
-插件,P=2.54mm
+Through-hole,P=2.54mm
 JLCPCB Part Class
 Extended Part
 Datasheet
@@ -1191,11 +1191,11 @@ Pitch
 Row Spacing
 -
 Circular Hole / Square Hole
-方孔
+Square hole
 Mounting Type
-直插
+Through-hole
 Number of Rows
-单排
+Single row
 Number of Positions
 19P
 Current Rating
@@ -1203,13 +1203,13 @@ Current Rating
 Voltage Rating (Max)
 -
 Holes Direction
-顶部
+Top
 Insulation Height
 8.5mm
 Operating Temperature
--40℃~+105℃
+-40°C~+105°C
 Description
-插孔结构:1x19P;间距:2.54mm;行距:-;圆孔/方孔:方孔;安装方式:直插;排数:单排;总孔位数:19P;额定电流:3A;额定电压:-;插孔方向:顶部;塑高:8.5mm;工作温度:-40℃~+105℃;
+Socket structure:1x19P;Pitch:2.54mm;Row spacing:-;Round/square hole:Square hole;Mounting type:Through-hole;Rows:Single row;Total positions:19P;Rated current:3A;Rated voltage:-;Socket direction:Top;Insulator height:8.5mm;Operating temperature:-40°C~+105°C;
 
 *
 ]
@@ -1221,7 +1221,7 @@ PWRM-TH_JETEKPS_K78XX-1000R3
 PARTTYPE
 K7803-1000R3_C5379714
 DESCRIPTION
-非隔离稳压单路输出 工作温度范围：-40℃ ~ +85℃ 支持负输出、过热保护、短路保护 引脚与 LM78xx 系列兼容，是 LM78xx 系列三端线性稳压器的理想替代品 效率高，损耗小，使用时无需外加散热片
+Non-isolated regulated single output. Operating temperature range: -40°C ~ +85°C. Supports negative output, over-temperature protection, short-circuit protection. Pin-compatible with the LM78xx series, an ideal replacement for LM78xx three-terminal linear regulators. High efficiency, low loss, no external heat sink needed
 Component Kind
 Standard
 Add into BOM
@@ -1237,11 +1237,11 @@ K7803-1000R3_C5379714
 Unique ID
 gge20
 LCSC Part Name
-DC-DC模块
+DC-DC module
 Supplier Part
 C5379714
 Manufacturer
-JETEKPS(健特)
+JETEKPS
 Manufacturer Part
 K7803-1000R3
 Supplier Footprint
@@ -1253,7 +1253,7 @@ https://item.szlcsc.com/datasheet/K7803-1000R3/6244272.html
 Supplier
 LCSC
 Function
-降压型
+Step-down
 Number of Outputs
 1
 Voltage - Supply
@@ -1271,7 +1271,7 @@ Features
 Name
 K7803-1000R3
 Description
-非隔离稳压单路输出 工作温度范围：-40℃ ~ +85℃ 支持负输出、过热保护、短路保护 引脚与 LM78xx 系列兼容，是 LM78xx 系列三端线性稳压器的理想替代品 效率高，损耗小，使用时无需外加散热片
+Non-isolated regulated single output. Operating temperature range: -40°C ~ +85°C. Supports negative output, over-temperature protection, short-circuit protection. Pin-compatible with the LM78xx series, an ideal replacement for LM78xx three-terminal linear regulators. High efficiency, low loss, no external heat sink needed
 Output Voltage Accuracy
 ±3%
 Conversion Efficiency
@@ -1289,7 +1289,7 @@ Width
 Height
 -
 Operating Temperature Range
--40℃~+85℃
+-40°C~+85°C
 
 *
 ]

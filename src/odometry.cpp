@@ -3,17 +3,17 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/task.h>
 #include <math.h>
-// 历史: 这里曾 #include <driver/adc.h> 调 adc_power_acquire(), 用来压 v1 板
-// GPIO36/39 上的 ESP32 Errata 3.11 噪声。v2 板已把 ENC1 挪到 GPIO22/23,
-// 且该 API 在 Arduino core 3.x / 新 IDF 中已移除, 故删除。
+// History: this file used to #include <driver/adc.h> and call adc_power_acquire() to suppress
+// ESP32 Errata 3.11 noise on v1 board GPIO36/39. The v2 board moved ENC1 to GPIO22/23,
+// and the API is gone in Arduino core 3.x / new IDF, so it was removed.
 
 // ============================================================
-// 编码器中断 (全局)
-// AB 相四倍频计数
+// Encoder interrupts (global)
+// A/B phase 4x (quadrature) counting
 //
-// 编码器 1 (GPIO36/39) 在 WiFi 模式下可能产生虚假中断
-// (ESP32 SAR ADC 硬件 Bug), 用状态机去抖: 只接受合法的
-// AB 相状态转移, 忽略非法跳变
+// Encoder 1 (GPIO36/39) may get false interrupts in WiFi mode
+// (ESP32 SAR ADC hardware bug); debounce with a state machine: only accept valid
+// A/B phase state transitions, ignore invalid jumps
 // ============================================================
 
 // Fixed-width modular counters: signed ++/-- is undefined at the limit.
@@ -35,21 +35,21 @@ static long signed_count(uint32_t value) {
     return -1L - static_cast<long>(UINT32_MAX - value);
 }
 
-// --- 编码器 1 状态机去抖 (GPIO36/39 WiFi 干扰防护) ---
-// AB 相合法状态转移表: 00→01→11→10→00 (正转) / 反向 (反转)
-// prev_state 编码: (A << 1) | B
+// --- Encoder 1 state machine debounce (GPIO36/39 WiFi interference guard) ---
+// Valid A/B phase transitions: 00→01→11→10→00 (forward) / the reverse order (reverse)
+// prev_state encoding: (A << 1) | B
 static volatile uint8_t enc1_prev_state_ = 0;
 
-// 状态转移查找表: index = (prev_state << 2) | new_state
-// 值: 0=非法, +1=正转, -1=反转
+// State transition lookup table: index = (prev_state << 2) | new_state
+// Values: 0=invalid, +1=forward, -1=reverse
 static const int8_t ENC_STATE_TABLE[16] = {
-     0, +1, -1,  0,   // prev=00: →01=+1, →10=-1, →00/11=无效
-    -1,  0,  0, +1,   // prev=01: →00=-1, →11=+1, →01/10=无效
-    +1,  0,  0, -1,   // prev=10: →00=+1, →11=-1, →10/01=无效
-     0, -1, +1,  0    // prev=11: →01=-1, →10=+1, →11/00=无效
+     0, +1, -1,  0,   // prev=00: →01=+1, →10=-1, →00/11=invalid
+    -1,  0,  0, +1,   // prev=01: →00=-1, →11=+1, →01/10=invalid
+    +1,  0,  0, -1,   // prev=10: →00=+1, →11=-1, →10/01=invalid
+     0, -1, +1,  0    // prev=11: →01=-1, →10=+1, →11/00=invalid
 };
 
-// --- 编码器 0 ISR (GPIO34/35, 标准四倍频) ---
+// --- Encoder 0 ISR (GPIO34/35, standard 4x counting) ---
 static void IRAM_ATTR enc0_a_isr() {
     taskENTER_CRITICAL_ISR(&encoder_mux_);
     if (digitalRead(ENC0_A_PIN) == digitalRead(ENC0_B_PIN))
@@ -67,8 +67,8 @@ static void IRAM_ATTR enc0_b_isr() {
     taskEXIT_CRITICAL_ISR(&encoder_mux_);
 }
 
-// --- 编码器 1 ISR (GPIO36/39, 状态机去抖) ---
-// adc_power_acquire() 消除硬件噪声, 状态机过滤残余毛刺
+// --- Encoder 1 ISR (GPIO36/39, state machine debounce) ---
+// adc_power_acquire() removes hardware noise; the state machine filters leftover glitches
 static void IRAM_ATTR enc1_isr() {
     taskENTER_CRITICAL_ISR(&encoder_mux_);
     uint8_t a = digitalRead(ENC1_A_PIN);
@@ -84,7 +84,7 @@ static void IRAM_ATTR enc1_isr() {
     taskEXIT_CRITICAL_ISR(&encoder_mux_);
 }
 
-// --- 编码器 2 ISR (GPIO18/19, 标准四倍频) ---
+// --- Encoder 2 ISR (GPIO18/19, standard 4x counting) ---
 static void IRAM_ATTR enc2_a_isr() {
     taskENTER_CRITICAL_ISR(&encoder_mux_);
     if (digitalRead(ENC2_A_PIN) == digitalRead(ENC2_B_PIN))
@@ -109,14 +109,14 @@ void encoders_init() {
     pinMode(ENC0_A_PIN, INPUT_PULLUP);
     pinMode(ENC0_B_PIN, INPUT_PULLUP);
 #else
-    // Motor0 编码器: GPIO34/35 — 仅输入引脚, 无内部上拉(靠编码器推挽输出驱动)
+    // Motor0 encoder: GPIO34/35 — input-only pins, no internal pull-up (driven by the encoder's push-pull output)
     pinMode(ENC0_A_PIN, INPUT);
     pinMode(ENC0_B_PIN, INPUT);
 #endif
     attachInterrupt(digitalPinToInterrupt(ENC0_A_PIN), enc0_a_isr, CHANGE);
     attachInterrupt(digitalPinToInterrupt(ENC0_B_PIN), enc0_b_isr, CHANGE);
 
-    // Motor1 编码器: GPIO22/23 (v2 板) — 普通数字脚, 均支持内部上拉, 免外部电阻
+    // Motor1 encoder: GPIO22/23 (v2 board) — normal digital pins, both support internal pull-up, no external resistor needed
     pinMode(ENC1_A_PIN, INPUT_PULLUP);   // GPIO22
     pinMode(ENC1_B_PIN, INPUT_PULLUP);   // GPIO23
     taskENTER_CRITICAL(&encoder_mux_);
@@ -125,7 +125,7 @@ void encoders_init() {
     attachInterrupt(digitalPinToInterrupt(ENC1_A_PIN), enc1_isr, CHANGE);
     attachInterrupt(digitalPinToInterrupt(ENC1_B_PIN), enc1_isr, CHANGE);
 
-    // Motor2 编码器: GPIO19/18 — 实测确认, 支持内部上拉
+    // Motor2 encoder: GPIO19/18 — confirmed by measurement, supports internal pull-up
     pinMode(ENC2_A_PIN, INPUT_PULLUP);   // GPIO19
     pinMode(ENC2_B_PIN, INPUT_PULLUP);   // GPIO18
     attachInterrupt(digitalPinToInterrupt(ENC2_A_PIN), enc2_a_isr, CHANGE);
@@ -152,7 +152,7 @@ void encoders_reset() {
 }
 
 // ============================================================
-// Odometry 类
+// Odometry class
 // ============================================================
 
 Odometry::Odometry(const Kinematics& kin, int encoder_cpr)
@@ -177,12 +177,12 @@ void Odometry::reset() {
 void Odometry::update(float dt) {
     if (!isfinite(dt) || dt <= 0.0f) return;
 
-    // 读取当前编码器计数
+    // Read the current encoder counts
     volatile long counts[3];
     encoders_read(counts);
 
-    // 计算各轮线速度
-    // 四倍频: 实际脉冲数 = encoder_cpr_ * 4
+    // Compute each wheel's linear speed
+    // 4x counting: actual pulse count = encoder_cpr_ * 4
     float cpr4 = static_cast<float>(encoder_cpr_) * 4.0f;
     float wheel_circumference = 2.0f * M_PI * kin_.getWheelRadius();
 
@@ -197,23 +197,23 @@ void Odometry::update(float dt) {
         float revolutions = (float)delta / cpr4;
         float raw_vel = (revolutions * wheel_circumference) / dt;
 
-        // 轮速合理性闸: 超过物理最大速度 = 编码器噪声/串扰 (尤其 M1 PWM 串扰
-        // 进 ENC1), 丢弃这帧 (按 0 处理), 防止幽灵恒速把 PID 顶到饱和。
+        // Wheel speed sanity gate: above the physical max speed = encoder noise/crosstalk (especially M1 PWM crosstalk
+        // into ENC1); drop this frame (treat as 0) so a phantom constant speed can't push the PID into saturation.
         if (fabsf(raw_vel) > MAX_WHEEL_VEL) raw_vel = 0.0f;
 
-        // 一阶低通滤波: 平滑轮速测量，减少 PID 对噪声的过度反应。
-        // M1(索引1, ENC1 GPIO36/39) 串扰噪声大, 用更重的低通(更小 alpha)压平,
-        // 否则噪声经 PID 放大成 PWM 乱跳(实测 jerk 56 vs M0/M2 的 6/12)。
+        // First-order low-pass filter: smooths the wheel speed measurement, so the PID overreacts less to noise.
+        // M1 (index 1, ENC1 GPIO36/39) has heavy crosstalk noise; flatten it with a heavier low-pass (smaller alpha),
+        // otherwise the PID amplifies the noise into erratic PWM (measured jerk 56 vs 6/12 for M0/M2).
         const float alpha = (i == 1) ? 0.15f : 0.3f;
         wv.v[i] = alpha * raw_vel + (1.0f - alpha) * wheel_velocity_.v[i];
     }
 
     wheel_velocity_ = wv;
 
-    // 正运动学: 轮速 -> 机体速度
+    // Forward kinematics: wheel speeds -> body velocity
     velocity_ = kin_.forward(wv);
 
-    // 位姿积分 (中间值积分)
+    // Pose integration (midpoint integration)
     float half_dtheta = velocity_.omega * dt * 0.5f;
     float cos_th = cosf(pose_.theta + half_dtheta);
     float sin_th = sinf(pose_.theta + half_dtheta);
@@ -222,7 +222,7 @@ void Odometry::update(float dt) {
     pose_.y     += (velocity_.vx * sin_th + velocity_.vy * cos_th) * dt;
     pose_.theta += velocity_.omega * dt;
 
-    // 归一化角度到 [-PI, PI]
+    // Normalize the angle to [-PI, PI]
     while (pose_.theta >  M_PI) pose_.theta -= 2.0f * M_PI;
     while (pose_.theta < -M_PI) pose_.theta += 2.0f * M_PI;
 }

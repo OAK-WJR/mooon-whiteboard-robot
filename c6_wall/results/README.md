@@ -2,7 +2,8 @@
 
 A few logs from the real robot on the whiteboard, copied from the local
 `c6_wall/logs/` folder (about 1 GB, kept offline). Videos are not included.
-Text logs are in Chinese, as printed by the tools.
+The tools printed the text logs in Chinese; they were translated into English
+in November 2026.
 
 | File | Run | What to look at |
 |---|---|---|

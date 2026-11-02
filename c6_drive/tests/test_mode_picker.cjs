@@ -66,7 +66,7 @@ async function test(){
  // STOP during an in-flight change must not display a successful-enable prompt.
  controllerGate=deferred();el('mode').value='floor_trial';const change=el('mode').onchange();await flush();
  await el('stop').onclick();controllerGate.resolve();controllerGate=null;await change;
- assert.equal(el('message').textContent,'已锁定');assert.equal(run('lease'),0);
+ assert.equal(el('message').textContent,'Locked');assert.equal(run('lease'),0);
  // A rejected switch reports the error, restores the confirmed value, no retries.
  await run('tick()');rejectMode=true;el('mode').value='legacy';await el('mode').onchange();
  assert(el('message').textContent.includes('TEST_REJECTION'));assert.equal(el('mode').value,'floor_trial');

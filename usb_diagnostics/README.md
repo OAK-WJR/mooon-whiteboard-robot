@@ -1,10 +1,10 @@
-# USB 诊断
+# USB diagnostics
 
-默认只采集数据，电机不运行。运行时每 100ms 输出 JSON，主机把原始帧存为 `telemetry.jsonl`，结论存为 `report.json`。这提供可复查的故障证据，不能使 MCU 自己识别所有 PCB 故障。
+By default it only collects data and the motors do not run. While running it outputs JSON every 100ms; the host saves the raw frames as `telemetry.jsonl` and the conclusions as `report.json`. This gives reviewable fault evidence; it cannot make the MCU identify every PCB fault by itself.
 
-## 快速使用：现有 C6 转接板
+## Quick use: existing C6 adapter board
 
-在 WhiteBoardBot 根目录执行，先让轮子离开接触面并断开电机电源，再连接 USB 数据线：
+Run from the WhiteBoardBot root folder. First lift the wheels off the surface and disconnect motor power, then connect the USB data cable:
 
 ```sh
 ./.venv/bin/pio run -d usb_diagnostics -e adapter -t upload
@@ -12,66 +12,66 @@
 ./.venv/bin/python scripts/pcb_diagnostics.py --seconds 10
 ```
 
-仅有一个 Espressif USB 串口时自动选择；有多个时加 `--port` 指定 `--list` 中的设备。上位机会核对固件协议和板型，不会向不匹配的程序发送电机测试指令。报告默认写入当前目录的 `diagnostic-reports/时间/`。
+If there is only one Espressif USB serial port, it is chosen automatically; if there are several, add `--port` with a device from `--list`. The host checks the firmware protocol and board type, and never sends motor test commands to a program that does not match. Reports are written to `diagnostic-reports/<time>/` in the current folder by default.
 
-新板的编译命令如下，**目前只开放无运动的诊断**；其电源尚未定型，不能用于打样验收或直接接 12V：
+The build command for the new board is below. **Only diagnostics without motion are enabled for now**; its power supply is not finalized, so it cannot be used for prototype acceptance or connected directly to 12V:
 
 ```sh
 ./.venv/bin/pio run -d usb_diagnostics -e top_board_v2
 ```
 
-`adapter` 的 ENC0_A 是 GPIO16；新板草稿 `top_board_v2` 的 ENC0_A 是 GPIO7。两个配置不能混用。旧板 GPIO16 在 ROM 阶段可能输出 UART；固件进入 `setup()` 后改成输入，不能倒过来消除 ROM 阶段的硬件冲突。
+On `adapter`, ENC0_A is GPIO16; on the new board draft `top_board_v2`, ENC0_A is GPIO7. The two configs must not be mixed. On the old board, GPIO16 may output UART during the ROM stage; the firmware changes it to an input after entering `setup()`, which cannot retroactively remove the hardware conflict during the ROM stage.
 
-诊断固件现支持 USB `reboot`，会先停止输出、回复接受状态，再重启。AI 可调用 `scripts/pcb_control.py reboot --port PORT --profile top_board_v2`（旧转接板用 `adapter`）；上位机验证新会话、复位原因和各路空闲，不能仅凭 ACK 判断成功。`reset` / `bootloader` 调用 esptool 原生 USB ROM 恢复，不擦写 Flash；USB 外设或供电本身失效时不保证可恢复。
+The diagnostic firmware now supports USB `reboot`: it first stops the outputs, replies with the accepted status, then reboots. AI can call `scripts/pcb_control.py reboot --port PORT --profile top_board_v2` (use `adapter` for the old adapter board); the host verifies the new session, the reset reason and that every channel is idle, and does not judge success from the ACK alone. `reset` / `bootloader` call esptool's native USB ROM recovery and do not erase or write Flash; recovery is not guaranteed when the USB peripheral or the power supply itself has failed.
 
-集成板另有 USB/Wi-Fi/BLE 主固件，使用不同的 `scripts/robot_control.py` 协议，见 [统一控制说明](../control_tests/README.md)。当前 USB 诊断固件保持协议 1，主固件是协议 2，二者不能混用。
+The integrated board also has a USB/Wi-Fi/BLE main firmware that uses a different protocol through `scripts/robot_control.py`; see the [unified control notes](../control_tests/README.md). The current USB diagnostic firmware stays on protocol 1, and the main firmware is protocol 2; the two must not be mixed.
 
-## 电机台架测试
+## Motor bench test
 
-当前没有板载电压/电流检测。带电测试必须使用**与已验证的电机/板额定值匹配的外部限流电源**，手测电机端电压，并让轮子悬空。先断电做静态检查，测试参数从低占空比开始。`--bench-current-limit` 只是记录你实际设置的电源限流值，脚本不会替你设置电源，也不会测到这个电流。
+There is currently no onboard voltage/current sensing. Powered tests must use an **external current-limited supply that matches the verified motor/board ratings**, measure the motor terminal voltage by hand, and keep the wheels in the air. First do static checks with power off, and start the test parameters at a low duty cycle. `--bench-current-limit` only records the supply current limit you actually set; the script does not set the supply for you, and does not measure this current.
 
-命令格式如下，尖括号内容需要换成实际确认的值：
+The command format is below; replace the parts in angle brackets with values you have actually confirmed:
 
 ```text
 ./.venv/bin/python scripts/pcb_diagnostics.py --run-motors \
-  --motor-voltage <6或12> --supply-voltage <实测伏特> \
-  --bench-current-limit <已核算并设置的安培数> --duty 64 --pulse-ms 500
+  --motor-voltage <6 or 12> --supply-voltage <measured volts> \
+  --bench-current-limit <amps, calculated and set> --duty 64 --pulse-ms 500
 ```
 
-脚本依次测试三轮的正/反向响应、未驱动通道的变化、编码器 A/B 相和计数方向，再测试停止心跳后的软件停机。每次脉冲前等待编码器静止；任何一项需要检查就取消后续动作。只有单轮测试通过后，才可按已核算的总启动电流增加 `--all-at-once` 测三轮同时启动。
+The script tests, in order, the forward/reverse response of the three wheels, changes on undriven channels, encoder A/B phases and count direction, then the software stop after the heartbeat stops. Before each pulse it waits for the encoders to be still; if any item needs checking, the following actions are canceled. Only after the single-wheel tests pass can `--all-at-once` be added to test all three starting together, based on the calculated total startup current.
 
-每次运行最多 1000ms；心跳失联 350ms 自动撤销命令，正常到时也解除使能，下次运行必须重新 arm。USB 断开、接收溢出或非法命令使电机控制脚恢复低电平。低/低对应驱动器高阻滑行，**不是机械急停，也不表示电机电源已经物理断开**。现有 v2 草稿的 MT3608 EN 不能替代电源隔离。
+Each run lasts at most 1000ms; losing the heartbeat for 350ms revokes the command automatically, and the enable is also cleared when the time is up normally, so the next run must arm again. USB disconnect, receive overflow or an invalid command returns the motor control pins to low. Low/low means the driver is high-impedance and coasting; **this is not a mechanical emergency stop, and does not mean the motor power is physically disconnected**. The MT3608 EN on the existing v2 draft cannot replace power isolation.
 
-## 报告能说明什么
+## What the report can tell
 
-| 证据 | 可以判断 | 仍不能独自判断 |
+| Evidence | Can determine | Still cannot determine alone |
 |---|---|---|
-| 协议、帧号、会话号、复位原因 | 通讯完整性、重启、应用是否活着 | 完全无枚举时到底是线缆、3V3、焊接还是 MCU 损坏 |
-| 每路 PWM 初始化状态 | 六个 LEDC 输出是否成功分配 | 驱动输入焊盘及电机输出端是否真的出现正确波形 |
-| A/B 电平、两相边沿、带方向计数、非法跳变 | 电机动作响应、单相缺失迹象、方向反转、串扰迹象 | 无响应究竟由欠压、占空比、机械负载、驱动器还是编码器引起 |
-| 软件停止原因和命令归零 | 失联/超时后软件停止逻辑 | 功率管短路、物理断电或实际轮子是否已停止 |
-| `motor_voltage_mv/current_ma/rail_3v3_mv = null` | 当前无对应检测能力 | 不得解读为 0V、0A 或供电正常 |
+| Protocol, frame number, session number, reset reason | Communication integrity, reboots, whether the app is alive | With no enumeration at all, whether it is the cable, 3V3, soldering or a damaged MCU |
+| PWM init status per channel | Whether the six LEDC outputs were allocated successfully | Whether the correct waveform really appears at the driver input pads and motor outputs |
+| A/B levels, edges on both phases, directional counts, illegal transitions | Motor motion response, signs of a missing phase, direction reversal, signs of crosstalk | Whether no response is caused by undervoltage, duty cycle, mechanical load, the driver or the encoder |
+| Software stop reason and command zeroing | Software stop logic after link loss/timeout | Power transistor short, physical power cut, or whether the real wheels have stopped |
+| `motor_voltage_mv/current_ma/rail_3v3_mv = null` | No matching sensing capability now | Must not be read as 0V, 0A or normal power |
 
-`USB_CAPTURE_PASSED` 只代表这次 USB 采集通过；`BENCH_CHECKS_PASSED` 只代表执行的台架检查通过。它们均不是整板制造放行结果。`REVIEW` 保留歧义，不会把“编码器没变”直接写成“ESP32 坏了”。
+`USB_CAPTURE_PASSED` only means this USB capture passed; `BENCH_CHECKS_PASSED` only means the bench checks that ran passed. Neither is a whole-board manufacturing release result. `REVIEW` keeps the ambiguity, and never turns "the encoder did not change" directly into "the ESP32 is broken".
 
-## 新 PCB 完整验收矩阵
+## Full acceptance matrix for the new PCB
 
-| 阶段 | 方法与记录 | 通过条件 |
+| Stage | Method and record | Pass condition |
 |---|---|---|
-| 断电 | 万用表/夹具测输入极性、GND、3V3、VMOT、每个排针及电机线束；记录阻值 | 和定型网表一致，无不应存在的短路/开路；不靠 MCU 推挽输出测短路 |
-| USB 独立供电 | 电池/电机电源移除，USB 两个插入方向、数据线、冷启动/复位/BOOT 下载各验证 | MCU 稳定枚举、重复上传成功；3V3 实测在规格内；USB 不给电机供电、不反灌外部输入 |
-| 两种电压 | 按最终规格分别上 6V、12V，对照万用表校准电压采样 | 实际 VMOT 匹配电机额定电压；不匹配模式禁止运行；芯片引脚均不超限 |
-| 电流检测/保护 | 用可控负载和校准仪表检查电流采样，再验证硬件限流/切断、故障锁存 | 在设计阈值及响应时间内动作；逻辑/USB 继续工作并报告故障；不得用 GPIO 或任意裸短接做故障注入 |
-| 手转编码器 | 电机不通电，依次手转三轮，USB 记录两相边沿和方向 | 每路两相有效；独立通道无异常跳变；实测方向和物理电机映射记录在配置中 |
-| 单轮运行 | 每轮正反转、分级占空比；USB + 示波器检查 FI/BI/FO/BO 与编码器 | 三轮都响应；非目标通道不动；反向计数变号；波形及相位符合手册 |
-| 同时启动 | 三轮同时启动、负载变化；示波器记录 VMOT、3V3、复位脚，USB 记录电流和编码器 | 无超规格跌落/尖峰、无复位；总电流及所有接点温升在批准的设计额定值内 |
-| 停机/回生 | 断心跳、拔 USB、复位 MCU、关电机电源；检查真实驱动输出和 VMOT 瞬态 | 默认不驱动；物理断电级按设计动作；回生/热插拔电压不超过设计上限 |
-| 热与堵转 | 参数确定后，在受控夹具和限流条件下按批准的电流/时间测试 | 驱动、稳压器、接头、铜线温升和保护动作合格；当前未知堵转电流，不能预填“通过” |
-| 故障注入 | 断开单相/电机连接、模拟电压/电流告警、USB 报文故障；记录预期与实测 | 可观测故障被报告且停止条件满足；检测盲区写入报告；不用反复“重试启动”掩盖失败 |
+| Power off | Multimeter/fixture measurement of input polarity, GND, 3V3, VMOT, every header pin and the motor harness; record resistances | Matches the final netlist, with no unexpected shorts/opens; MCU push-pull outputs are not used to test for shorts |
+| USB-only power | Battery/motor power removed; verify both USB plug orientations, the data lines, cold boot/reset/BOOT download | MCU enumerates stably and repeated uploads succeed; measured 3V3 within spec; USB does not power the motors or back-feed external inputs |
+| Both voltages | Apply 6V and 12V separately per the final spec, and calibrate voltage sensing against a multimeter | Actual VMOT matches the motor rated voltage; mismatched modes are prevented from running; no chip pin exceeds its limits |
+| Current sensing/protection | Check current sensing with a controllable load and calibrated instruments, then verify hardware current limit/cutoff and fault latch | Acts within the design threshold and response time; logic/USB keep working and report the fault; no fault injection with GPIO or arbitrary bare shorts |
+| Hand-turned encoders | Motors unpowered; turn the three wheels by hand one at a time; USB records the edges and direction of both phases | Both phases valid on every channel; no abnormal transitions on the other channels; the measured directions and physical motor mapping are recorded in the config |
+| Single-wheel run | Each wheel forward and reverse, stepped duty cycles; check FI/BI/FO/BO and the encoders with USB + oscilloscope | All three wheels respond; non-target channels do not move; reversing flips the count sign; waveforms and phases match the datasheet |
+| Simultaneous start | Three wheels start together, load changes; oscilloscope records VMOT, 3V3 and the reset pin, USB records current and encoders | No out-of-spec dips/spikes and no resets; total current and the temperature rise of all contacts within the approved design ratings |
+| Stop/regeneration | Cut the heartbeat, unplug USB, reset the MCU, turn off motor power; check the real driver outputs and VMOT transients | Not driven by default; the physical power-off stage acts as designed; regeneration/hot-plug voltage does not exceed the design limit |
+| Thermal and stall | After the parameters are fixed, test at the approved current/time in a controlled fixture with current limiting | Temperature rise of drivers, regulators, connectors and copper and the protection action pass; the stall current is unknown now, so "pass" cannot be filled in in advance |
+| Fault injection | Disconnect a single phase/motor connection, simulate voltage/current alarms, USB message faults; record expected vs. measured | Observable faults are reported and the stop conditions are met; detection blind spots are written into the report; failures are not masked by repeatedly "retrying startup" |
 
-最终 PCB 必须补充电压/电流反馈、默认关闭的功率开关、独立硬件保护和足够的测试点。共用电流采样可辅助逐轮定位；若要同时运行时直接分辨每个驱动的电流/输出故障，需三路采样或改底板的测试接口。高速尖峰和 USB 信号质量仍需示波器，USB 日志不能替代它。
+The final PCB must add voltage/current feedback, a default-off power switch, independent hardware protection and enough test points. Shared current sensing can help locate faults wheel by wheel; to directly tell apart each driver's current/output fault while running together, three sensing channels or a changed base board test interface are needed. High-speed spikes and USB signal quality still need an oscilloscope; USB logs cannot replace it.
 
-## 软件验证
+## Software verification
 
 ```sh
 c++ -std=c++17 -I usb_diagnostics/include usb_diagnostics/tests/test_safety.cpp -o /tmp/wbb-diag-safety
@@ -83,4 +83,4 @@ c++ -std=c++17 -fsanitize=address,undefined \
 /tmp/wbb-diag-firmware
 ```
 
-最后一项执行实际固件的命令解析器和循环，模拟 USB/GPIO/PWM，覆盖丢心跳、USB 断开、换行前的长报文溢出、PWM 故障和运行中重启。完整两板型与主机验证可执行 `.venv/bin/python control_tests/verify.py`。输出是**模拟数据**，本轮没有连接到实际 ESP32，没有实测 USB 下载、转动电机、电流或温升。
+The last item runs the real firmware's command parser and loop, simulating USB/GPIO/PWM, and covers lost heartbeat, USB disconnect, a long message overflowing before the newline, PWM faults and reboot while running. The full two-board and host verification can be run with `.venv/bin/python control_tests/verify.py`. The output is **simulated data**; this round did not connect to a real ESP32, and did not measure USB download, motor rotation, current or temperature rise.

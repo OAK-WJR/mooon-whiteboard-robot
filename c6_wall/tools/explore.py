@@ -20,7 +20,7 @@ reps = int(sys.argv[3]) if len(sys.argv) > 3 else 2
 rows, H = [], None
 try:
     for k in range(reps):
-        for name, ux, uy in (('右', 1, 0), ('左', -1, 0), ('上', 0, 1), ('下', 0, -1)):
+        for name, ux, uy in (('R', 1, 0), ('L', -1, 0), ('U', 0, 1), ('D', 0, -1)):
             H, a = vision.measure(cam, n=11, H=H)
             err = (90 - (a['heading'] + front) + 180) % 360 - 180
             if abs(err) > 5:
@@ -30,7 +30,7 @@ try:
             def edge_gap(x, y):
                 return min(x, W - x, y, Hh - y)
             if edge_gap(tx, ty) < MARGIN and edge_gap(tx, ty) < edge_gap(a['x'], a['y']):
-                print(f'  {name}: 会靠近边框，跳过 (目标 {tx:.1f},{ty:.1f})'); continue
+                print(f'  {name}: would get close to the frame; skipping (target {tx:.1f},{ty:.1f})'); continue
             oa = odom_board(r.status())
             r.cmd('move', x=ux * dist / 100, y=uy * dist / 100, speed=speed, accel=0.15)
             wait_still(r)
@@ -42,9 +42,9 @@ try:
             row = dict(dir=name, cmd=dist, along=along, across=(my * ux - mx * uy), turn=turn,
                        odo=[(ob[0] - oa[0]) / 10, (ob[1] - oa[1]) / 10, ob[2] - oa[2]], at=[b['x'], b['y']])
             rows.append(row)
-            print(f"  {name}{dist:g}: 实际沿方向 {along:+5.2f} cm ({along / dist:4.0%})  侧偏 {row['across']:+5.2f} cm  转 {turn:+6.2f}°   位置 ({b['x']:.1f},{b['y']:.1f})")
+            print(f"  {name}{dist:g}: actual along {along:+5.2f} cm ({along / dist:4.0%})  sideways {row['across']:+5.2f} cm  turn {turn:+6.2f}°   position ({b['x']:.1f},{b['y']:.1f})")
             if abs(turn) > 15:
-                print('  转角过大，停下'); raise SystemExit
+                print('  Turn too large; stopping'); raise SystemExit
 finally:
     r.cmd('stop'); cam.close()
     p = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'logs', time.strftime('explore-%m%d-%H%M%S.json'))

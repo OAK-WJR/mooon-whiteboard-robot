@@ -188,19 +188,19 @@ def main():
     options=''.join(f'<option value="{p}">{names[i]}</option>' for i,p in enumerate(figures))
     analysis_url=os.path.relpath(args.directory/'analysis.json',args.portfolio)
     archive_url=os.path.relpath(Path('c6_drive/portfolio/hardware-response.html'),args.portfolio)
-    html='''<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>WhiteBoardBot · 带载实测数据</title><style>body{font:18px/1.65 system-ui;margin:32px auto;padding:0 20px;max-width:1100px;color:#172b3c;background:#f7f9fb}h1{font-size:32px}select{font:inherit;padding:10px;max-width:100%}img{width:100%;height:auto}a{color:#186a96}.notice{padding:16px;background:#fff1de;border-left:4px solid #b96d16}nav{display:flex;gap:20px;flex-wrap:wrap}</style>
-<h1>带载数据：采完不代表控制通过</h1><nav><a href="__ARCHIVE__">返回实测结果</a><a href="__ANALYSIS__">指标和原始采样</a></nav>
+    html='''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>WhiteBoardBot · Loaded test data</title><style>body{font:18px/1.65 system-ui;margin:32px auto;padding:0 20px;max-width:1100px;color:#172b3c;background:#f7f9fb}h1{font-size:32px}select{font:inherit;padding:10px;max-width:100%}img{width:100%;height:auto}a{color:#186a96}.notice{padding:16px;background:#fff1de;border-left:4px solid #b96d16}nav{display:flex;gap:20px;flex-wrap:wrap}</style>
+<h1>Loaded data: a finished capture does not mean control passed</h1><nav><a href="__ARCHIVE__">Back to test results</a><a href="__ANALYSIS__">Metrics and raw samples</a></nav>
 <p class="notice">__COUNTS__</p>
-<p>上图纵轴 100% 是请求速度，下图是实际 PWM。阴影从输出归零开始。标题会区分固件故障、采集中止和运动判据结果；中止的记录也保留。短时测试不代表已完成稳态或直线精度验证。</p>
-<label>查看测试 <select id="trial">'''+options+'''</select></label> · <a id="full" href="floor-response-01.png" target="_blank">原尺寸图片</a>
-<img id="chart" src="floor-response-01.png" alt="真实轮速及PWM随时间变化，英文图表">
-<p>统计定义：连续 3 个采样超过 100 counts/s 记为起转；末段 200 ms 平均轮速误差要求不超过 20%；指令后 300 ms 以后，轮速低于 30 counts/s 持续 200 ms 则判运动不合格。这些是诊断筛选线，不是稳定性证明。没有电压、电流或独立车体位置测量，无法仅凭这批数据区分全部机械、电源和摩擦因素。</p>
+<p>In the top chart, 100% on the vertical axis is the requested speed; the bottom chart is the actual PWM. Shading starts when the output returns to zero. The title tells apart firmware faults, aborted captures and motion-criteria results; aborted records are kept too. Short tests do not mean steady-state or straight-line accuracy has been validated.</p>
+<label>View test <select id="trial">'''+options+'''</select></label> · <a id="full" href="floor-response-01.png" target="_blank">Full-size image</a>
+<img id="chart" src="floor-response-01.png" alt="Real wheel speed and PWM over time, chart in English">
+<p>Definitions: 3 consecutive samples above 100 counts/s count as the wheel starting to turn; the mean wheel-speed error over the final 200 ms must be at most 20%; from 300 ms after the command on, wheel speed below 30 counts/s for 200 ms fails the motion check. These are diagnostic screening lines, not proof of stability. There is no voltage, current or independent body position measurement, so this data alone cannot tell apart all mechanical, power and friction factors.</p>
 <script>document.getElementById('trial').onchange=e=>{document.getElementById('chart').src=e.target.value;document.getElementById('full').href=e.target.value;};</script></html>'''
-    counts=(f'{labels[0]}：{len(trials)} 段、{result["unique_control_samples"]} 个去重后的 100 Hz 采样；'
-            f'{result["complete_captures"]} 段完成采集，{result["motion_quality_passes"]} 段通过本页运动判据。'
-            f'{result["disturbed_captures"]} 段已标注人为扰动，不作为正常行走对比。'
-            '位移只来自编码器，不是独立车体测量。')
+    counts=(f'{labels[0]}: {len(trials)} runs, {result["unique_control_samples"]} deduplicated 100 Hz samples; '
+            f'{result["complete_captures"]} runs fully captured, {result["motion_quality_passes"]} runs passed the motion criteria on this page. '
+            f'{result["disturbed_captures"]} runs are marked as disturbed by a person and are not used for normal driving comparison. '
+            'Displacement comes only from the encoders, not from an independent body measurement.')
     html=html.replace('__ARCHIVE__',escape(archive_url,quote=True)).replace('__ANALYSIS__',escape(analysis_url,quote=True)).replace('__COUNTS__',escape(counts))
     (args.portfolio/'floor-response.html').write_text(html)
     print(json.dumps({k:v for k,v in result.items() if k!='trials'},indent=2))

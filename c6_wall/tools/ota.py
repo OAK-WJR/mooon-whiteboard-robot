@@ -40,7 +40,7 @@ def find_robot(preferred):
             return host, status(host)
         except Exception:
             continue
-    sys.exit("找不到小车：确认它和电脑在同一个 Wi-Fi，或用 --host 指定 IP")
+    sys.exit("Cannot find the robot: make sure it is on the same Wi-Fi as the computer, or give its IP with --host")
 
 
 def upload(host, data, token):
@@ -54,7 +54,7 @@ def upload(host, data, token):
     for off in range(0, len(data), step):
         conn.send(data[off:off + step])
         pct = min(100, (off + step) * 100 // len(data))
-        print(f"\r  上传 {pct:3d}%", end="", flush=True)
+        print(f"\r  Upload {pct:3d}%", end="", flush=True)
     print()
     resp = conn.getresponse()
     body = resp.read().decode(errors="replace")
@@ -72,31 +72,31 @@ def main():
     args = ap.parse_args()
     t0 = time.time()
     if not args.no_build and not args.bin:
-        print("编译中…")
+        print("Compiling…")
         log = os.path.join(ROOT, ".pio", "ota-build.log")
         os.makedirs(os.path.dirname(log), exist_ok=True)
         with open(log, "w") as f:
             if subprocess.run([PIO, "run"], cwd=ROOT, stdout=f, stderr=subprocess.STDOUT).returncode:
-                sys.exit(f"编译失败，见 {log}")
-        print(f"  编译完成 {time.time() - t0:.0f} s")
+                sys.exit(f"Build failed, see {log}")
+        print(f"  Build done {time.time() - t0:.0f} s")
     data = open(args.bin or BIN, "rb").read()
     token = open(os.path.join(ROOT, ".ota_token")).read().strip()
 
     # esp_app_desc_t starts at byte 32; app_elf_sha256 is at byte 176. The fw id ends with its first 4 bytes.
     host, st = find_robot(args.host)
     old_fw = st["fw"]
-    print(f"小车 {host}: 固件 {old_fw}, 状态 {st['mode']}/{st['src']}")
+    print(f"Robot {host}: firmware {old_fw}, state {st['mode']}/{st['src']}")
     same = old_fw.endswith("-" + data[176:180].hex())
     if same:
-        print("  注意：这和小车上的是同一个固件，重新刷一遍")
+        print("  Note: this is the same firmware as on the robot; flashing it again")
     if st.get("moving"):
-        sys.exit("小车正在运动，先停下再更新")
+        sys.exit("The robot is moving; stop it before updating")
 
     t1 = time.time()
     code, reply = upload(host, data, token)
     if code != 200 or not reply.get("ok"):
-        sys.exit(f"更新失败: HTTP {code} {reply}")
-    print(f"  已写入 {len(data) / 1024:.0f} KB，用时 {time.time() - t1:.1f} s，重启中…")
+        sys.exit(f"Update failed: HTTP {code} {reply}")
+    print(f"  Wrote {len(data) / 1024:.0f} KB in {time.time() - t1:.1f} s, restarting…")
 
     sent = time.time()
     deadline = sent + 90
@@ -111,9 +111,9 @@ def main():
             break
         # Old firmware with a fresh uptime: the new image crashed and the bootloader rolled back.
         if not same and new["fw"] == old_fw and new["up"] < (time.time() - sent) * 1000:
-            sys.exit(f"新固件启动失败，已自动回滚到 {old_fw}（小车一直保持/刹车）")
+            sys.exit(f"New firmware failed to start; rolled back to {old_fw} automatically (the robot kept holding/braking)")
     if not new or (new["fw"] == old_fw and not same):
-        sys.exit("小车没有带着新固件回来（会在 150 s 内自动回滚到旧版）")
+        sys.exit("The robot did not come back with the new firmware (it rolls back to the old version automatically within 150 s)")
     for _ in range(10):  # the status request itself confirms the image
         if not new.get("ota_pending"):
             break
@@ -121,8 +121,8 @@ def main():
         new = status(host)
     ip = new["net"]["ip"] or host
     open(HOST_CACHE, "w").write(ip)
-    print(f"完成: 固件 {new['fw']}，状态 {new['mode']}{'（重启后已恢复保持）' if new.get('resumed') else ''}，"
-          f"{'已确认' if not new.get('ota_pending') else '尚未确认'}，总用时 {time.time() - t0:.0f} s")
+    print(f"Done: firmware {new['fw']}, state {new['mode']}{' (hold resumed after restart)' if new.get('resumed') else ''}, "
+          f"{'confirmed' if not new.get('ota_pending') else 'not confirmed yet'}, total time {time.time() - t0:.0f} s")
 
 
 if __name__ == "__main__":
