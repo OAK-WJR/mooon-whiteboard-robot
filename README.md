@@ -191,8 +191,7 @@ and tuned it:**
   identification, erasing, drawing, demo cutting); most of the schematic clean-up,
   routing and checks of the unbuilt `top_board_v2_logic` board in EasyEDA
   from my requirements (Oct 27–30), starting from the Codex KiCad draft
-  below; its review firmware and tests (Oct 2026); translating the Chinese
-  comments, notes, logs and web pages into English (Nov 2026).
+  below; its review firmware and tests (Oct 2026).
 - **OpenAI Codex:** the September top-board explorations (KiCad, never built)
   and the September firmware in `c6_drive/` (Wi-Fi driving, web page,
   calibration, system ID, MuJoCo simulation).
